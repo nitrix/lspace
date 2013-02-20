@@ -15,5 +15,6 @@ ADD_EXECUTABLE(
 
 TARGET_LINK_LIBRARIES(
     client
-    common    
+    common
+    curses
 )
