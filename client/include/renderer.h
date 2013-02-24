@@ -2,14 +2,17 @@
 #define RENDERER_H
 
 #include "stdio.h"
-#include "stdbool.h"
-#include "GL/freeglut.h"
-#include "GL/gl.h"
-#include "GL/glu.h"
+#include "ncurses.h"
 
-bool renderer_init(void);
-void renderer_update(void);
-void renderer_render(void);
+struct renderer {
+    WINDOW* window;
+    int     number;
+};
+
+void renderer_ctor(struct renderer *this);
+void renderer_dtor(void);
+void renderer_update(struct renderer *this);
+void renderer_render(struct renderer *this);
 
 #endif /* RENDERER_H */
 

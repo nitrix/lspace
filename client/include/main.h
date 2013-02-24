@@ -2,13 +2,10 @@
 #define MAIN_H
 
 #include "stdio.h"
-#include "GL/freeglut.h"
-#include "GL/gl.h"
-#include "GL/glu.h"
+#include "stdlib.h"
 #include "renderer.h"
 
-int  main(int argc, char *argv[]);
-void runMainLoop(int val);
+int main(void);
 
 #endif /* MAIN_H */
 
