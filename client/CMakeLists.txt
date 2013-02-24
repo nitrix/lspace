@@ -10,7 +10,6 @@ ADD_EXECUTABLE(
     client
     src/main.c
     src/renderer.c
-    src/window.c
 )
 
 TARGET_LINK_LIBRARIES(

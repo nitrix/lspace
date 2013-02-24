@@ -1,12 +1,21 @@
 #include "renderer.h"
 
-void renderer_ctor(struct renderer *this)
+struct renderer {
+    WINDOW* window;
+    int     number;
+};
+
+struct renderer *renderer_init(void)
 {
+    struct renderer *this = malloc(sizeof(struct renderer));
+    
     this->window = initscr();
     this->number = 0;
+
+    return this;
 }
 
-void renderer_dtor(void)
+void renderer_fini(void)
 {
     endwin();
 }
