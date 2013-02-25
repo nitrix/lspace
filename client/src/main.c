@@ -1,10 +1,17 @@
-#include "main.h"
+#include "stdlib.h"
+#include "renderer.h"
+
 
 int main(void)
 {
-    initscr();
-    printf("It works; client here\n");
-    endwin();
+    struct renderer *rnd = renderer_init();
+    
+    while (true) {
+        renderer_update(rnd);
+        renderer_render(rnd);
+    }
+
+    renderer_fini();
 
     return EXIT_SUCCESS;
 }

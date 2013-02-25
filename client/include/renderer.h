@@ -1,11 +1,15 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "curses.h"
+#include "stdlib.h"
+#include "ncurses.h"
 
-void renderer_init(void);
-void renderer_update(void);
-void renderer_render(void);
+struct renderer;
+
+struct renderer *renderer_init(void);
+void             renderer_fini(void);
+void             renderer_update(struct renderer *this);
+void             renderer_render(struct renderer *this);
 
 #endif /* RENDERER_H */
 
