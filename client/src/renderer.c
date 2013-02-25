@@ -1,8 +1,13 @@
 #include "renderer.h"
 
-bool renderer_init(void)
+void renderer_ctor(void)
 {
-    return true;
+    initscr();
+}
+
+void renderer_dtor(void)
+{
+    endwin();
 }
 
 void renderer_update(void)

@@ -1,10 +1,9 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "stdio.h"
-#include "stdbool.h"
+#include "curses.h"
 
-bool renderer_init(void);
+void renderer_init(void);
 void renderer_update(void);
 void renderer_render(void);
 

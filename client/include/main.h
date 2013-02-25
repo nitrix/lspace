@@ -4,7 +4,6 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "renderer.h"
-#include "curses.h"
 
 int main(void);
 
