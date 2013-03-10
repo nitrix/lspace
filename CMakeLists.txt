@@ -19,6 +19,17 @@ ADD_DEFINITIONS(
     -Wpointer-arith          # Warn about anything that depends on the size of a function type or a "void".
 )
 
-ADD_SUBDIRECTORY(common)
-ADD_SUBDIRECTORY(client)
-ADD_SUBDIRECTORY(server)
+INCLUDE_DIRECTORIES(
+    "include"
+)
+
+ADD_EXECUTABLE(
+    lspace
+    src/main.c
+    src/renderer.c
+)
+
+TARGET_LINK_LIBRARIES(
+    lspace
+    ncurses
+)
