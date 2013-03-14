@@ -6,8 +6,9 @@ void engine_init(struct engine *this)
     WINDOW       *window = initscr();
 
     /* Initialize member variables */
-    this->stage  = NULL;
-    this->window = window;
+    this->stage   = NULL;
+    this->window  = window;
+    this->running = true;
 }
 
 void engine_fini(struct engine *this)
@@ -33,4 +34,12 @@ void engine_update(struct engine *this)
 void engine_render(struct engine *this)
 {
     wrefresh(this->window);
+}
+
+void engine_run(struct engine *this)
+{
+    while (this->running) {
+        engine_update(this);
+        engine_render(this);
+    }
 }

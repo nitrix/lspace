@@ -25,10 +25,7 @@ int main(void)
     engine_stage(engine, (struct stage*)stage_menu);
     
     /* Main loop */
-    while (true) {
-        engine_update(engine);
-        engine_render(engine);
-    }
+    engine_run(engine);
 
     /* Finalize objects */
     engine_fini(engine);
