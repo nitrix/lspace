@@ -12,31 +12,31 @@
 int main(void)
 {
     /* Allocate objects */
-    struct renderer   *renderer   = malloc(sizeof(struct renderer));
+    struct engine     *engine     = malloc(sizeof(struct engine));
     struct stage_menu *stage_menu = malloc(sizeof(struct stage_menu));
     struct stage_game *stage_game = malloc(sizeof(struct stage_game)); 
 
     /* Initialize objects */
-    renderer_init(renderer);
+    engine_init(engine);
     stage_menu_init(stage_menu);
     stage_game_init(stage_game);
 
     /* Set the correct stage */
-    renderer_stage(renderer, (struct stage*)stage_menu);
+    engine_stage(engine, (struct stage*)stage_menu);
     
     /* Main loop */
     while (true) {
-        renderer_update(renderer);
-        renderer_render(renderer);
+        engine_update(engine);
+        engine_render(engine);
     }
 
     /* Finalize objects */
-    renderer_fini(renderer);
+    engine_fini(engine);
     stage_menu_fini(stage_menu);
     stage_game_fini(stage_game);
 
     /* Deallocate objects */
-    free(renderer);
+    free(engine);
     free(stage_menu);
     free(stage_game);
 

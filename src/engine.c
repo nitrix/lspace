@@ -1,6 +1,6 @@
-#include "renderer.h"
+#include "engine.h"
 
-void renderer_init(struct renderer *this)
+void engine_init(struct engine *this)
 {
     /* Allocate member objects */
     WINDOW       *window = initscr();
@@ -10,7 +10,7 @@ void renderer_init(struct renderer *this)
     this->window = window;
 }
 
-void renderer_fini(struct renderer *this)
+void engine_fini(struct engine *this)
 {
     UNUSED_PARAM(this);
 
@@ -18,19 +18,19 @@ void renderer_fini(struct renderer *this)
     endwin();
 }
 
-void renderer_stage(struct renderer *this, struct stage *stage)
+void engine_stage(struct engine *this, struct stage *stage)
 {
     this->stage = stage;
 }
 
-void renderer_update(struct renderer *this)
+void engine_update(struct engine *this)
 {
     /* We call update() on whatever is our current stage implementation */
     if (this->stage)
         this->stage->update(this->stage);
 }
 
-void renderer_render(struct renderer *this)
+void engine_render(struct engine *this)
 {
     wrefresh(this->window);
 }

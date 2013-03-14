@@ -26,8 +26,8 @@ INCLUDE_DIRECTORIES(
 
 ADD_EXECUTABLE(
     lspace
+    src/engine.c
     src/main.c
-    src/renderer.c
     src/stage.c
     src/stage_game.c
     src/stage_menu.c
