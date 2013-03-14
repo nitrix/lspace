@@ -3,13 +3,17 @@
 
 #include "stdlib.h"
 #include "ncurses.h"
+#include "stage.h"
 
-struct renderer;
+struct renderer {
+    WINDOW       *window;
+    struct stage *stage;
+};
 
-struct renderer *renderer_init(void);
-void             renderer_fini(void);
-void             renderer_update(struct renderer *this);
-void             renderer_render(struct renderer *this);
+void renderer_init(struct renderer *this);
+void renderer_fini(struct renderer *this);
+void renderer_update(struct renderer *this);
+void renderer_render(struct renderer *this);
+void renderer_stage(struct renderer *this, struct stage *stage);
 
 #endif /* RENDERER_H */
-

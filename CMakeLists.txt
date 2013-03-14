@@ -2,7 +2,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(lspace)
 
 ADD_DEFINITIONS(
-    -std=c99                 # Only /partial/ C99 support.
+    #-std=c99                 # Only /partial/ C99 support.
+    -ansi
     -O2                      # Optimize for performance.
     -Wall                    # Misnamed, enables a list of warning options, but not all of them.
     -Wextra                  # Print extra warning information.
@@ -27,6 +28,9 @@ ADD_EXECUTABLE(
     lspace
     src/main.c
     src/renderer.c
+    src/stage.c
+    src/stage_game.c
+    src/stage_menu.c
 )
 
 TARGET_LINK_LIBRARIES(

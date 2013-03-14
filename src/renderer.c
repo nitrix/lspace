@@ -1,30 +1,33 @@
 #include "renderer.h"
 
-struct renderer {
-    WINDOW* window;
-    int     number;
-};
-
-struct renderer *renderer_init(void)
+void renderer_init(struct renderer *this)
 {
-    struct renderer *this = malloc(sizeof(struct renderer));
-    
-    this->window = initscr();
-    this->number = 0;
+    /* Allocate member objects */
+    WINDOW       *window = initscr();
 
-    return this;
+    /* Initialize member variables */
+    this->stage  = NULL;
+    this->window = window;
 }
 
-void renderer_fini(void)
+void renderer_fini(struct renderer *this)
 {
+    UNUSED_PARAM(this);
+
+    /* Deallocate member objects */
     endwin();
+}
+
+void renderer_stage(struct renderer *this, struct stage *stage)
+{
+    this->stage = stage;
 }
 
 void renderer_update(struct renderer *this)
 {
-    //Some game logic that change stuff on screen
-    mvwprintw(this->window, 0, 0, "Hello World #%d", this->number);
-    this->number++;
+    /* We call update() on whatever is our current stage implementation */
+    if (this->stage)
+        this->stage->update(this->stage);
 }
 
 void renderer_render(struct renderer *this)
