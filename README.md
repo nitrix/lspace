@@ -16,14 +16,17 @@ Community
 ---------
 
 On IRC: freenode #lspace
+
 Website: http://lonesomespace.com
 
 Roadmap
 -------
 
-1st iteration: Sketchy singleplayer game. [ncurses rendering, world generation, logic and some content] 
-2nd iteration: Polished multiplayer game. [OpenGL 2D rendering, better experience, protocol and content]
-3rd iteration: Peer-to-peer full-blown experience. [OpenGL 3D rendering, PvP, trading, security and what's left]
+* 1st iteration: Sketchy singleplayer game. [ncurses rendering, world generation, logic and some content] 
+
+* 2nd iteration: Polished multiplayer game. [OpenGL 2D rendering, better experience, protocol and content]
+
+* 3rd iteration: Peer-to-peer full-blown experience. [OpenGL 3D rendering, PvP, trading, security and what's left]
 
 How to compile
 --------------
