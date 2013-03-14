@@ -2,8 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(lspace)
 
 ADD_DEFINITIONS(
-    #-std=c99                 # Only /partial/ C99 support.
-    -ansi
+    -ansi                    # Always and forever.
     -O2                      # Optimize for performance.
     -Wall                    # Misnamed, enables a list of warning options, but not all of them.
     -Wextra                  # Print extra warning information.

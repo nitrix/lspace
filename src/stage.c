@@ -8,11 +8,11 @@ void stage_init(struct stage *this)
 
 void stage_fini(struct stage *this)
 {
-    UNUSED_PARAM(this);
+    UNUSED(this);
 }
 
 void stage_noop(struct stage *this)
 {
     /* Placeholder for implementations */
-    UNUSED_PARAM(this);
+    UNUSED(this);
 }

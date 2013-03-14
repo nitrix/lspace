@@ -11,12 +11,12 @@ void stage_game_init(struct stage_game *this)
 
 void stage_game_fini(struct stage_game *this)
 {
-    UNUSED_PARAM(this);
+    UNUSED(this);
 }
 
 void stage_game_update(struct stage *this)
 {
     /* TEMPORARY */
-    UNUSED_PARAM(this);
+    UNUSED(this);
     printf("game");
 }

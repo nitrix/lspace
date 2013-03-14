@@ -13,7 +13,7 @@ void engine_init(struct engine *this)
 
 void engine_fini(struct engine *this)
 {
-    UNUSED_PARAM(this);
+    UNUSED(this);
 
     /* Deallocate member objects */
     endwin();
