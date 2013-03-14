@@ -12,5 +12,6 @@ struct stage_game {
 void stage_game_init(struct stage_game *this);
 void stage_game_fini(struct stage_game *this);
 void stage_game_update(struct stage *this);
+void stage_game_render(struct stage *this);
 
 #endif /* STAGE_GAME_H */

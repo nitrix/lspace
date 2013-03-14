@@ -4,6 +4,7 @@ void stage_game_init(struct stage_game *this)
 {
     /* Initialize virtual member functions */
     this->stage.update = stage_game_update;
+    this->stage.render = stage_game_render;
 
     /* Initialize member variables */
     this->test = 0;
@@ -18,5 +19,10 @@ void stage_game_update(struct stage *this)
 {
     /* TEMPORARY */
     UNUSED(this);
-    printf("game");
+}
+
+void stage_game_render(struct stage *this)
+{
+    /* TEMPORARY */
+    UNUSED(this);
 }

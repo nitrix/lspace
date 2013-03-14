@@ -35,4 +35,5 @@ ADD_EXECUTABLE(
 TARGET_LINK_LIBRARIES(
     lspace
     ncurses
+    panel
 )

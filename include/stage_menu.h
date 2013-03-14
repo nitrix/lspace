@@ -12,5 +12,6 @@ struct stage_menu {
 void stage_menu_init(struct stage_menu *this);
 void stage_menu_fini(struct stage_menu *this);
 void stage_menu_update(struct stage *this);
+void stage_menu_render(struct stage *this);
 
 #endif /* STAGE_MENU_H */

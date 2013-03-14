@@ -6,6 +6,7 @@
 
 struct stage {
     void (*update)(struct stage *);
+    void (*render)(struct stage *);
 };
 
 void stage_init(struct stage *this);
