@@ -11,7 +11,6 @@ void stage_menu_init(struct stage_menu *this)
     this->window = initscr();
 
     nonl(); /* no line break */
-    raw(); /* raw inputs */
     noecho(); /* no output */
     curs_set(0); /* invisible */
     keypad(this->window, true);
