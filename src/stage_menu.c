@@ -32,8 +32,8 @@ void stage_menu_update(struct stage *this)
     /* Prepare the labels for the menu */
     options[0] = "New game";
     options[1] = "Continue game";
-    options[2] = "Options";
-    options[3] = "Exit";
+    options[2] = "Settings";
+    options[3] = "Quit";
 
     /* Detect the size of the shell running our game */
     getmaxyx(local->window, logo_y, logo_x);

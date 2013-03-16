@@ -3,7 +3,7 @@
 void engine_init(struct engine *this)
 {
     /* Initialize member variables */
-    this->stage   = NULL;
+    this->stage = NULL;
 }
 
 void engine_fini(struct engine *this)
