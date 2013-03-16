@@ -81,14 +81,20 @@ void stage_menu_update(struct stage *this)
         /* -------------------------------- */
         case 'j':
         case KEY_DOWN:
-            if (s - local->current_option - 1)
+            if (s - local->current_option - 1) {
                 local->current_option++;
+            } else {
+                local->current_option = OPTION_NEW;
+            }
             break;
         /* -------------------------------- */
         case 'k':
         case KEY_UP:
-            if (local->current_option)
+            if (local->current_option) {
                 local->current_option--;
+            } else {
+                local->current_option = OPTION_EXIT;
+            }
             break;
         /* -------------------------------- */
         case '\r':
