@@ -1,0 +1,9 @@
+Our entry-point is the main() function inside src/main.c
+
+It initialize the various stages of the game, create an engine,
+configure it, then transfer control to that engine.
+
+When the engine returns/stops, it deallocate its objects gracefully
+and terminates.
+
+It does nothing e

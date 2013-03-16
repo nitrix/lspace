@@ -1,0 +1,12 @@
+The game flow is divided into multiple stages.
+
+The first stage is the game menu, then is the game itself,
+then a gameover screen and the last one to save your progression.
+
+The engine is responsible to call critical functions on whatever is
+set to be the current stage. Therefore, you can easily switch to any
+stage and whenever you want to.
+
+* When switching stages, you will not lose their states. This is
+because they are created at the begining of main() and destoyed
+only at the very end. This is intentional.

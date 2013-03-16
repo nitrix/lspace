@@ -1,0 +1,14 @@
+The code base is divided into various folders:
+    - build : Ignored directory to let you compile and test stuff.
+    - src : The source files for the code.
+    - include : The header files for the code.
+    - libs : Third-party libraries built statically.
+    - doc : Documentation for the code but also the game.
+
+Then there's some files at the root:
+    A license file (LICENSE.txt),
+    A readme file (README.md),
+    A project generation script (CMakeLists.txt).
+
+    An hidden .gitignore to help maintain the repositoy.
+    An hidden .gitmodules to help manage external libraries.

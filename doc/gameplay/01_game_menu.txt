@@ -1,0 +1,9 @@
+The menu is the first thing you should see when you launch the game.
+
+The available options are: create a new game, continue one already in
+progress, change your settings or to quit.
+
+You can navigate the menu using the arrow keys on your keyboard or
+h,j,k,l if you are used to vim keybindings.
+
+Finally, to select your option, hit Enter (return).
