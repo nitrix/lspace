@@ -3,10 +3,18 @@
 
 #include "stage.h"
 #include "stdio.h"
+#include "ncurses.h"
+
+/* Our options */
+#define OPTION_NEW      0
+#define OPTION_CONTINUE 1
+#define OPTION_OPTIONS  2
+#define OPTION_EXIT     3
 
 struct stage_menu {
-    struct stage stage;
-    int          test;
+    struct stage  stage;
+    WINDOW       *window;
+    int           current_option;
 };
 
 void stage_menu_init(struct stage_menu *this);

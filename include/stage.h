@@ -3,8 +3,10 @@
 
 #include "stdlib.h"
 #include "utils.h"
+#include "engine.h"
 
 struct stage {
+    struct engine *engine;
     void (*update)(struct stage *);
     void (*render)(struct stage *);
 };

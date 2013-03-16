@@ -2,9 +2,11 @@
 #define ENGINE_H
 
 #include "stage.h"
+#include "stdbool.h"
 
 struct engine {
     struct stage *stage;
+    bool          running;
 };
 
 void engine_init(struct engine *this);
