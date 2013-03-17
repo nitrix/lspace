@@ -121,6 +121,8 @@ void stage_menu_update(struct stage *this)
             }
             break;
         /* -------------------------------- */
+        default:
+            old = -1;
     }
     
     if (old == local->current_option && ch != '\r') {
