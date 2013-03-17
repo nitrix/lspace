@@ -19,4 +19,4 @@
     Most options will have a letter in bold. Pressing the letter once will
     move to that option. Pressing the same letter twice will simulate a
     press on the Enter key (therefore, chosing that option). Of course,
-    you can always use the old ways and hit Enter yourself.
+    you can always chose to hit Enter yourself.
