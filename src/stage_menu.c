@@ -26,7 +26,7 @@ void stage_menu_update(struct stage *this)
 {
     /* Initializing variables */
     struct stage_menu *local = (struct stage_menu *)this;
-    int logo_y, logo_x, i, s;
+    int logo_x, i, s;
     char *options[4];
     
     /* Prepare the labels for the menu */
@@ -36,9 +36,8 @@ void stage_menu_update(struct stage *this)
     options[3] = "Quit";
 
     /* Detect the size of the shell running our game */
-    getmaxyx(local->window, logo_y, logo_x);
-    logo_x = (logo_x/ 2) - (65 / 2);
-    UNUSED(logo_y);
+    logo_x = getmaxx(local->window);
+    logo_x = (logo_x/ 2) - (65 / 2); /* magic number */
     
     /* Draw the logo */
     mvwprintw(local->window,  1,logo_x, "             ,-,--.     _ __    ,---.       _,.----.       ,----. ");
@@ -51,7 +50,7 @@ void stage_menu_update(struct stage *this)
     mvwprintw(local->window,  8,logo_x, "/==/ - , ,|==\\ - , /==/ - |  \\==\\ _.\\=\\.-'`-.`.___.-' /==/ ,     /");
     mvwprintw(local->window,  9,logo_x, "`--`-----' `--`---'`--`---'   `--`                    `--`-----`` ");
 
-    mvwprintw(local->window, 11,logo_x+8, "Presented by Alex Belanger and GitHub contributors.");
+    mvwprintw(local->window, 11,logo_x+20, "Presented by Alex Belanger.");
 
     mvwprintw(local->window, 13,logo_x+25, "LONESOME SPACE,");
     mvwprintw(local->window, 14,logo_x+23, "version 0.0.1 alpha");
@@ -66,14 +65,24 @@ void stage_menu_update(struct stage *this)
             mvwaddch(local->window, 18+(i*2),logo_x-2, ' ');
         }
         mvwprintw(local->window, 18+(i*2),logo_x, " %s ", options[i]);
+        attron(A_BOLD);
+        mvwprintw(local->window, 18+(i*2),logo_x+1, "%c", options[i][0]);
+        attroff(A_BOLD);
         if (i == local->current_option) {
             attroff(A_STANDOUT);
         }
     }
 
     /* Wait for inputs and process them as they arrive */
-    int ch = wgetch(local->window);
+    int ch  = wgetch(local->window);
+    int old = local->current_option;
+    handle_inputs:
     switch (ch) {
+        /* -------------------------------- */
+        case 'n': local->current_option = OPTION_NEW;      break;
+        case 'c': local->current_option = OPTION_CONTINUE; break;
+        case 's': local->current_option = OPTION_SETTINGS; break;
+        case 'q': local->current_option = OPTION_QUIT;     break;
         /* -------------------------------- */
         case KEY_RESIZE:
             wclear(local->window);
@@ -93,7 +102,7 @@ void stage_menu_update(struct stage *this)
             if (local->current_option) {
                 local->current_option--;
             } else {
-                local->current_option = OPTION_EXIT;
+                local->current_option = OPTION_QUIT;
             }
             break;
         /* -------------------------------- */
@@ -102,16 +111,21 @@ void stage_menu_update(struct stage *this)
                 /* ----------------- */
                 case OPTION_NEW:
                 case OPTION_CONTINUE:
-                case OPTION_OPTIONS:
+                case OPTION_SETTINGS:
                     break;
                 /* ----------------- */
-                case OPTION_EXIT:
+                case OPTION_QUIT:
                     engine_stop(this->engine);
                     break;
                 /* ----------------- */
             }
             break;
         /* -------------------------------- */
+    }
+    
+    if (old == local->current_option && ch != '\r') {
+        ch = '\r';
+        goto handle_inputs;
     }
 }
 
