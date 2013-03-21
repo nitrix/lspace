@@ -50,23 +50,21 @@ void stage_menu_update(struct stage *this)
     mvwprintw(local->window,  8,logo_x, "/==/ - , ,|==\\ - , /==/ - |  \\==\\ _.\\=\\.-'`-.`.___.-' /==/ ,     /");
     mvwprintw(local->window,  9,logo_x, "`--`-----' `--`---'`--`---'   `--`                    `--`-----`` ");
 
-    mvwprintw(local->window, 11,logo_x+20, "Presented by Alex Belanger.");
-
-    mvwprintw(local->window, 13,logo_x+25, "LONESOME SPACE,");
-    mvwprintw(local->window, 14,logo_x+23, "version 0.0.1 alpha");
+    mvwprintw(local->window, 11,logo_x+25, "LONESOME SPACE,");
+    mvwprintw(local->window, 13,logo_x+23, "version 0.0.1 alpha");
 
     /* Show the menu options based on current selection */
     s = sizeof(options) / sizeof(options[0]);
     for(i=0; i<s; i++) {
         if (i == local->current_option) {
-            mvwaddch(local->window, 18+(i*2),logo_x-2, ACS_DIAMOND);
+            mvwaddch(local->window, 16+(i*2),logo_x-2, ACS_DIAMOND);
             attron(A_STANDOUT);
         } else {
-            mvwaddch(local->window, 18+(i*2),logo_x-2, ' ');
+            mvwaddch(local->window, 16+(i*2),logo_x-2, ' ');
         }
-        mvwprintw(local->window, 18+(i*2),logo_x, " %s ", options[i]);
+        mvwprintw(local->window, 16+(i*2),logo_x, " %s ", options[i]);
         attron(A_BOLD);
-        mvwprintw(local->window, 18+(i*2),logo_x+1, "%c", options[i][0]);
+        mvwprintw(local->window, 16+(i*2),logo_x+1, "%c", options[i][0]);
         attroff(A_BOLD);
         if (i == local->current_option) {
             attroff(A_STANDOUT);
