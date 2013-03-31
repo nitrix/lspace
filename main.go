@@ -1,4 +1,5 @@
 package lspace
+
 import "fmt"
 import "code.google.com/p/goncurses"
 
