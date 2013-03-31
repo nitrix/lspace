@@ -7,8 +7,9 @@ void stage_menu_init(struct stage_menu *this)
     this->stage.render = stage_menu_render;
 
     /* Initialize member variables */
-    this->current_option = 0;
-    this->window = initscr();
+    this->current_option  = 0;
+    this->window          = initscr();
+    this->center_x        = 0;
 
     nonl(); /* no line break */
     noecho(); /* no output */
@@ -26,7 +27,7 @@ void stage_menu_update(struct stage *this)
 {
     /* Initializing variables */
     struct stage_menu *local = (struct stage_menu *)this;
-    int logo_x, i, s;
+    int i, s;
     char *options[4];
     
     /* Prepare the labels for the menu */
@@ -34,37 +35,26 @@ void stage_menu_update(struct stage *this)
     options[1] = "Continue game";
     options[2] = "Settings";
     options[3] = "Quit";
-
-    /* Detect the size of the shell running our game */
-    logo_x = getmaxx(local->window);
-    logo_x = (logo_x/ 2) - (65 / 2); /* magic number */
     
-    /* Draw the logo */
-    mvwprintw(local->window,  1,logo_x, "             ,-,--.     _ __    ,---.       _,.----.       ,----. ");
-    mvwprintw(local->window,  2,logo_x, "   _.-.    ,-.'-  _\\ .-`.' ,`..--.'  \\    .' .' -   \\   ,-.--` , \\");
-    mvwprintw(local->window,  3,logo_x, " .-,.'|   /==/_ ,_.'/==/, -   \\==\\-/\\ \\  /==/  ,  ,-'  |==|-  _.-`");
-    mvwprintw(local->window,  4,logo_x, "|==|, |   \\==\\  \\  |==| _ .=. /==/-|_\\ | |==|-   |  .  |==|   `.-.");
-    mvwprintw(local->window,  5,logo_x, "|==|- |    \\==\\ -\\ |==| , '=',\\==\\,   - \\|==|_   `-' \\/==/_ ,    /");
-    mvwprintw(local->window,  6,logo_x, "|==|, |    _\\==\\ ,\\|==|-  '..'/==/ -   ,||==|   _  , ||==|    .-' ");
-    mvwprintw(local->window,  7,logo_x, "|==|- `-._/==/\\/ _ |==|,  |  /==/-  /\\ - \\==\\.       /|==|_  ,`-._");
-    mvwprintw(local->window,  8,logo_x, "/==/ - , ,|==\\ - , /==/ - |  \\==\\ _.\\=\\.-'`-.`.___.-' /==/ ,     /");
-    mvwprintw(local->window,  9,logo_x, "`--`-----' `--`---'`--`---'   `--`                    `--`-----`` ");
+    /* Find center */
+    stage_menu_detect_size(local);
 
-    mvwprintw(local->window, 11,logo_x+25, "LONESOME SPACE,");
-    mvwprintw(local->window, 13,logo_x+23, "version 0.0.1 alpha");
+    /* Draw the logo */
+    stage_menu_draw_logo(local);
 
     /* Show the menu options based on current selection */
     s = sizeof(options) / sizeof(options[0]);
+    
     for(i=0; i<s; i++) {
         if (i == local->current_option) {
-            mvwaddch(local->window, 16+(i*2),logo_x-2, ACS_DIAMOND);
+            mvwaddch(local->window, 16+(i*2),local->center_x-2, ACS_DIAMOND);
             attron(A_STANDOUT);
         } else {
-            mvwaddch(local->window, 16+(i*2),logo_x-2, ' ');
+            mvwaddch(local->window, 16+(i*2),local->center_x-2, ' ');
         }
-        mvwprintw(local->window, 16+(i*2),logo_x, " %s ", options[i]);
+        mvwprintw(local->window, 16+(i*2),local->center_x, " %s ", options[i]);
         attron(A_BOLD);
-        mvwprintw(local->window, 16+(i*2),logo_x+1, "%c", options[i][0]);
+        mvwprintw(local->window, 16+(i*2),local->center_x+1, "%c", options[i][0]);
         attroff(A_BOLD);
         if (i == local->current_option) {
             attroff(A_STANDOUT);
@@ -108,6 +98,7 @@ void stage_menu_update(struct stage *this)
             switch (local->current_option) {
                 /* ----------------- */
                 case OPTION_NEW:
+                    break;
                 case OPTION_CONTINUE:
                 case OPTION_SETTINGS:
                     break;
@@ -127,6 +118,30 @@ void stage_menu_update(struct stage *this)
         ch = '\r';
         goto handle_inputs;
     }
+}
+
+void stage_menu_draw_logo(struct stage_menu *local)
+{
+    /* Draw the logo */
+    mvwprintw(local->window,  1,local->center_x, "             ,-,--.     _ __    ,---.       _,.----.       ,----. ");
+    mvwprintw(local->window,  2,local->center_x, "   _.-.    ,-.'-  _\\ .-`.' ,`..--.'  \\    .' .' -   \\   ,-.--` , \\");
+    mvwprintw(local->window,  3,local->center_x, " .-,.'|   /==/_ ,_.'/==/, -   \\==\\-/\\ \\  /==/  ,  ,-'  |==|-  _.-`");
+    mvwprintw(local->window,  4,local->center_x, "|==|, |   \\==\\  \\  |==| _ .=. /==/-|_\\ | |==|-   |  .  |==|   `.-.");
+    mvwprintw(local->window,  5,local->center_x, "|==|- |    \\==\\ -\\ |==| , '=',\\==\\,   - \\|==|_   `-' \\/==/_ ,    /");
+    mvwprintw(local->window,  6,local->center_x, "|==|, |    _\\==\\ ,\\|==|-  '..'/==/ -   ,||==|   _  , ||==|    .-' ");
+    mvwprintw(local->window,  7,local->center_x, "|==|- `-._/==/\\/ _ |==|,  |  /==/-  /\\ - \\==\\.       /|==|_  ,`-._");
+    mvwprintw(local->window,  8,local->center_x, "/==/ - , ,|==\\ - , /==/ - |  \\==\\ _.\\=\\.-'`-.`.___.-' /==/ ,     /");
+    mvwprintw(local->window,  9,local->center_x, "`--`-----' `--`---'`--`---'   `--`                    `--`-----`` ");
+
+    mvwprintw(local->window, 11,local->center_x+25, "LONESOME SPACE,");
+    mvwprintw(local->window, 13,local->center_x+23, "version 0.0.1 alpha");
+}
+
+void stage_menu_detect_size(struct stage_menu* local)
+{
+    /* Detect the size of the shell running our game */
+    local->center_x = getmaxx(local->window);
+    local->center_x = (local->center_x/ 2) - (65 / 2); /* magic number */
 }
 
 void stage_menu_render(struct stage *this)
