@@ -1,6 +1,5 @@
-package main
+package lspace
 
-import "code.google.com/p/goncurses"
 import "fmt"
 
 func main() {
