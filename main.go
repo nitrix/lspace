@@ -1,4 +1,4 @@
-package lspace
+package main
 
 import "fmt"
 
