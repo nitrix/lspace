@@ -1,4 +1,4 @@
-package lspace
+package main
 
 import "code.google.com/p/goncurses"
 import "fmt"
