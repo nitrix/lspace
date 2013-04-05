@@ -1,6 +1,8 @@
 package main
 
 func main() {
-    var engine Engine
-    engine.Run()
+	engine := Engine{
+		stage: &StageMenu{},
+	}
+	engine.Run()
 }

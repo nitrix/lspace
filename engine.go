@@ -1,27 +1,23 @@
 package main
 
-import "fmt"
-
 type Engine struct {
-    //player
-    //stage
-    //inputs
-    //renderer int
-    //stage
-    running bool
+	//player
+	//stage
+	//inputs
+	//renderer
+	running bool
+	stage   Stage
 }
 
 func (e *Engine) Run() {
-    e.running = true
-
-    //Main program loop
-    for e.running {
-        fmt.Println("seems to work")
-        //stage.Update()
-        //stage.Render()
-    }
+	e.running = true
+	//Main program loop
+	for e.running {
+		e.stage.Update(e)
+		e.stage.Render(e)
+	}
 }
 
 func (e *Engine) Stop() {
-    e.running = false
+	e.running = false
 }
