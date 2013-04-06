@@ -2,7 +2,7 @@ package main
 
 func main() {
 	engine := Engine{
-		stage: &StageMenu{},
+		Stage: &StageMenu{},
 	}
 	engine.Run()
 }
