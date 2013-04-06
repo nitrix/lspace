@@ -1,6 +1,7 @@
 package main
 
 type Stage interface {
-	Update(e *Engine)
-	Render(e *Engine)
+	Update()
+	Render()
+	HandleEvents(e *Engine)
 }
