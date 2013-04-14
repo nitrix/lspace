@@ -43,21 +43,21 @@ func (stage *StageMenu) HandleEvents(e *Engine) {
 
 func (stage StageMenu) DrawLogo() {
 	width, height := termbox.Size()
-        print_tb(width/2-33, 1, termbox.ColorWhite, termbox.ColorDefault, "             ,-,--.     _ __    ,---.       _,.----.       ,----. \n")
-        print_tb(width/2-33, 2, termbox.ColorWhite, termbox.ColorDefault, "   _.-.    ,-.'-  _\\ .-`.' ,`..--.'  \\    .' .' -   \\   ,-.--` , \\\n")
-        print_tb(width/2-33, 3, termbox.ColorWhite, termbox.ColorDefault, " .-,.'|   /==/_ ,_.'/==/, -   \\==\\-/\\ \\  /==/  ,  ,-'  |==|-  _.-`\n")
-        print_tb(width/2-33, 4, termbox.ColorWhite, termbox.ColorDefault, "|==|, |   \\==\\  \\  |==| _ .=. /==/-|_\\ | |==|-   |  .  |==|   `.-.\n")
-        print_tb(width/2-33, 5, termbox.ColorWhite, termbox.ColorDefault, "|==|- |    \\==\\ -\\ |==| , '=',\\==\\,   - \\|==|_   `-' \\/==/_ ,    /\n")
-        print_tb(width/2-33, 6, termbox.ColorWhite, termbox.ColorDefault, "|==|, |    _\\==\\ ,\\|==|-  '..'/==/ -   ,||==|   _  , ||==|    .-' \n")
-        print_tb(width/2-33, 7, termbox.ColorWhite, termbox.ColorDefault, "|==|- `-._/==/\\/ _ |==|,  |  /==/-  /\\ - \\==\\.       /|==|_  ,`-._\n")
-        print_tb(width/2-33, 8, termbox.ColorWhite, termbox.ColorDefault, "/==/ - , ,|==\\ - , /==/ - |  \\==\\ _.\\=\\.-'`-.`.___.-' /==/ ,     /\n")
-        print_tb(width/2-33, 9, termbox.ColorWhite, termbox.ColorDefault, "`--`-----' `--`---'`--`---'   `--`                    `--`-----`` \n")
+        print_tb(width/2-33, 1, termbox.ColorDefault, termbox.ColorDefault, "             ,-,--.     _ __    ,---.       _,.----.       ,----. \n")
+        print_tb(width/2-33, 2, termbox.ColorDefault, termbox.ColorDefault, "   _.-.    ,-.'-  _\\ .-`.' ,`..--.'  \\    .' .' -   \\   ,-.--` , \\\n")
+        print_tb(width/2-33, 3, termbox.ColorDefault, termbox.ColorDefault, " .-,.'|   /==/_ ,_.'/==/, -   \\==\\-/\\ \\  /==/  ,  ,-'  |==|-  _.-`\n")
+        print_tb(width/2-33, 4, termbox.ColorDefault, termbox.ColorDefault, "|==|, |   \\==\\  \\  |==| _ .=. /==/-|_\\ | |==|-   |  .  |==|   `.-.\n")
+        print_tb(width/2-33, 5, termbox.ColorDefault, termbox.ColorDefault, "|==|- |    \\==\\ -\\ |==| , '=',\\==\\,   - \\|==|_   `-' \\/==/_ ,    /\n")
+        print_tb(width/2-33, 6, termbox.ColorDefault, termbox.ColorDefault, "|==|, |    _\\==\\ ,\\|==|-  '..'/==/ -   ,||==|   _  , ||==|    .-' \n")
+        print_tb(width/2-33, 7, termbox.ColorDefault, termbox.ColorDefault, "|==|- `-._/==/\\/ _ |==|,  |  /==/-  /\\ - \\==\\.       /|==|_  ,`-._\n")
+        print_tb(width/2-33, 8, termbox.ColorDefault, termbox.ColorDefault, "/==/ - , ,|==\\ - , /==/ - |  \\==\\ _.\\=\\.-'`-.`.___.-' /==/ ,     /\n")
+        print_tb(width/2-33, 9, termbox.ColorDefault, termbox.ColorDefault, "`--`-----' `--`---'`--`---'   `--`                    `--`-----`` \n")
 
-        print_tb(width/2-8, 11, termbox.ColorWhite, termbox.ColorDefault, "LONESPACE SPACE\n")
-        print_tb(width/2-26, 12, termbox.ColorWhite, termbox.ColorDefault, "Presented by Alex Belanger <i.caught.air@gmail.com>\n")
+        print_tb(width/2-8, 11, termbox.ColorDefault, termbox.ColorDefault, "LONESPACE SPACE\n")
+        print_tb(width/2-26, 12, termbox.ColorDefault, termbox.ColorDefault, "Presented by Alex Belanger <i.caught.air@gmail.com>\n")
        
 	//Footer 
-	print_tb(width-60, height-1, termbox.ColorWhite, termbox.ColorDefault, "Visit lonesomespace.com for more information on the project")
+	print_tb(width-60, height-1, termbox.ColorDefault, termbox.ColorDefault, "Visit lonesomespace.com for more information on the project")
 }
 
 func (stage *StageMenu) DrawMenu() {
@@ -70,11 +70,11 @@ func (stage *StageMenu) DrawMenu() {
 
 	width,_ := termbox.Size()
 	for key,val := range options {
-		termbox.SetCell(width/2-31, 15+key*2, 0x2022, termbox.ColorWhite, termbox.ColorDefault)
+		termbox.SetCell(width/2-31, 15+key*2, 0x2022, termbox.ColorDefault, termbox.ColorDefault)
 		if key == stage.CurrentSelection {
-			printf_tb(width/2-29, 15+key*2, termbox.ColorBlack, termbox.ColorWhite, " %s ", val)
+			printf_tb(width/2-29, 15+key*2, termbox.ColorDefault | termbox.AttrReverse, termbox.ColorDefault, " %s ", val)
 		} else {
-			print_tb(width/2-28, 15+key*2, termbox.ColorWhite, termbox.ColorDefault, val)
+			print_tb(width/2-28, 15+key*2, termbox.ColorDefault, termbox.ColorDefault, val)
 		}
 	}
 }
