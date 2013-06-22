@@ -1,7 +1,10 @@
 #include "main.h"
 
 int main(void) {
-    printf("Lonesome Space\n");
-
-    return EXIT_SUCCESS;
+	if (engine_init()) {
+		if (engine_run()) {
+			return EXIT_SUCCESS;
+		}
+	}
+	return EXIT_FAILURE;
 }

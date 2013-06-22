@@ -28,6 +28,7 @@ INCLUDE_DIRECTORIES (
 ADD_EXECUTABLE(
     lspace
     src/main.c
+    src/engine.c
 )
 
 TARGET_LINK_LIBRARIES(
