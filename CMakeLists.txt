@@ -29,8 +29,10 @@ ADD_EXECUTABLE(
     lspace
     src/main.c
     src/engine.c
+    src/renderer.c
 )
 
 TARGET_LINK_LIBRARIES(
+    lspace
     ncurses
 )

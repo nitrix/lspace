@@ -1,8 +1,10 @@
 #include "main.h"
 
 int main(void) {
-	if (engine_init()) {
-		if (engine_run()) {
+	struct engine engine;
+
+	if (engine_init(&engine)) {
+		if (engine_run(&engine)) {
 			return EXIT_SUCCESS;
 		}
 	}
