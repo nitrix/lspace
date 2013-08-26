@@ -4,3 +4,15 @@ go:
     - 1.0
     - 1.1
     - tip
+
+notifications:
+    irc:
+        channels:
+            - "irc.freenode.org#lspace"
+        template:
+            - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+            - "Build details: %{build_url}"
+        on_success: change # default: always [always|never|change]
+        on_failure: change # default: always [always|never|change]
+        use_notice: true
+        skip_join: true
