@@ -3,6 +3,7 @@ language: go
 go:
     - 1.0
     - 1.1
+    - 1.1.2
     - tip
 
 notifications:
@@ -14,4 +15,3 @@ notifications:
         on_success: always # default: always [always|never|change]
         on_failure: always # default: always [always|never|change]
         use_notice: true
-        skip_join: true
