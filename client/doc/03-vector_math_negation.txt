@@ -1,0 +1,31 @@
+== Vector negation ==
+
+Vector Negation and Subtraction. You can negate a vector. This reverses its direction:
+
+(Figure 7)
+                    
+               |           
+          /    |     ^
+         /     |    /
+        /      |   /
+       /  -A   |  /   A
+      /        | /
+     v         |/
+---------------|---------------
+               |
+               |
+               |
+               |
+               |
+               |
+               |
+
+Numerically, this means negating each component of the vector.
+
+Equation 2. Vector Negation
+
+(Figure 8)
+
+  ->       |A.x|   |-A.x|
+- A   =  - |A.y| = |-A.y|
+           |A.z|   |-A.z|
