@@ -1,0 +1,53 @@
+== Vector addition ==
+
+You can take two vectors and add them together. Graphically, this works as follows:
+
+(Figure 4)
+             ^ |
+       (A+B) | |     ^
+             | |    /
+             | |   /
+        ^\.  | |  /  (A)
+      (B)  \_. | /
+              \|/
+---------------|---------------
+               |
+               |
+               |
+               |
+               |
+               |
+
+Remember that vector directions can be shifted around without changing their values.
+So if you put two vectors head to tail, the vector sum is simply the direction from the tail of the first vector to the head of the last.
+
+(Figure 5)
+             ^\. (B)
+             | |\_.
+       (A+B) | |   \ ^
+             | |    /
+             | |   /
+             | |  /  (A)
+             . | /
+              \|/
+---------------|---------------
+               |
+               |
+               |
+               |
+               |
+               |
+
+Numerically, the sum of two vectors is just the sum of the corresponding components:
+
+Equation 1. Vector Addition with Numbers
+
+(Figure 6)
+
+->   ->   |A.x|   |B.x|   |A.x + B.x|
+A  + B  = |A.y| + |B.y| = |A.y + B.y|
+          |A.z|   |B.z|   |A.z + B.z|
+
+Any operation where you perform an operation on each component of a vector is called a component-wise operation.
+Vector addition is component-wise.
+Any component-wise operation on two vectors requires that the two vectors have the same dimensionality.
