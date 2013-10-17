@@ -23,4 +23,5 @@ TARGET_LINK_LIBRARIES(
     SDL2
     SDL2_image
     GL
+    GLU
 )
