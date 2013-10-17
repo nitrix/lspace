@@ -24,6 +24,15 @@ void renderer_init()
         exit(EXIT_FAILURE);
     }
 
+    SDL_GLContext context = SDL_GL_CreateContext(gWindow);
+    const char *version = glGetString(GL_VERSION);
+    if (!version) {
+        fprintf(stderr, "Unable to get OpenGL version\n");
+        exit(EXIT_FAILURE);
+    } else {
+        printf("OpenGL version: %s\n", version);
+    }
+    
     /* We could enforce a logical size and have the system emulate it.
      *
      * SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"); // make the scaled rendering look smoother.
@@ -88,6 +97,13 @@ void renderer_render()
     dest.h = 380;
     SDL_RenderCopy(gRenderer, gTileset, &src, &dest);
     */
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(0.1, 0.2, 0.3);
+    glVertex3f(0, 0, 0);
+    glVertex3f(1, 0, 0);
+    glVertex3f(0, 1, 0);
+    glEnd();
 
     SDL_RenderPresent(gRenderer);
 }
