@@ -6,7 +6,6 @@
 #include <unistd.h> //sleep
 
 #include "SDL2/SDL.h"
-#include "camera.h"
 
 int  main(int argc, char *argv[]);
 void terminate();

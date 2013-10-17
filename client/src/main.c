@@ -2,10 +2,6 @@
 
 int main(int argc, char *argv[])
 {
-    Camera camera;
-    camera.x = 0;
-    camera.y = 0;
-
     renderer_init();
     
     while (1) {
@@ -18,29 +14,17 @@ int main(int argc, char *argv[])
                         case SDLK_ESCAPE:
                             terminate();
                             break;
-                        case SDLK_w:
-                            camera.x--;
-                            break;
-                        case SDLK_a:
-                            camera.y--;
-                            break;
-                        case SDLK_s:
-                            camera.x++;
-                            break;
-                        case SDLK_d:
-                            camera.y++;
-                            break;
                     }
                     break;
             }
-            renderer_render(&camera);
         } else {
-            // do some other stuff here -- draw your app, etc.
-            renderer_render(&camera);
+            // do some other stuff here
+            renderer_clear();
+            renderer_render();
         }
     }
 
-    //terminate(); //Good ending
+    terminate(); //Good ending
     return EXIT_FAILURE; //Bad ending
 } 
 

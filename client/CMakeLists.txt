@@ -21,7 +21,5 @@ TARGET_LINK_LIBRARIES(
     #common
     #${SDL2_LIBRARIES}
     SDL2
-    SDL2_image
     GL
-    GLU
 )
