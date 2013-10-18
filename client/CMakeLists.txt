@@ -3,6 +3,8 @@ PROJECT(client)
 
 INCLUDE_DIRECTORIES(
     include
+    lib/SDL/include
+    lib/SDL_image
     #common
 )
 
