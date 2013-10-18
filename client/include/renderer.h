@@ -2,10 +2,10 @@
 #define RENDERER_H
 
 #include <stdlib.h>
+#include <stdio.h>
 
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_opengl.h"
-#include "SDL2/SDL_image.h"
+#include "SDL.h"
+#include "SDL_image.h"
 
 void renderer_init();
 void renderer_fini();

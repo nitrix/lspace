@@ -2,6 +2,7 @@
 
 SDL_Window   *gWindow;
 SDL_Renderer *gRenderer;
+SDL_Texture  *gTexture;
 
 void renderer_init()
 {
@@ -11,10 +12,6 @@ void renderer_init()
         exit(EXIT_FAILURE);
     }
     
-    // Force opengl version 3.0
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,0);
-    
     // Create a window and renderer for the game
     SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &gWindow, &gRenderer);
 
@@ -23,16 +20,6 @@ void renderer_init()
         exit(EXIT_FAILURE);
     }
 
-    // Get the OpenGL context
-    SDL_GLContext context = SDL_GL_CreateContext(gWindow);
-    const char *version = glGetString(GL_VERSION);
-    if (!version) {
-        fprintf(stderr, "Unable to get OpenGL version\n");
-        exit(EXIT_FAILURE);
-    } else {
-        printf("OpenGL version: %s\n", version);
-    }
-    
     /* We could enforce a logical size and have the system emulate it.
      *
      * SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"); // make the scaled rendering look smoother.
@@ -41,12 +28,23 @@ void renderer_init()
      * Note that 640x480 and 1920x1200 aren't the same aspect ratio: SDL takes care of that, too,
      * scaling as much as possible and letterboxing the difference.
      */
+
+    // Load a test image
+    SDL_Surface *catgirl = IMG_Load("cat_girl_by_Amuria.jpg");
+
+    if(!catgirl) {
+        fprintf(stderr, "Unable to load image `cat_girl_by_Amuria.jpg`: %s\n", IMG_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    gTexture = SDL_CreateTextureFromSurface(gRenderer, catgirl);
+    SDL_FreeSurface(catgirl);
 }
 
 
 void renderer_clear()
 {
-    // Clear the screen
+    // Clear the SDL screen
     SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
     SDL_RenderClear(gRenderer);
 }
@@ -54,20 +52,18 @@ void renderer_clear()
 void renderer_render()
 {
     //TODO: draw elements here
-    /*
     SDL_Rect src, dest;
     src.x  = 0;
     src.y  = 0;
-    src.w  = 38;
-    src.h  = 38;
+    src.w  = 500;
+    src.h  = 800;
     
     dest.x = 0;
     dest.y = 0;
-    dest.w = 380;
-    dest.h = 380;
-    SDL_RenderCopy(gRenderer, gTileset, &src, &dest);
-    */
+    dest.w = 500;
+    dest.h = 800;
 
+    SDL_RenderCopy(gRenderer, gTexture, &src, &dest);
     SDL_RenderPresent(gRenderer);
 }
 

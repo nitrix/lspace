@@ -1,13 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(client)
 
-#INCLUDE(FindPkgConfig)
-#PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-
 INCLUDE_DIRECTORIES(
     include
     #common
-    #${SDL2_INCLUDE_DIRS}
 )
 
 ADD_EXECUTABLE(
@@ -19,7 +15,6 @@ ADD_EXECUTABLE(
 TARGET_LINK_LIBRARIES(
     client
     #common
-    #${SDL2_LIBRARIES}
     SDL2
-    GL
+    SDL2_image
 )

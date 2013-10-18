@@ -1,0 +1,6 @@
+[submodule "client/lib/SDL"]
+	path = client/lib/SDL
+	url = https://github.com/kphillisjr/SDL2.git
+[submodule "client/lib/SDL_image"]
+	path = client/lib/SDL_image
+	url = https://github.com/davidsiaw/SDL2_image.git
