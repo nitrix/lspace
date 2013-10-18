@@ -12,4 +12,5 @@ client/android/libs/
 client/android/.settings/
 client/android/.classpath
 client/android/.project
+client/android/default.properties
 client/android/project.properties
