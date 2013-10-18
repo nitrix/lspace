@@ -1,2 +1,5 @@
 .idea/
 build/
+client/android/bin
+client/android/obj
+client/android/libs
