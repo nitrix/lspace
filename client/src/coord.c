@@ -26,7 +26,7 @@ void coord_apply(COORD *coord, TYPE_SIZE_CHUNK off_top, TYPE_SIZE_CHUNK off_righ
         pos_x -= SIZE_CHUNK;
         coord->world_position_chunk_x++;
     }
-    else if (pos_x < -(SIZE_CHUNK - 1)) {
+    else if (pos_x < 0) {
         /* we reached chunk boundary to the left. add 255 from calculated pos for the new chunk position,
          * and decrement the world position by one chunk to the left. */
         pos_x += SIZE_CHUNK;
@@ -44,7 +44,7 @@ void coord_apply(COORD *coord, TYPE_SIZE_CHUNK off_top, TYPE_SIZE_CHUNK off_righ
         pos_y -= SIZE_CHUNK;
         coord->world_position_chunk_y++;
     }
-    else if (pos_y < -(SIZE_CHUNK - 1)) {
+    else if (pos_y < 0) {
         /* we reached chunk boundary to the left. add 255 from calculated pos for the new chunk position,
          * and decrement the world position by one chunk to the left. */
         pos_y += SIZE_CHUNK;
