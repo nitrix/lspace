@@ -14,4 +14,15 @@ GFX gfx_find(TILE tile, unsigned int step) {
         gfx.tileset_y = 5;
         return gfx;
     }
+
+    /* ahah, the magic cell */
+    /*
+    if (tile == TILE_DOOR && step == 0) {
+        gfx.tileset_x = 0;
+        gfx.tileset_y = 0;
+        return gfx;
+    }
+    */
+
+    return gfx;
 }

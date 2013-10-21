@@ -1,10 +1,12 @@
 #include "world.h"
 
 CELL *gTestCell;
+CELL *gMagicCell;
 
 void world_init()
 {
-    gTestCell = cell_create(TILE_FLOOR, LAYER_GROUND);
+    gTestCell  = cell_create(TILE_FLOOR, LAYER_GROUND);
+    gMagicCell = cell_create(TILE_DOOR, LAYER_OBJECTS);
 }
 
 void world_fini()
@@ -25,6 +27,13 @@ CELL *world_get_cell(COORD *coord)
 {
     /* position->x */
     /* position->y */
+
+    /* hack */
+    if (coord->world_position_chunk_x == 0 && coord->world_position_chunk_y == 0) {
+        if (coord->chunk_position_cell_x == 0 && coord->chunk_position_cell_y == 0) {
+            return gMagicCell;
+        }
+    }
 
     return gTestCell;
 }
