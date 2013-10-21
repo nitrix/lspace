@@ -24,20 +24,6 @@
  *  _clear() clears the screen (usually called in-between frames) to prevent
  *  visual glitchs that would happen with transparent objects moved or removed.
  *
- *******************************************************************************
- * 
- * TODO:
- *
- *  - Implement support for layers.
- *  - Implement support for gfx resource management, or consider a new module.
- *      Currently loading the tileset ourself since it isn't very complex yet.
- *      Ideally, would be nice to have the tiles separate, and merge them into
- *      one huge texture. The git repository will appreciated it.
- *  - Proper resolution on android devices; probably using a combination of:
- *      SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
- *      SDL_RenderSetLogicalSize(renderer, 640, 480);
- *  - I'm told the texture loaded could be faster if it was a be a power of two.
- *
  ******************************************************************************/
 
 #include <stdlib.h>
