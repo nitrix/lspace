@@ -59,7 +59,8 @@ void renderer_render(CAMERA *camera)
     COORD *camera_coord, coord;
     CELL  *cell;
     SDL_Rect src, dest;
-    unsigned int i,j;
+    TYPE_SIZE_CHUNK i,j; /* nested loops x,y cells */
+    TYPE_SIZE_WORLD k,l; /* nested loops x,y chunks */
     unsigned int screen_width_gfx, screen_height_gfx;
     unsigned int screen_width_chunk, screen_height_chunk;
 
@@ -73,9 +74,7 @@ void renderer_render(CAMERA *camera)
     screen_width_chunk  = screen_width_gfx / SIZE_CHUNK  + 1; 
     screen_height_chunk = screen_height_gfx / SIZE_CHUNK + 1;
 
-    /* copy the camery coords locally to work with it */
     camera_coord = camera_get_coord(camera);
-    coord = *camera_coord;
     
     printf("Gfx: %d, %d\n", screen_width_gfx, screen_height_gfx);
     printf("Chunk: %d, %d\n", screen_width_chunk, screen_height_chunk);
@@ -83,19 +82,43 @@ void renderer_render(CAMERA *camera)
     printf("Chunk coord: %d, %d\n", camera_coord->chunk_position_cell_x, camera_coord->chunk_position_cell_y);
     printf("------\n");
 
-        
-    /* the rendering - only one chunk */
-    for (i=camera_coord->chunk_position_cell_x; i<SIZE_CHUNK; i++) {
-        dest.x = ((i - camera_coord->chunk_position_cell_x) * GFX_WIDTH_PX);
-        for (j=camera_coord->chunk_position_cell_y; j<SIZE_CHUNK; j++) {
-            dest.y = ((j - camera_coord->chunk_position_cell_y) * GFX_HEIGHT_PX);
-           
-            coord_apply(&coord, 0, i, j, 0);
-            cell  = world_get_cell(&coord);
-            src.x = GFX_WIDTH_PX  * cell->gfx.tileset_x; 
-            src.y = GFX_HEIGHT_PX * cell->gfx.tileset_y;
-            
-            SDL_RenderCopy(gRenderer, gTileset, &src, &dest);
+    /* the rendering of all chunks */
+    for (k=0; k < screen_height_chunk; k++) {
+        for (l=0; l < screen_width_chunk; l++) {
+            /* the rendering of all cells */
+            for (i=0; i<SIZE_CHUNK; i++) {
+                dest.x = (i * GFX_WIDTH_PX) + (l * SIZE_CHUNK * GFX_WIDTH_PX);
+                for (j=0; j<SIZE_CHUNK; j++) {
+                    dest.y = (j * GFX_HEIGHT_PX) + (k * SIZE_CHUNK * GFX_HEIGHT_PX);
+                    
+                    coord = *camera_coord;
+                    coord_apply(&coord, 0, i + (l * SIZE_CHUNK), j + (k * SIZE_CHUNK), 0);
+                    cell  = world_get_cell(&coord);
+                    src.x = GFX_WIDTH_PX  * cell->gfx.tileset_x; 
+                    src.y = GFX_HEIGHT_PX * cell->gfx.tileset_y;
+                    
+                    SDL_RenderCopy(gRenderer, gTileset, &src, &dest);
+                }
+            }
+            /*
+            for (i=camera_coord->chunk_position_cell_x; i<SIZE_CHUNK; i++) {
+                dest.x = ((i - camera_coord->chunk_position_cell_x) * GFX_WIDTH_PX) + (l * SIZE_CHUNK * GFX_WIDTH_PX);
+                for (j=camera_coord->chunk_position_cell_y; j<SIZE_CHUNK; j++) {
+                    dest.y = (j * GFX_HEIGHT_PX) + (k * SIZE_CHUNK * GFX_HEIGHT_PX);
+                    if (k == 0) {
+                        dest.y -= camera_coord->chunk_position_cell_y * GFX_HEIGHT_PX;
+                    }
+                   
+                    coord = *camera_coord;
+                    coord_apply(&coord, 0, i + (l * SIZE_CHUNK), j + (k + SIZE_CHUNK), 0);
+                    cell  = world_get_cell(&coord);
+                    src.x = GFX_WIDTH_PX  * cell->gfx.tileset_x; 
+                    src.y = GFX_HEIGHT_PX * cell->gfx.tileset_y;
+                    
+                    SDL_RenderCopy(gRenderer, gTileset, &src, &dest);
+                }
+            }
+            */
         }
     }
 

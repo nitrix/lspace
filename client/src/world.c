@@ -12,6 +12,7 @@ void world_init()
 void world_fini()
 {
     cell_destroy(gTestCell);
+    cell_destroy(gMagicCell);
 }
 
 void world_set_cell(COORD *coord, CELL *cell)
