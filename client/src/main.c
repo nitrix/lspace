@@ -7,6 +7,8 @@ int main(int argc, char *argv[])
     world_init();
     renderer_init();
     gCamera = camera_create();
+
+    coord_apply(camera_get_coord(gCamera), 0, 10 - 16, 10 - 16, 0);
     
     while (1) {
         SDL_Event event;

@@ -10,7 +10,7 @@ void coord_translate(COORD *coord, COORD *offset)
     coord->chunk_position_cell_y += offset->chunk_position_cell_y;
 }
 
-void coord_apply(COORD *coord, TYPE_SIZE_CHUNK off_top, TYPE_SIZE_CHUNK off_right, TYPE_SIZE_CHUNK off_bottom, TYPE_SIZE_CHUNK off_left)
+void coord_apply(COORD *coord, int8_t off_top, int8_t off_right, int8_t off_bottom, int8_t off_left)
 {
     /* We're playing with integer promotions here, so do not deal with types > int8_t please,
      * unless you happen to know what you are doing. */

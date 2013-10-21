@@ -16,6 +16,6 @@ typedef struct coord {
 } COORD;
 
 void coord_translate(COORD *coord, COORD *offset);
-void coord_apply(COORD *coord, TYPE_SIZE_CHUNK off_top, TYPE_SIZE_CHUNK off_right, TYPE_SIZE_CHUNK off_bottom, TYPE_SIZE_CHUNK off_left);
+void coord_apply(COORD *coord, int8_t off_top, int8_t off_right, int8_t off_bottom, int8_t off_left);
 
 #endif /* COORD_H */
