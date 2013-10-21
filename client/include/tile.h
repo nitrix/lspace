@@ -8,6 +8,7 @@ typedef enum tile {
     TILE_WALL_RIGHT,
     TILE_WALL_BOTTOM,
     TILE_FLOOR,
+    TILE_WALL,
     TILE_DOOR,
     TILE_PLANT
 } TILE;

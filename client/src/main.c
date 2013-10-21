@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     
     while (1) {
         SDL_Event event;
-        if (SDL_WaitEventTimeout(&event, 100)) {
+        if (SDL_WaitEventTimeout(&event, 16)) { /* 16ms = 60fps */
             /* handle your event here */
             switch(event.type) {
                 case SDL_KEYDOWN:

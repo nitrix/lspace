@@ -71,28 +71,51 @@ void renderer_render(CAMERA *camera)
 
     screen_width_gfx    = gDisplayMode.w / GFX_WIDTH_PX  + 1;
     screen_height_gfx   = gDisplayMode.h / GFX_HEIGHT_PX + 1;
-    screen_width_chunk  = screen_width_gfx / SIZE_CHUNK  + 1; 
-    screen_height_chunk = screen_height_gfx / SIZE_CHUNK + 1;
+    screen_width_chunk  = screen_width_gfx / SIZE_CHUNK  + 2; 
+    screen_height_chunk = screen_height_gfx / SIZE_CHUNK + 2;
 
     camera_coord = camera_get_coord(camera);
     
     printf("Gfx: %d, %d\n", screen_width_gfx, screen_height_gfx);
-    printf("Chunk: %d, %d\n", screen_width_chunk, screen_height_chunk);
+    printf("Screen: %d, %d\n", screen_width_chunk, screen_height_chunk);
     printf("World coord: %d, %d\n", camera_coord->world_position_chunk_x, camera_coord->world_position_chunk_y);
     printf("Chunk coord: %d, %d\n", camera_coord->chunk_position_cell_x, camera_coord->chunk_position_cell_y);
     printf("------\n");
 
     /* the rendering of all chunks */
-    for (k=0; k < screen_height_chunk; k++) {
-        for (l=0; l < screen_width_chunk; l++) {
+    for (k=0; k < screen_width_chunk; k++) {
+        for (l=0; l < screen_height_chunk; l++) {
+            /*
+             * current chunk x : camera_coord->world_position_chunk_x + k
+             * current chunk y : camera_coord->world_position_chunk_y + l
+             */ 
+            printf("Rendering chunk (%d,%d)\n", camera_coord->world_position_chunk_x + k, camera_coord->world_position_chunk_y + l);
+
             /* the rendering of all cells */
+
             for (i=0; i<SIZE_CHUNK; i++) {
-                dest.x = (i * GFX_WIDTH_PX) + (l * SIZE_CHUNK * GFX_WIDTH_PX);
+                dest.x = ((i - camera_coord->chunk_position_cell_x) * GFX_WIDTH_PX) + (k * SIZE_CHUNK * GFX_WIDTH_PX);
                 for (j=0; j<SIZE_CHUNK; j++) {
-                    dest.y = (j * GFX_HEIGHT_PX) + (k * SIZE_CHUNK * GFX_HEIGHT_PX);
+                    dest.y = ((j - camera_coord->chunk_position_cell_y) * GFX_HEIGHT_PX) + (l * SIZE_CHUNK * GFX_HEIGHT_PX);
                     
                     coord = *camera_coord;
-                    coord_apply(&coord, 0, i + (l * SIZE_CHUNK), j + (k * SIZE_CHUNK), 0);
+                    /* coord_apply(&coord, 0, i + (k * SIZE_CHUNK), j + (l * SIZE_CHUNK), 0); */
+                    cell  = world_get_cell(&coord); /* will show same cell everywhere */
+                    src.x = GFX_WIDTH_PX  * cell->gfx.tileset_x; 
+                    src.y = GFX_HEIGHT_PX * cell->gfx.tileset_y;
+                    
+                    SDL_RenderCopy(gRenderer, gTileset, &src, &dest);
+                }
+            }
+
+            /*
+            for (i=0; i<SIZE_CHUNK; i++) {
+                dest.x = (i * GFX_WIDTH_PX) + (k * SIZE_CHUNK * GFX_WIDTH_PX) - (camera_coord->chunk_position_cell_x * GFX_WIDTH_PX);
+                for (j=0; j<SIZE_CHUNK; j++) {
+                    dest.y = (j * GFX_HEIGHT_PX) + (l * SIZE_CHUNK * GFX_HEIGHT_PX) - (camera_coord->chunk_position_cell_y * GFX_HEIGHT_PX);
+                    
+                    coord = *camera_coord;
+                    coord_apply(&coord, 0, i + (k * SIZE_CHUNK), j + (l * SIZE_CHUNK), 0);
                     cell  = world_get_cell(&coord);
                     src.x = GFX_WIDTH_PX  * cell->gfx.tileset_x; 
                     src.y = GFX_HEIGHT_PX * cell->gfx.tileset_y;
@@ -100,6 +123,7 @@ void renderer_render(CAMERA *camera)
                     SDL_RenderCopy(gRenderer, gTileset, &src, &dest);
                 }
             }
+            */
             /*
             for (i=camera_coord->chunk_position_cell_x; i<SIZE_CHUNK; i++) {
                 dest.x = ((i - camera_coord->chunk_position_cell_x) * GFX_WIDTH_PX) + (l * SIZE_CHUNK * GFX_WIDTH_PX);
