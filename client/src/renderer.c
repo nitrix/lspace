@@ -69,10 +69,10 @@ void renderer_render(CAMERA *camera)
     dest.w = GFX_WIDTH_PX;
     dest.h = GFX_HEIGHT_PX;
 
-    screen_width_gfx    = gDisplayMode.w / GFX_WIDTH_PX  + 1;
-    screen_height_gfx   = gDisplayMode.h / GFX_HEIGHT_PX + 1;
-    screen_width_chunk  = screen_width_gfx / SIZE_CHUNK  + 2; 
-    screen_height_chunk = screen_height_gfx / SIZE_CHUNK + 2;
+    screen_width_gfx    = gDisplayMode.w / GFX_WIDTH_PX  + 1; /* +1 to accomodate rounding error */
+    screen_height_gfx   = gDisplayMode.h / GFX_HEIGHT_PX + 1; /* +1 to accomodate rounding error */
+    screen_width_chunk  = screen_width_gfx / SIZE_CHUNK  + 2; /* +2 to accomodate rounding error & safety extra chunk */
+    screen_height_chunk = screen_height_gfx / SIZE_CHUNK + 2; /* +2 to accomodate rounding error & safety extra chunk */
 
     camera_coord = camera_get_coord(camera);
     
@@ -100,9 +100,23 @@ void renderer_render(CAMERA *camera)
                     
                     coord = *camera_coord;
                     /* coord_apply(&coord, 0, i + (k * SIZE_CHUNK), j + (l * SIZE_CHUNK), 0); */
-                    cell  = world_get_cell(&coord); /* will show same cell everywhere */
+
+                    /*
+                    printf("\t%d, %d\n", i+(k*SIZE_CHUNK), j+(l*SIZE_CHUNK));
+                    if (k == 2 && l == 1) {
+                        terminate();
+                    }
+                    */
+                    
+                    /*
+                    coord_apply(&coord, 0, i + (k * SIZE_CHUNK) - camera_coord->chunk_position_cell_x, j + (l * SIZE_CHUNK) - camera_coord->chunk_position_cell_y, 0);
+                    cell  = world_get_cell(&coord);
                     src.x = GFX_WIDTH_PX  * cell->gfx.tileset_x; 
                     src.y = GFX_HEIGHT_PX * cell->gfx.tileset_y;
+                    */
+
+                    src.x = GFX_WIDTH_PX * (k + camera_coord->world_position_chunk_x);
+                    src.y = GFX_WIDTH_PX * (l + camera_coord->world_position_chunk_y);
                     
                     SDL_RenderCopy(gRenderer, gTileset, &src, &dest);
                 }
