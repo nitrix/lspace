@@ -17,8 +17,9 @@
  * MECHANICS:
  *  
  *  _render() renders every visible cells by the player with the help of
- *  the camera and world module. It has to be called periodically to provide good
- *  visual feebacks to the user. Such operation is often referred to as a frame.
+ *  the camera, coord and world module. It has to be called periodically to
+ *  provide good visual feebacks to the user. Such operation is often referred
+ *  to as one frame.
  *
  *  _clear() clears the screen (usually called in-between frames) to prevent
  *  visual glitchs that would happen with transparent objects moved or removed.
@@ -27,8 +28,11 @@
  * 
  * TODO:
  *
- *  - Implement support for a camera module.
+ *  - Implement support for layers.
  *  - Implement support for gfx resource management, or consider a new module.
+ *      Currently loading the tileset ourself since it isn't very complex yet.
+ *      Ideally, would be nice to have the tiles separate, and merge them into
+ *      one huge texture. The git repository will appreciated it.
  *  - Proper resolution on android devices; probably using a combination of:
  *      SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
  *      SDL_RenderSetLogicalSize(renderer, 640, 480);
