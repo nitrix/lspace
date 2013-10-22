@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     renderer_init();
     gCamera = camera_create();
 
-    coord_apply(camera_get_coord(gCamera), 0, 10 - 16, 10 - 16, 0);
+    coord_apply(camera_coord_get(gCamera), 0, 10 - 16, 10 - 16, 0);
     
     while (1) {
         SDL_Event event;
@@ -22,16 +22,16 @@ int main(int argc, char *argv[])
                             terminate();
                             break;
                         case SDLK_d:
-                            coord_apply(camera_get_coord(gCamera), 0, 1, 0, 0); /*right*/
+                            coord_apply(camera_coord_get(gCamera), 0, 1, 0, 0); /*right*/
                             break;
                         case SDLK_a:
-                            coord_apply(camera_get_coord(gCamera), 0, 0, 0, 1); /*left*/
+                            coord_apply(camera_coord_get(gCamera), 0, 0, 0, 1); /*left*/
                             break;
                         case SDLK_w:
-                            coord_apply(camera_get_coord(gCamera), 1, 0, 0, 0); /*top*/
+                            coord_apply(camera_coord_get(gCamera), 1, 0, 0, 0); /*top*/
                             break;
                         case SDLK_s:
-                            coord_apply(camera_get_coord(gCamera), 0, 0, 1, 0); /*bottom*/
+                            coord_apply(camera_coord_get(gCamera), 0, 0, 1, 0); /*bottom*/
                             break;
                     }
                     break;

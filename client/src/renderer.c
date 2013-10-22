@@ -75,7 +75,7 @@ void renderer_render(CAMERA *camera)
     screen_height_chunk = screen_height_gfx / SIZE_CHUNK + 2; /* +2 to accomodate rounding error & safety extra chunk */
 
     /* local pointer to make it simpler */
-    camera_coord = camera_get_coord(camera);
+    camera_coord = camera_coord_get(camera);
     
     /* the rendering of all visible chunks on screen */
     for (k=0; k < screen_width_chunk; k++) {

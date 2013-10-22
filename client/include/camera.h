@@ -12,6 +12,6 @@ typedef struct camera {
 CAMERA  *camera_create();
 void    camera_destroy(CAMERA *camera);
 void    camera_move(CAMERA *camera, COORD *new_coord);
-COORD   *camera_get_coord();
+COORD   *camera_coord_get();
 
 #endif /* CAMERA_H */

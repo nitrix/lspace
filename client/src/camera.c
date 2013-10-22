@@ -15,7 +15,7 @@ void camera_move(CAMERA *camera, COORD *new_coord)
     camera->coord = *new_coord;
 }
 
-COORD *camera_get_coord(CAMERA *camera)
+COORD *camera_coord_get(CAMERA *camera)
 {
     return &camera->coord;
 }
