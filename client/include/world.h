@@ -12,6 +12,18 @@
  *
  *  Use _init() and _fini() respectively.
  *
+ *******************************************************************************
+ *
+ * MECHANICS:
+ *  
+ *  _cell_() let you acces any cell in the world and do operations on them.
+ *      _get() to obtain a cell at the specified coordinate.
+ *      _set() to update a cell at the specified coordinate.
+ *
+ *  _chunk_() let you manage the chunks the game is dealing with.
+ *      _load() to work with a chunk or simply prepare it ahead of time.
+ *      _unload() to get rid of a chunk not needed anymore.
+ *
  ******************************************************************************/
 
 #include "coord.h"
@@ -22,9 +34,9 @@
 void world_init();
 void world_fini();
 
-void world_set_cell(COORD *coord, CELL *cell);
-CELL *world_get_cell(COORD *coord);
-void world_load_chunk(CHUNK *chunk);
-void world_unload_chunk(CHUNK *chunk);
+void world_cell_set(COORD *coord, CELL *cell);
+CELL *world_cell_get(COORD *coord);
+void world_chunk_load(CHUNK *chunk);
+void world_chunk_unload(CHUNK *chunk);
 
 #endif /* WORLD_H */

@@ -18,7 +18,7 @@ void world_fini()
     cell_destroy(gAnotherMagicCell);
 }
 
-void world_set_cell(COORD *coord, CELL *cell)
+void world_cell_set(COORD *coord, CELL *cell)
 {
     /* coord->world_chunk_x  */
     /* coord->world_chunk_y */
@@ -27,7 +27,7 @@ void world_set_cell(COORD *coord, CELL *cell)
     /* coord->layer */
 }
 
-CELL *world_get_cell(COORD *coord)
+CELL *world_cell_get(COORD *coord)
 {
     /* position->x */
     /* position->y */
@@ -43,11 +43,11 @@ CELL *world_get_cell(COORD *coord)
     return gTestCell;
 }
 
-void world_load_chunk(CHUNK *chunk)
+void world_chunk_load(CHUNK *chunk)
 {
 
 }
 
-void world_unload_chunk(CHUNK *chunk)
+void world_chunk_unload(CHUNK *chunk)
 {
 }

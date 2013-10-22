@@ -96,7 +96,7 @@ void renderer_render(CAMERA *camera)
                     coord.chunk_position_cell_y = j;
 
                     /* query the world system about our cell */
-                    cell  = world_get_cell(&coord);
+                    cell  = world_cell_get(&coord);
 
                     /* use available cell information on which gfx to draw */
                     src.x = GFX_WIDTH_PX  * cell->gfx.tileset_x; 
