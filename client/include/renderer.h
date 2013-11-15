@@ -39,6 +39,6 @@
 void renderer_init();
 void renderer_fini();
 void renderer_render(CAMERA *camera);
-void renderer_clear();
+void renderer_clear(); 
 
 #endif /* RENDERER_H */

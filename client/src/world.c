@@ -6,8 +6,8 @@ CELL *gAnotherMagicCell;
 
 void world_init()
 {
-    gTestCell        = cell_create(TILE_FLOOR, LAYER_GROUND);
-    gMagicCell       = cell_create(TILE_DOOR, LAYER_OBJECTS);
+    gTestCell         = cell_create(TILE_FLOOR, LAYER_GROUND);
+    gMagicCell        = cell_create(TILE_DOOR, LAYER_OBJECTS);
     gAnotherMagicCell = cell_create(TILE_WALL, LAYER_OBJECTS);
 }
 

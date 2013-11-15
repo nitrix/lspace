@@ -23,6 +23,10 @@ void renderer_init()
         exit(EXIT_FAILURE);
     }
 
+    /* Resolution on android devices */
+    /* SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"); */
+    /* SDL_RenderSetLogicalSize(gRenderer, 597, 335); */
+
     /* Save the display mode for later uses */
     check = SDL_GetCurrentDisplayMode(0, &gDisplayMode);
     if (check != 0) {
@@ -84,7 +88,7 @@ void renderer_render(CAMERA *camera)
             /* the rendering of all cells inside each chunk */
             for (i=0; i<SIZE_CHUNK; i++) {
                 for (j=0; j<SIZE_CHUNK; j++) {
-
+                    
                     /* compute the destination of this cell (read position) on the screen */
                     dest.x = ((i - camera_coord->chunk_position_cell_x) * GFX_WIDTH_PX) + (k * SIZE_CHUNK * GFX_WIDTH_PX);
                     dest.y = ((j - camera_coord->chunk_position_cell_y) * GFX_HEIGHT_PX) + (l * SIZE_CHUNK * GFX_HEIGHT_PX);
@@ -104,7 +108,7 @@ void renderer_render(CAMERA *camera)
                 
                     /* render the source gfx computed to the proper destination computed */
                     SDL_RenderCopy(gRenderer, gTileset, &src, &dest);
-                
+
                 }
             }
 
