@@ -1,11 +1,7 @@
 language: c
 
 before_script:
-    - mkdir dummyprefix
-    - export PREFIX=$PWD/dummyprefix
-    - export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
-    - export PATH=$PATH:$PWD/rock/bin:$PWD/dummyprefix/bin
-
+    - export PREFIX=/usr
     - wget http://libsdl.org/release/SDL2-2.0.1.tar.gz -O - | tar xz
     - (cd SDL2-2.0.1 && ./configure --prefix=$PREFIX && make -j5 && make install)
     - wget http://libsdl.org/projects/SDL_image/release/SDL2_image-2.0.0.tar.gz -O - | tar xz
