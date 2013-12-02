@@ -61,18 +61,32 @@ void hm_insert(HASHMAP *hm, char *key, void *value)
 
     /* Place our first node or append our node to an existing one in the list */
     if (hm->map[bucket] == NULL) {
-        printf("first\n");
         hm->map[bucket] = new_node;
     } else {
-        printf("not first\n");
         new_node->next  = hm->map[bucket];
         hm->map[bucket] = new_node;
     }
 }
 
-void hm_remove(char *str)
+void hm_remove(HASHMAP *hm, char *key)
 {
-    printf("Rem: %s", str);
+    TYPE_SIZE_HASHMAP    bucket = hm_hash(key) % hm->size;
+    HASHMAP_BUCKET_LIST *node   = hm->map[bucket];
+    HASHMAP_BUCKET_LIST *prev   = NULL;
+
+    while(node) {
+        if (strcmp(node->key, key) == 0) {
+            if (prev) {
+                prev->next = node->next;
+            } else {
+                hm->map[bucket] = node->next;
+            }
+            free(node);
+            return;
+        }
+        prev = node;
+        node = node->next;
+    }
 }
 
 void *hm_search(HASHMAP *hm, char *key)
