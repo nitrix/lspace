@@ -4,7 +4,11 @@ PROJECT(client)
 ADD_DEFINITIONS(
     -std=c89
     -pedantic
+    -Wall
+    -Wextra
     -Wno-attributes
+    -Wno-unused-variable
+    -Wno-unused-function
 )
 
 INCLUDE_DIRECTORIES(
@@ -20,6 +24,7 @@ ADD_EXECUTABLE(
     src/cell.c
     src/coord.c
     src/gfx.c
+    src/hashmap.c
     src/main.c    
     src/renderer.c
     src/world.c

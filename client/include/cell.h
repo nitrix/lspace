@@ -9,15 +9,15 @@
 
 typedef struct cell CELL;
 struct cell {
-    TILE  tile;
-    GFX   gfx;
-    LAYER layer;
+    TILE   tile;
+    GFX    gfx;
+    LAYER  layer;
     CELL  *next;
 };
 
 /* TODO: implement linked list here  */
 
 CELL *cell_create(TILE tile, LAYER layer);
-void cell_destroy(CELL *cell);
+void  cell_destroy(CELL *cell);
 
 #endif /* CELL_H */

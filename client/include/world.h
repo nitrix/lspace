@@ -31,12 +31,16 @@
 #include "chunk.h"
 #include "layer.h"
 
-void world_init();
-void world_fini();
+/* Singleton */
+void  world_init(void);
+void  world_fini(void);
 
-void world_cell_set(COORD *coord, CELL *cell);
+/* Operations on cells */
+void  world_cell_set(COORD *coord, CELL *cell);
 CELL *world_cell_get(COORD *coord);
-void world_chunk_load(CHUNK *chunk);
-void world_chunk_unload(CHUNK *chunk);
+
+/* Operatiosn on chunks */
+void  world_chunk_load(CHUNK *chunk);
+void  world_chunk_unload(CHUNK *chunk);
 
 #endif /* WORLD_H */

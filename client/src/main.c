@@ -2,7 +2,7 @@
 
 CAMERA *gCamera;
 
-int main(int argc, char *argv[])
+int main(void)
 {
     world_init();
     renderer_init();
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE; /* Bad ending */
 } 
 
-void main_event_render()
+void main_event_render(void)
 {
     /*
      * TODO: have a check to block extra calls to this function;
@@ -76,7 +76,7 @@ void main_event_render()
     SDL_PushEvent(&event);
 }
 
-void main_terminate()
+void main_terminate(void)
 {
     camera_destroy(gCamera);
     renderer_fini();

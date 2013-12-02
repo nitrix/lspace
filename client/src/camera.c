@@ -1,6 +1,6 @@
 #include "camera.h"
 
-CAMERA *camera_create()
+CAMERA *camera_create(void)
 {
     return calloc(1, sizeof (CAMERA));
 }

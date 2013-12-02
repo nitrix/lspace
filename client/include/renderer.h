@@ -36,9 +36,12 @@
 #include "cell.h"
 #include "world.h"
 
-void renderer_init();
-void renderer_fini();
+/* Singleton */
+void renderer_init(void);
+void renderer_fini(void);
+
+/* Various operations */
 void renderer_render(CAMERA *camera);
-void renderer_clear(); 
+void renderer_clear(void); 
 
 #endif /* RENDERER_H */

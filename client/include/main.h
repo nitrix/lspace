@@ -9,8 +9,8 @@
 #include "renderer.h"
 #include "camera.h"
 
-int    main(int argc, char *argv[]);
-void   main_event_render();
-void   main_terminate();
+int  main(void);
+void main_event_render(void);
+void main_terminate(void);
 
 #endif /* MAIN_H */

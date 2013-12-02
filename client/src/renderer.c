@@ -5,7 +5,7 @@ SDL_Renderer    *gRenderer;
 SDL_Texture     *gTileset;
 SDL_DisplayMode  gDisplayMode;
 
-void renderer_init()
+void renderer_init(void)
 {
     int check;
     SDL_Surface *tmp = NULL;
@@ -46,7 +46,7 @@ void renderer_init()
     SDL_FreeSurface(tmp);
 }
 
-void renderer_fini()
+void renderer_fini(void)
 {
     /* Cleanup SDL */
     SDL_DestroyWindow(gWindow);
@@ -118,7 +118,7 @@ void renderer_render(CAMERA *camera)
     SDL_RenderPresent(gRenderer);
 }
 
-void renderer_clear()
+void renderer_clear(void)
 {
     /* Clear the SDL screen */
     SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);

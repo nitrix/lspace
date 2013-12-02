@@ -4,14 +4,14 @@ CELL *gTestCell;
 CELL *gMagicCell;
 CELL *gAnotherMagicCell;
 
-void world_init()
+void world_init(void)
 {
     gTestCell         = cell_create(TILE_FLOOR, LAYER_GROUND);
     gMagicCell        = cell_create(TILE_DOOR, LAYER_OBJECTS);
     gAnotherMagicCell = cell_create(TILE_WALL, LAYER_OBJECTS);
 }
 
-void world_fini()
+void world_fini(void)
 {
     cell_destroy(gTestCell);
     cell_destroy(gMagicCell);
