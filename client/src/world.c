@@ -25,6 +25,8 @@ void world_cell_set(COORD *coord, CELL *cell)
     /* coord->chunk_inner_x */
     /* coord->chunk_inner_y */
     /* coord->layer */
+    (void) coord;
+    (void) cell;
 }
 
 CELL *world_cell_get(COORD *coord)
@@ -45,9 +47,10 @@ CELL *world_cell_get(COORD *coord)
 
 void world_chunk_load(CHUNK *chunk)
 {
-
+    (void) chunk;
 }
 
 void world_chunk_unload(CHUNK *chunk)
 {
+    (void) chunk;
 }

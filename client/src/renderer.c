@@ -63,8 +63,8 @@ void renderer_render(CAMERA *camera)
     SDL_Rect src, dest;
     TYPE_SIZE_CHUNK i,j; /* nested loops x,y cells */
     TYPE_SIZE_WORLD k,l; /* nested loops x,y chunks */
-    unsigned int screen_width_gfx, screen_height_gfx;
-    unsigned int screen_width_chunk, screen_height_chunk;
+    int screen_width_gfx, screen_height_gfx;
+    int screen_width_chunk, screen_height_chunk;
 
     /* set source and destination widht/height to our gfx dimensions  */
     src.w  = GFX_WIDTH_PX;
