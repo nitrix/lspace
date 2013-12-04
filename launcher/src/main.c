@@ -28,7 +28,8 @@ int main(void)
     SDL_Renderer    *renderer;
     SDL_DisplayMode  displayMode;
     int              check, i;
-    LIST            *layer[3];
+    LIST             layer[3] = {0};
+    int              layerc[3] = {0};
 
     /* Load SDL */
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_EVENTS) != 0) {
@@ -52,11 +53,7 @@ int main(void)
     /* Set alpha blending mode */
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    /* Clear the entire screen */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
-    srand(time(NULL));
+    srand(5);
 
     /* Generate stars */
     for (i = 0; i < 2000; i++) { //FIXME: proper ratio given the screen size please
@@ -64,17 +61,65 @@ int main(void)
         star->x     = rand() % displayMode.w;
         star->y     = rand() % displayMode.h;
         star->alpha = rand() % 255;
-        list_add(layer[rand() % 3], star);
+        list_push(&layer[rand() % 3], star);
     }
     
-    //SDL_SetRenderDrawColor(renderer, 255, 255, 255, rand() % 255);
-    //SDL_RenderDrawPoint(renderer, rand() % displayMode.w, rand() % displayMode.h);
+    while (1) {
+        /* Clear the entire screen */
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
 
-    // Up until now everything was drawn behind the scenes.
-    // This will show the new, red contents of the window.
-    SDL_RenderPresent(renderer);
+        int i;
+        for (i=0; i<3; i++) {
+            int offset_x = 0;
+            int offset_y = 0;
 
-    SDL_Delay(5000);
+            layerc[i]++;
+            if (layerc[i]-1 == i) {
+                offset_x++;
+                layerc[i] = 0;
+            }
+
+            /* Draw one layer */
+            LIST *node = &layer[i];
+            while (node && node->next) {
+                if (offset_x) {
+                    ((STAR*)node->data)->x += offset_x; 
+                    if (((STAR*)node->data)->x > displayMode.w) {
+                        ((STAR*)node->data)->x -= displayMode.w;
+                    }
+                }
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, ((STAR*)(node->data))->alpha);
+                SDL_RenderDrawPoint(renderer, ((STAR*)node->data)->x, ((STAR*)(node->data))->y);
+                node = node->next;
+            }
+        }
+
+        // Up until now everything was drawn behind the scenes.
+        // This will show the new, red contents of the window.
+        SDL_RenderPresent(renderer);
+
+        SDL_Event event;
+        if (SDL_WaitEventTimeout(&event, 20)) {
+            switch(event.type) {
+                /*
+                case SDL_USEREVENT:
+                    if (event.user.code == 0) {
+                        renderer_clear();
+                        renderer_render(gCamera);
+                    }
+                    break;
+                */
+                case SDL_KEYDOWN:
+                    switch (event.key.keysym.sym) {
+                        case SDLK_ESCAPE:
+                            exit(EXIT_SUCCESS);
+                            break;
+                    }
+                    break;
+            }
+        }
+    }
 
     /*
      * Load SDL_image
