@@ -1,6 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(launcher)
 
+ADD_DEFINITIONS(
+    -O3
+)
+
 INCLUDE_DIRECTORIES(
     include
 )
@@ -13,6 +17,6 @@ ADD_EXECUTABLE(
 
 TARGET_LINK_LIBRARIES(
     launcher
-    enet
     SDL2
+    SDL2_ttf
 )

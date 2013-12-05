@@ -3,6 +3,7 @@
 
 #include "stdio.h"
 #include "SDL2/SDL.h"
+#include "SDL/SDL_ttf.h"
 #include "list.h"
 
 typedef struct star {
@@ -11,6 +12,6 @@ typedef struct star {
     unsigned char alpha;
 } STAR;
 
-int main(void);
+int main(int argc, const char *argv[]);
 
 #endif /* MAIN_H */

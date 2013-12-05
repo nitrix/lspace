@@ -1,6 +1,6 @@
 #include "main.h"
 
-int main(void)
+int main(int argc, const char *argv[])
 {
     /*
     LIST test;
@@ -56,7 +56,8 @@ int main(void)
     srand(time(NULL));
 
     /* Generate stars */
-    for (i = 0; i < 2000; i++) { //FIXME: proper ratio given the screen size please
+    int star = displayMode.w * displayMode.h * 800 / 1440000;
+    for (i = 0; i < star; i++) { //FIXME: proper ratio given the screen size please
         STAR *star  = malloc(sizeof (STAR));
         star->x     = rand() % displayMode.w;
         star->y     = rand() % displayMode.h;
@@ -66,6 +67,33 @@ int main(void)
         star->alpha = rand() % 255;
         list_push(&layer[rand() % 3], star);
     }
+    
+    /* Generate logo */
+    SDL_Texture *logo;
+    if (TTF_Init() != 0) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+    }
+    //lxl  - lean effect
+    //og   - paper effect
+    //hwd
+    TTF_Font *font = TTF_OpenFont(argv[1], 72);
+    if (!font) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+    }
+    TTF_SetFontOutline(font, 0);
+    //TTF_CloseFont(font);
+    //TTF_Quit();
+    SDL_Surface *text_surface;
+    SDL_Color color = {200,200,230,255};
+    text_surface    = TTF_RenderText_Blended(font, "Lonesome Space", color);
+    logo            = SDL_CreateTextureFromSurface(renderer, text_surface);
+    SDL_Rect dest = {0};
+    dest.w = text_surface->w;
+    dest.h = text_surface->h;
+    dest.x = displayMode.w / 2 - dest.w / 2;
+    dest.y = 50;
+    SDL_FreeSurface(text_surface);
+
     
     while (1) {
         /* Clear the entire screen */
@@ -100,6 +128,8 @@ int main(void)
                 node = node->next;
             }
         }
+    
+        SDL_RenderCopy(renderer, logo, NULL, &dest);
 
         // Up until now everything was drawn behind the scenes.
         // This will show the new, red contents of the window.
