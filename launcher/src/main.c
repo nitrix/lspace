@@ -53,13 +53,16 @@ int main(void)
     /* Set alpha blending mode */
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    srand(5);
+    srand(time(NULL));
 
     /* Generate stars */
     for (i = 0; i < 2000; i++) { //FIXME: proper ratio given the screen size please
         STAR *star  = malloc(sizeof (STAR));
         star->x     = rand() % displayMode.w;
         star->y     = rand() % displayMode.h;
+        star->r     = 175 + rand() % 80;
+        star->g     = 175 + rand() % 80;
+        star->b     = 255;
         star->alpha = rand() % 255;
         list_push(&layer[rand() % 3], star);
     }
@@ -77,19 +80,22 @@ int main(void)
             layerc[i]++;
             if (layerc[i]-1 == i) {
                 offset_x++;
+                //offset_y++;
                 layerc[i] = 0;
             }
 
             /* Draw one layer */
             LIST *node = &layer[i];
             while (node && node->next) {
-                if (offset_x) {
-                    ((STAR*)node->data)->x += offset_x; 
-                    if (((STAR*)node->data)->x > displayMode.w) {
-                        ((STAR*)node->data)->x -= displayMode.w;
-                    }
+                if (offset_x != 0 || offset_y != 0) {
+                    ((STAR*)node->data)->x += offset_x;
+                    ((STAR*)node->data)->y += offset_y;
+                    if (((STAR*)node->data)->x > displayMode.w) ((STAR*)node->data)->x -= displayMode.w;
+                    else if (((STAR*)node->data)->x < 0) ((STAR*)node->data)->x += displayMode.w;
+                    if (((STAR*)node->data)->y > displayMode.h) ((STAR*)node->data)->y -= displayMode.h;
+                    else if (((STAR*)node->data)->y < 0) ((STAR*)node->data)->y += displayMode.h;
                 }
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, ((STAR*)(node->data))->alpha);
+                SDL_SetRenderDrawColor(renderer, ((STAR*)(node->data))->r, ((STAR*)(node->data))->g, ((STAR*)(node->data))->b, ((STAR*)(node->data))->alpha);
                 SDL_RenderDrawPoint(renderer, ((STAR*)node->data)->x, ((STAR*)(node->data))->y);
                 node = node->next;
             }

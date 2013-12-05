@@ -6,8 +6,8 @@
 #include "list.h"
 
 typedef struct star {
-    unsigned int  x;
-    unsigned int  y;
+    unsigned char r, g, b;
+    int           x, y;
     unsigned char alpha;
 } STAR;
 
