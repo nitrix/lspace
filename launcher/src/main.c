@@ -56,7 +56,7 @@ int main(int argc, const char *argv[])
     srand(time(NULL));
 
     /* Generate stars */
-    int star = displayMode.w * displayMode.h * 800 / 1440000;
+    int star = displayMode.w * displayMode.h * 1000 / 1440000;
     for (i = 0; i < star; i++) { //FIXME: proper ratio given the screen size please
         STAR *star  = malloc(sizeof (STAR));
         star->x     = rand() % displayMode.w;
@@ -74,9 +74,9 @@ int main(int argc, const char *argv[])
         printf("TTF_OpenFont: %s\n", TTF_GetError());
     }
     //lxl  - lean effect
-    //og   - paper effect
     //hwd
-    TTF_Font *font = TTF_OpenFont(argv[1], 72);
+    //og   - paper effect
+    TTF_Font *font = TTF_OpenFont("../client/assets/lxl.ttf", 72);
     if (!font) {
         printf("TTF_OpenFont: %s\n", TTF_GetError());
     }
