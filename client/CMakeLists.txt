@@ -12,10 +12,10 @@ ADD_DEFINITIONS(
 )
 
 INCLUDE_DIRECTORIES(
+    ../common/lib/SDL/include
+    ../common/lib/SDL_image
+    ../common/include
     include
-    lib/SDL/include
-    lib/SDL_image
-    #common
 )
 
 ADD_EXECUTABLE(
@@ -33,7 +33,7 @@ ADD_EXECUTABLE(
 TARGET_LINK_LIBRARIES(
     client
     #common
-    SDL2
+    SDL2-static
     SDL2_image
 )
 

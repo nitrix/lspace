@@ -4,12 +4,17 @@ PROJECT(lspace)
 INCLUDE(CTest)
 ENABLE_TESTING()
 
-# Compiler flags
+# Optimise and strip binaries
 IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	SET(CMAKE_C_FLAGS "-O2 -s")        # Optimize and strip binary
+SET(CMAKE_C_FLAGS "-O2 -s")
 ENDIF()
 
-#ADD_SUBDIRECTORY(common)
+# ------------------- COMMON --------------------
+ADD_SUBDIRECTORY(common)
+
+# ------------------- CLIENT --------------------
 ADD_SUBDIRECTORY(client)
 ADD_SUBDIRECTORY(launcher)
+
+# ------------------- SERVER --------------------
 #ADD_SUBDIRECTORY(server)
