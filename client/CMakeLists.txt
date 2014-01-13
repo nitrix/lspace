@@ -33,7 +33,7 @@ ADD_EXECUTABLE(
 TARGET_LINK_LIBRARIES(
     client
     #common
-    SDL2-static
+    SDL2
     SDL2_image
 )
 
