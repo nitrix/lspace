@@ -7,5 +7,5 @@ INCLUDE_DIRECTORIES(
 
 ADD_LIBRARY(
     common
-    src/example.c
+    src/example.cpp
 )

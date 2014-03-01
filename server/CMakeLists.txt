@@ -8,7 +8,7 @@ INCLUDE_DIRECTORIES(
 
 ADD_EXECUTABLE(
     server
-    src/main.c
+    src/main.cpp
 )
 
 TARGET_LINK_LIBRARIES(

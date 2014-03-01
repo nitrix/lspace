@@ -8,10 +8,14 @@ INCLUDE_DIRECTORIES(
 
 ADD_EXECUTABLE(
     client
-    src/main.c    
+    src/main.cpp
+    src/window.cpp
 )
 
 TARGET_LINK_LIBRARIES(
     client
     common
+    sfml-system
+    sfml-window
+    sfml-graphics
 )
