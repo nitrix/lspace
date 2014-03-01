@@ -1,16 +1,2 @@
-# PHPStorm IDE
-.idea/
-
 # CMake standard build folder
 build/
-
-# Android builds with eclipse
-client/android/bin/
-client/android/obj/
-client/android/gen/
-client/android/libs/
-client/android/.settings/
-client/android/.classpath
-client/android/.project
-client/android/default.properties
-client/android/project.properties

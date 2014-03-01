@@ -1,9 +1,0 @@
-[submodule "common/lib/SDL_image"]
-	path = common/lib/SDL_image
-	url = https://github.com/davidsiaw/SDL2_image.git
-[submodule "common/lib/SDL_ttf"]
-	path = common/lib/SDL_ttf
-	url = https://github.com/cmakified/SDL2_ttf.git
-[submodule "common/lib/SDL"]
-	path = common/lib/SDL
-	url = https://github.com/nitrix/SDL2.git
