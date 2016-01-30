@@ -1,0 +1,9 @@
+If the node had a "input rate", "output rate", and "last updated" members, couldn't you figure out how much it produced since its last update rate?
+Then, these rates are calculated based on the parent rates (because our outputs are unbound).
+The rates are fixed... until, the graph structure change.
+
+When the graph structure change, then, to avoid depreciencies, (the user walking around and evaluating things with the new rate while part of the elapsed time should be with the old rate), what I do to solve this is whenever we change the rates, I update all the child containers recursively. And that's it.
+
+This way, we eliminate the old rates entirely and converted them into resources in containers in the present, and we can start lazily from there ahain. 
+
+It's essentially lazy evaluation, which is either done partially if only part of the graph is visited, or entirely if the graph structure changes. 
