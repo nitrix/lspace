@@ -5,7 +5,8 @@ import qualified SDL.Image as IM
 import SDL.Video
 import SDL.Event
 import Control.Monad
-import Linear.V4 (V4(V4))
+import Linear (V2(V2), V4(V4))
+import Linear.Affine (Point(P))
 
 main :: IO ()
 main = do
@@ -17,7 +18,7 @@ main = do
     renderer <- createRenderer window (-1) defaultRenderer
     
     -- Loading texture
-    _ <- IM.loadTexture renderer "assets/tileset.png"
+    texture <- IM.loadTexture renderer "assets/tileset.png"
     
     -- Some options for convenience
     disableScreenSaver
@@ -27,22 +28,25 @@ main = do
     showWindow window
 
     -- Main loop
-    mainLoop window renderer
+    mainLoop window renderer texture
     
     -- Cleanup
     destroyRenderer renderer
     destroyWindow window
     IM.quit
 
-mainLoop :: Window -> Renderer -> IO ()
-mainLoop window renderer = do
+mainLoop :: Window -> Renderer -> Texture -> IO ()
+mainLoop window renderer texture = do
     event <- waitEvent
     
     let quit = eventPayload event == QuitEvent
 
     clear renderer
+    let src = Rectangle (P $ V2 0 0) (V2 32 32)
+    let dst = Rectangle (P $ V2 0 0) (V2 32 32)
+    copyEx renderer texture (Just src) (Just dst) 0 Nothing (V2 False False)
     present renderer
 
     -- putStrLn "Event!"
 
-    unless quit $ mainLoop window renderer
+    unless quit $ mainLoop window renderer texture
