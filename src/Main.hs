@@ -7,6 +7,10 @@ import SDL.Event
 import Control.Monad
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
+import Control.Monad.State (State, runState)
+import Debug.Trace (traceM)
+
+import Game
 
 main :: IO ()
 main = do
@@ -28,18 +32,18 @@ main = do
     showWindow window
 
     -- Main loop
-    mainLoop window renderer texture
+    mainLoop window renderer texture gameDefaultState
     
     -- Cleanup
     destroyRenderer renderer
     destroyWindow window
     IM.quit
 
-mainLoop :: Window -> Renderer -> Texture -> IO ()
-mainLoop window renderer texture = do
+mainLoop :: Window -> Renderer -> Texture -> GameState -> IO ()
+mainLoop window renderer texture gameState = do
     event <- waitEvent
     
-    let quit = eventPayload event == QuitEvent
+    let (quit, newGameState) = runState (gameHandleEvent event) gameState
 
     clear renderer
     let src = Rectangle (P $ V2 0 0) (V2 32 32)
@@ -47,6 +51,4 @@ mainLoop window renderer texture = do
     copyEx renderer texture (Just src) (Just dst) 0 Nothing (V2 False False)
     present renderer
 
-    -- putStrLn "Event!"
-
-    unless quit $ mainLoop window renderer texture
+    unless quit $ mainLoop window renderer texture newGameState
