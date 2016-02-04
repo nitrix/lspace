@@ -7,8 +7,7 @@ import SDL.Event
 import Control.Monad
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
-import Control.Monad.State (State, runState)
-import Debug.Trace (traceM)
+import Control.Monad.State
 
 import Game
 

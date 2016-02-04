@@ -1,10 +1,9 @@
 module Game where
 
 import SDL.Event (Event, eventPayload, EventPayload(QuitEvent))
-import Linear (V2(V2), V4(V4))
+import Linear (V2(V2))
 import Linear.Affine (Point(P))
 import Control.Monad.State (State, get)
-import Debug.Trace (traceM)
 
 data GameState = MkGameState { playerPosition :: Point V2 Integer
                              , counter :: Int }
