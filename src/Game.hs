@@ -3,10 +3,9 @@ module Game where
 import SDL.Event
 import SDL.Input.Keyboard
 import SDL.Input.Keyboard.Codes
-import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
 import Control.Monad.State (State, modify)
-import Debug.Trace (traceM)
+import Linear (V2(V2))
 
 import Camera
 
