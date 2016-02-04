@@ -43,12 +43,18 @@ mainLoop :: Window -> Renderer -> Texture -> GameState -> IO ()
 mainLoop window renderer texture gameState = do
     event <- waitEvent
     
+    -- Handle events
     let (quit, newGameState) = runState (gameHandleEvent event) gameState
-
+    
+    -- Debugging
+    putStrLn $ "Counter: " ++ (show $ counter newGameState)
+    
+    -- Render camera
     clear renderer
     let src = Rectangle (P $ V2 0 0) (V2 32 32)
     let dst = Rectangle (P $ V2 0 0) (V2 32 32)
     copyEx renderer texture (Just src) (Just dst) 0 Nothing (V2 False False)
     present renderer
 
+    -- Do it again
     unless quit $ mainLoop window renderer texture newGameState
