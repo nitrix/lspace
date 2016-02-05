@@ -8,6 +8,7 @@ import Control.Monad
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
 import Control.Monad.State
+import Control.Lens
 
 import Game
 
@@ -31,7 +32,7 @@ main = do
     showWindow window
 
     -- Main loop
-    mainLoop window renderer texture gameDefaultState
+    mainLoop window renderer texture defaultGameState
     
     -- Cleanup
     destroyRenderer renderer
@@ -46,7 +47,7 @@ mainLoop window renderer texture gameState = do
     let (quit, newGameState) = runState (gameHandleEvent event) gameState
     
     -- Debugging
-    putStrLn $ "Counter: " ++ (show $ counter newGameState)
+    putStrLn $ "Counter: " ++ show (newGameState ^. counter)
     
     -- Render camera
     clear renderer

@@ -1,29 +1,24 @@
 module Camera where
 
-import Linear (V2(V2), V4(V4))
-import Linear.Affine (Point(P))
+import Control.Lens
+import Coordinate
 
-data Camera = MkCamera { screenWidth :: Int
-                       , screenHeight :: Int
-                       , positionInWorld :: Point V2 Integer
-                       , positionInChunk :: Point V2 Word
-                       }
+data Camera = MkCamera { _cameraCoordinate :: Coordinate }
 
 defaultCamera :: Camera
-defaultCamera = MkCamera { screenWidth = 0
-                         , screenHeight = 0
-                         , positionInWorld = P $ V2 0 0
-                         , positionInChunk = P $ V2 0 0
-                         }
+defaultCamera = MkCamera { _cameraCoordinate = defaultCoordinate }
+
+cameraCoordinate :: Lens' Camera Coordinate
+cameraCoordinate f s = (\x -> s { _cameraCoordinate = x }) <$> (f $ _cameraCoordinate s )
 
 cameraMoveUp :: Camera -> Camera
-cameraMoveUp = id
+cameraMoveUp = cameraCoordinate . coordinateY %~ (subtract 1)
 
 cameraMoveDown :: Camera -> Camera
-cameraMoveDown = id
+cameraMoveDown = cameraCoordinate . coordinateY %~ (+1)
 
 cameraMoveLeft :: Camera -> Camera
-cameraMoveLeft = id
+cameraMoveLeft = cameraCoordinate . coordinateX %~ (subtract 1)
                     
 cameraMoveRight :: Camera -> Camera
-cameraMoveRight = id
+cameraMoveRight = cameraCoordinate . coordinateX %~ (+1)

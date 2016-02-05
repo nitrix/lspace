@@ -9,7 +9,7 @@ import Control.Lens
 
 import Camera
 
-data GameState = MkGameState { playerPosition :: Point V2 Integer
+data GameState = MkGameState { _playerPosition :: Point V2 Integer
                              , _camera :: Camera
                              , _counter :: Int }
 
@@ -35,8 +35,8 @@ gameHandleEvent event = do
             return False
         _ -> return False
 
-gameDefaultState :: GameState
-gameDefaultState = MkGameState { playerPosition = P $ V2 0 0
+defaultGameState :: GameState
+defaultGameState = MkGameState { _playerPosition = P $ V2 0 0
                                , _counter = 0
                                , _camera = defaultCamera
                                }
