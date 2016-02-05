@@ -9,6 +9,13 @@ data Camera = MkCamera { screenWidth :: Int
                        , positionInChunk :: Point V2 Word
                        }
 
+defaultCamera :: Camera
+defaultCamera = MkCamera { screenWidth = 0
+                         , screenHeight = 0
+                         , positionInWorld = P $ V2 0 0
+                         , positionInChunk = P $ V2 0 0
+                         }
+
 cameraMoveUp :: Camera -> Camera
 cameraMoveUp = id
 

@@ -2,38 +2,41 @@ module Game where
 
 import SDL.Event
 import SDL.Input.Keyboard
-import SDL.Input.Keyboard.Codes
+import Linear (V2(V2))
 import Linear.Affine (Point(P))
 import Control.Monad.State (State, modify)
-import Linear (V2(V2))
+import Control.Lens
 
 import Camera
 
 data GameState = MkGameState { playerPosition :: Point V2 Integer
-                             , camera :: Camera
-                             , counter :: Int }
-                          
-gameDefaultState :: GameState
-gameDefaultState = MkGameState { playerPosition = P $ V2 0 0
-                               , counter = 0
-                               }
+                             , _camera :: Camera
+                             , _counter :: Int }
 
+camera :: Lens' GameState Camera
+camera f s = (\x -> s { _camera = x }) <$> (f $ _camera s)
+
+counter :: Lens' GameState Int
+counter f s = (\x -> s { _counter = x }) <$> (f $ _counter s)
+                          
 gameHandleEvent :: Event -> State GameState Bool
 gameHandleEvent event = do
-    modifyCounter (+1)
+    modify $ counter %~ (+1)
 
     case eventPayload event of
         QuitEvent -> return True
-        KeyboardEvent ked ->
+        KeyboardEvent ked -> do
             case (keysymKeycode $ keyboardEventKeysym ked) of
-                KeycodeUp -> modifyCamera cameraMoveUp
-                KeycodeDown -> modifyCamera cameraMoveDown
-                KeycodeRight -> modifyCamera cameraMoveRight
-                KeycodeLeft -> modifyCamera cameraMoveLeft
-                _ -> return False
-                
-    where
-        modifyCamera :: (Camera -> Camera) -> State GameState Bool
-        modifyCamera f = do { modify $ \gs -> gs { camera = f $ camera gs }; return False }
-        modifyCounter :: (Int -> Int) -> State GameState Bool
-        modifyCounter f = do { modify $ \gs -> gs { counter = f $ counter gs }; return False }
+                KeycodeUp -> modify $ camera %~ cameraMoveUp
+                KeycodeDown -> modify $ camera %~ cameraMoveDown
+                KeycodeRight -> modify $ camera %~ cameraMoveRight
+                KeycodeLeft -> modify $ camera %~ cameraMoveLeft
+                _ -> return ()
+            return False
+        _ -> return False
+
+gameDefaultState :: GameState
+gameDefaultState = MkGameState { playerPosition = P $ V2 0 0
+                               , _counter = 0
+                               , _camera = defaultCamera
+                               }
