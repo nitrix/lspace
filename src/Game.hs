@@ -26,7 +26,7 @@ gameHandleEvent event = do
     case eventPayload event of
         QuitEvent -> return True
         KeyboardEvent ked -> do
-            case (keysymKeycode $ keyboardEventKeysym ked) of
+            case keysymKeycode (keyboardEventKeysym ked) of
                 KeycodeUp -> modify $ camera %~ cameraMoveUp
                 KeycodeDown -> modify $ camera %~ cameraMoveDown
                 KeycodeRight -> modify $ camera %~ cameraMoveRight
