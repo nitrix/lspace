@@ -11,7 +11,7 @@ packages:
         commit: 0808be3039ce362402166cfdd02fb74c6cd4a2a3
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
-extra-deps: [sdl2-2.1.0, sdl-image-0.2]
+extra-deps: [sdl2-2.1.0, sdl2-image-0.2]
 
 # Override default flag values for local packages and extra-deps
 flags: {}

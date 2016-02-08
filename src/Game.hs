@@ -26,13 +26,21 @@ gameHandleEvent event = do
     case eventPayload event of
         QuitEvent -> return True
         KeyboardEvent ked -> do
-            case keysymKeycode (keyboardEventKeysym ked) of
-                KeycodeUp -> modify $ camera %~ cameraMoveUp
-                KeycodeDown -> modify $ camera %~ cameraMoveDown
-                KeycodeRight -> modify $ camera %~ cameraMoveRight
-                KeycodeLeft -> modify $ camera %~ cameraMoveLeft
-                _ -> return ()
-            return False
+            let keysym = keyboardEventKeysym ked
+            let keymotion = keyboardEventKeyMotion ked
+            let keycode = keysymKeycode keysym
+
+            if keymotion == Pressed then
+                case keycode of
+                    KeycodeUp -> (modify $ camera %~ cameraMoveDown) >> return False
+                    KeycodeDown -> (modify $ camera %~ cameraMoveUp) >> return False
+                    KeycodeRight -> (modify $ camera %~ cameraMoveLeft) >> return False
+                    KeycodeLeft -> (modify $ camera %~ cameraMoveRight) >> return False
+                    _ -> case keysymScancode keysym of 
+                            ScancodeEscape -> return True
+                            _ -> return False
+            else
+                return False
         _ -> return False
 
 defaultGameState :: GameState
