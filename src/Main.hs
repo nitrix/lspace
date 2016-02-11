@@ -48,9 +48,6 @@ mainLoop window renderer texture gameState = do
     -- Handle events
     let (halt, newGameState) = runState (gameHandleEvent event) gameState
     
-    -- Debugging
-    putStrLn $ "Counter: " ++ show (newGameState ^. counter)
-    
     -- Render camera
     clear renderer
     let x = fromIntegral $ newGameState ^. camera . cameraCoordinate . coordinateX

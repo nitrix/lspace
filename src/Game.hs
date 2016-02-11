@@ -8,21 +8,22 @@ import Control.Monad.State (State, modify)
 import Control.Lens
 
 import Camera
+import Coordinate
 
-data GameState = MkGameState { _playerPosition :: Point V2 Integer
+data GameState = MkGameState { _playerPosition :: Coordinate
                              , _camera :: Camera
                              , _counter :: Int }
 
 camera :: Lens' GameState Camera
 camera f s = (\x -> s { _camera = x }) <$> (f $ _camera s)
 
-counter :: Lens' GameState Int
-counter f s = (\x -> s { _counter = x }) <$> (f $ _counter s)
-                          
+defaultGameState :: GameState
+defaultGameState = MkGameState { _playerPosition = defaultCoordinate
+                               , _camera = defaultCamera
+                               }
+
 gameHandleEvent :: Event -> State GameState Bool
 gameHandleEvent event = do
-    modify $ counter %~ (+1)
-
     case eventPayload event of
         QuitEvent -> return True
         KeyboardEvent ked -> do
@@ -42,9 +43,3 @@ gameHandleEvent event = do
             else
                 return False
         _ -> return False
-
-defaultGameState :: GameState
-defaultGameState = MkGameState { _playerPosition = P $ V2 0 0
-                               , _counter = 0
-                               , _camera = defaultCamera
-                               }
