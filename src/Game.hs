@@ -2,8 +2,6 @@ module Game where
 
 import SDL.Event
 import SDL.Input.Keyboard
-import Linear (V2(V2))
-import Linear.Affine (Point(P))
 import Control.Monad.State (State, modify)
 import Control.Lens
 
@@ -13,9 +11,8 @@ import World
 
 data GameState = MkGameState { _playerPosition :: Coordinate
                              , _camera :: Camera
-                             , _counter :: Int
-							 , _world :: World
-							 }
+                             , _world :: World
+                             }
 
 camera :: Lens' GameState Camera
 camera f s = (\x -> s { _camera = x }) <$> (f $ _camera s)
@@ -26,6 +23,7 @@ world f s = (\x -> s { _world = x }) <$> (f $ _world s)
 defaultGameState :: GameState
 defaultGameState = MkGameState { _playerPosition = defaultCoordinate
                                , _camera = defaultCamera
+                               , _world = defaultWorld
                                }
 
 gameHandleEvent :: Event -> State GameState Bool
