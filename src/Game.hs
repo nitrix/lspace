@@ -1,52 +1,58 @@
 module Game where
 
+import Camera
+import Control.Lens
+import Control.Monad.State
+import Coordinate
 import SDL.Event
 import SDL.Input.Keyboard
-import Control.Monad.State (State, modify)
-import Control.Lens
-
-import Camera
-import Coordinate
 import World
 
-data GameState = MkGameState { _playerPosition :: Coordinate
-                             , _camera :: Camera
-                             , _world :: World
-                             }
+data GameState = MkGameState
+    { _playerPosition :: Coordinate
+    , _camera         :: Camera
+    , _world          :: World
+    }
 
+-- TODO: Wait for GHC8 and then switch to makeLenses
 camera :: Lens' GameState Camera
-camera f s = (\x -> s { _camera = x }) <$> (f $ _camera s)
+camera f s = (\x -> s { _camera = x }) <$> f (_camera s)
 
+-- TODO: Wait for GHC8 and then switch to makeLenses
 world :: Lens' GameState World
-world f s = (\x -> s { _world = x }) <$> (f $ _world s)
+world f s = (\x -> s { _world = x }) <$> f (_world s)
 
 defaultGameState :: GameState
-defaultGameState = MkGameState { _playerPosition = defaultCoordinate
-                               , _camera = defaultCamera
-                               , _world = defaultWorld
-                               }
+defaultGameState = MkGameState
+    { _playerPosition = defaultCoordinate
+    , _camera         = defaultCamera
+    , _world          = defaultWorld
+    }
 
 gameHandleEvent :: Event -> State GameState Bool
-gameHandleEvent event = do
+gameHandleEvent event =
     case eventPayload event of
-        QuitEvent -> return True
-        KeyboardEvent ked -> do
-            let keysym = keyboardEventKeysym ked
-            let keymotion = keyboardEventKeyMotion ked
-            let keycode = keysymKeycode keysym
+        KeyboardEvent ked -> gameHandleKeyboardEvent ked
+        QuitEvent         -> return True
+        _                 -> return False
 
-            if keymotion == Pressed then
-                -- Virtual keyboard, the character received
-                case keycode of
-                    KeycodeUp -> (modify $ camera %~ cameraMoveUp) >> return False
-                    KeycodeDown -> (modify $ camera %~ cameraMoveDown) >> return False
-                    KeycodeRight -> (modify $ camera %~ cameraMoveRight) >> return False
-                    KeycodeLeft -> (modify $ camera %~ cameraMoveLeft) >> return False
-                    KeycodeT -> (modify $ world %~ toggleDoors) >> return False
-                    -- Physical actual key location on a US QWERTY keyboard
-                    _ -> case keysymScancode keysym of 
-                            ScancodeEscape -> return True
-                            _ -> return False
-            else
-                return False
-        _ -> return False
+-- | This function handles all keyboard events in the game
+gameHandleKeyboardEvent :: KeyboardEventData -> State GameState Bool
+gameHandleKeyboardEvent ked =
+    if keymotion == Pressed then
+        case keycode of
+            KeycodeUp    -> modify (camera %~ cameraMoveUp)    >> return False
+            KeycodeDown  -> modify (camera %~ cameraMoveDown)  >> return False
+            KeycodeRight -> modify (camera %~ cameraMoveRight) >> return False
+            KeycodeLeft  -> modify (camera %~ cameraMoveLeft)  >> return False
+            KeycodeT     -> modify (world  %~ toggleDoors)     >> return False
+            _            -> case scancode of 
+                                ScancodeEscape -> return True
+                                _              -> return False
+    else
+        return False
+    where
+        keymotion = keyboardEventKeyMotion ked -- ^ Wether the key is being pressed or released
+        keysym    = keyboardEventKeysym ked    -- ^ Key symbol information with two representations available: keycode or scancode
+        keycode   = keysymKeycode keysym       -- ^ Which character is received from the operating system
+        scancode  = keysymScancode keysym      -- ^ Physical key location as it would be on a US QWERTY keyboard
