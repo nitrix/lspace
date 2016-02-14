@@ -36,11 +36,14 @@ gameHandleEvent event = do
             let keycode = keysymKeycode keysym
 
             if keymotion == Pressed then
+                -- Virtual keyboard, the character received
                 case keycode of
                     KeycodeUp -> (modify $ camera %~ cameraMoveUp) >> return False
                     KeycodeDown -> (modify $ camera %~ cameraMoveDown) >> return False
                     KeycodeRight -> (modify $ camera %~ cameraMoveRight) >> return False
                     KeycodeLeft -> (modify $ camera %~ cameraMoveLeft) >> return False
+                    KeycodeT -> (modify $ world %~ toggleDoors) >> return False
+                    -- Physical actual key location on a US QWERTY keyboard
                     _ -> case keysymScancode keysym of 
                             ScancodeEscape -> return True
                             _ -> return False

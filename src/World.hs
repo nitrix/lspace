@@ -22,3 +22,11 @@ defaultWorld = M.fromList [(coordinate 0 0, [FloorObject])
 
 worldObjectsAt :: World -> Coordinate -> [Object]
 worldObjectsAt world coord = fromMaybe [] $ M.lookup coord world
+
+toggleDoors :: World -> World
+toggleDoors = M.adjust (map go) (coordinate 0 2)
+    where
+        go :: Object -> Object
+        go (DoorObject DoorStateOpened) = DoorObject DoorStateClosed
+        go (DoorObject DoorStateClosed) = DoorObject DoorStateOpened
+        go x = x
