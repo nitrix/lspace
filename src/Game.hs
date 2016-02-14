@@ -37,10 +37,10 @@ gameHandleEvent event = do
 
             if keymotion == Pressed then
                 case keycode of
-                    KeycodeUp -> (modify $ camera %~ cameraMoveDown) >> return False
-                    KeycodeDown -> (modify $ camera %~ cameraMoveUp) >> return False
-                    KeycodeRight -> (modify $ camera %~ cameraMoveLeft) >> return False
-                    KeycodeLeft -> (modify $ camera %~ cameraMoveRight) >> return False
+                    KeycodeUp -> (modify $ camera %~ cameraMoveUp) >> return False
+                    KeycodeDown -> (modify $ camera %~ cameraMoveDown) >> return False
+                    KeycodeRight -> (modify $ camera %~ cameraMoveRight) >> return False
+                    KeycodeLeft -> (modify $ camera %~ cameraMoveLeft) >> return False
                     _ -> case keysymScancode keysym of 
                             ScancodeEscape -> return True
                             _ -> return False
