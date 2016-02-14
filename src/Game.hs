@@ -42,11 +42,11 @@ gameHandleKeyboardEvent :: KeyboardEventData -> State GameState Bool
 gameHandleKeyboardEvent ked =
     if keymotion == Pressed then
         case keycode of
-            KeycodeUp    -> modify (camera %~ cameraMoveUp)    >> return False
-            KeycodeDown  -> modify (camera %~ cameraMoveDown)  >> return False
-            KeycodeRight -> modify (camera %~ cameraMoveRight) >> return False
-            KeycodeLeft  -> modify (camera %~ cameraMoveLeft)  >> return False
-            KeycodeT     -> modify (world  %~ toggleDoors)     >> return False
+            KeycodeUp    -> modify (camera %~ cameraMoveUp)        >> return False
+            KeycodeDown  -> modify (camera %~ cameraMoveDown)      >> return False
+            KeycodeRight -> modify (camera %~ cameraMoveRight)     >> return False
+            KeycodeLeft  -> modify (camera %~ cameraMoveLeft)      >> return False
+            KeycodeT     -> modify (world  %~ worldTestToggleDoor) >> return False
             _            -> case scancode of 
                                 ScancodeEscape -> return True
                                 _              -> return False
