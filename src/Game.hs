@@ -29,6 +29,7 @@ defaultGameState = MkGameState
     , _world          = defaultWorld
     }
 
+-- | This function takes care of all events in the game and dispatches them to the appropriate handlers.
 gameHandleEvent :: Event -> State GameState Bool
 gameHandleEvent event =
     case eventPayload event of
@@ -36,7 +37,7 @@ gameHandleEvent event =
         QuitEvent         -> return True
         _                 -> return False
 
--- | This function handles all keyboard events in the game
+-- | This function handles keyboard events in the game
 gameHandleKeyboardEvent :: KeyboardEventData -> State GameState Bool
 gameHandleKeyboardEvent ked =
     if keymotion == Pressed then
