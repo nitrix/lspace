@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE MonoLocalBinds #-}
 
 import SDL
 import qualified SDL.Image as IM
@@ -26,8 +25,7 @@ main = do
     renderer <- createRenderer window (-1) defaultRenderer
     
     -- Loading texture
-    texture <- IM.loadTexture renderer "assets/tileset.png"
-    -- texture <- IM.loadTexture renderer "assets/tilea4.png"
+    tileset <- IM.loadTexture renderer "assets/tileset.png"
     
     -- Some options for convenience
     disableScreenSaver
@@ -39,7 +37,7 @@ main = do
     showWindow window
 
     -- Main loop
-    mainLoop window renderer texture defaultGameState
+    mainLoop window renderer tileset defaultGameState
     
     -- Cleanup
     destroyRenderer renderer
@@ -48,28 +46,38 @@ main = do
     SDL.quit
 
 mainLoop :: Window -> Renderer -> Texture -> GameState -> IO ()
-mainLoop window renderer texture gameState = do
+mainLoop window renderer tileset gameState = do
+    -- Wait for any event
     event <- waitEvent
     
-    -- Handle events
+    -- Handle game event
     let (halt, newGameState) = runState (gameHandleEvent event) gameState
     
-    -- Render camera
+    -- Render world
+    renderGame window renderer tileset newGameState 
+
+    -- Do it again
+    unless halt $ mainLoop window renderer tileset newGameState
+
+renderGame :: Window -> Renderer -> Texture -> GameState -> IO ()
+renderGame window renderer tileset gameState = do
+    -- Let's prepare a new fresh screen
     clear renderer
 
     V2 width height <- SDL.get $ windowSize window
-    let w = newGameState ^. world
-    let cameraX = newGameState ^. camera . cameraCoordinate . coordinateX
-    let cameraY = newGameState ^. camera . cameraCoordinate . coordinateY
+    
     let screenWidthInTiles = fromIntegral $ width `div` 32
     let screenHeightInTiles = fromIntegral $ height `div` 32
+    
+    let cameraX = gameState ^. camera . cameraCoordinate . coordinateX
+    let cameraY = gameState ^. camera . cameraCoordinate . coordinateY
     
     let coordsToRender = [coordinate x y
                          | x <- [cameraX-1..cameraX+screenWidthInTiles+1]
                          , y <- [cameraY-1..cameraY+screenHeightInTiles+1]
                          ]
 
-    let objectsToRender = concatMap (\x -> (\y -> (x, y)) <$> worldObjectsAt w x) coordsToRender
+    let objectsToRender = concatMap (\x -> (\y -> (x, y)) <$> worldObjectsAt (gameState ^. world) x) coordsToRender
     
     mapM_ (\(coord, obj) -> do
         let tileRelX = fromIntegral $ coord ^. coordinateX - cameraX
@@ -77,10 +85,8 @@ mainLoop window renderer texture gameState = do
         let (objSpriteX, objSpriteY) = objectSprite obj
         let src = Rectangle (P $ (V2 (fromIntegral objSpriteX) (fromIntegral objSpriteY)) * V2 32 32) (V2 32 32)
         let dst = Rectangle (P $ V2 (tileRelX*32) (tileRelY*32)) (V2 32 32)
-        copyEx renderer texture (Just src) (Just dst) 0 Nothing (V2 False False)
+        copyEx renderer tileset (Just src) (Just dst) 0 Nothing (V2 False False)
         ) objectsToRender
 
+    -- Render new screen
     present renderer
-
-    -- Do it again
-    unless halt $ mainLoop window renderer texture newGameState
