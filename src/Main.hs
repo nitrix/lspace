@@ -54,11 +54,10 @@ mainLoop game = do
     -- As a optimisation, process all the existing events at once
     -- Previously was:
     --      let (halt, newGame) = runState (gameHandleEvent event) game
-    events <- (event:) <$> pollEvents
-    let (halt, newGame) = foldr (\e (_, y) -> runState (gameHandleEvent e) y) (False, game) events
+    let (shouldHalts, newGame) = runState (traverse gameHandleEvent events) game
     
     -- Then render the new game state
     renderGame newGame
 
     -- Continue doing it over and over again
-    unless halt $ mainLoop newGame
+    unless (or shouldHalts) (mainLoop newGame)
