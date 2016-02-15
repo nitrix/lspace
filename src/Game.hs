@@ -2,23 +2,13 @@ module Game where
 
 import Camera
 import Control.Lens
-import Control.Monad.Reader
 import Control.Monad.State
 import Coordinate
 import SDL.Event
 import SDL.Input.Keyboard
-import SDL.Video
 import World
 
-type GameEnvironment m a = ReaderT GameEnvironment' m a
-
-data GameEnvironment' = MkGameEnvironment
-    { gameWindow   :: Window
-    , gameRenderer :: Renderer
-    , gameTileset  :: Texture
-    }
-
-data Game= MkGame
+data Game = MkGame
     { _playerPosition :: Coordinate
     , _camera         :: Camera
     , _world          :: World

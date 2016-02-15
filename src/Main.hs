@@ -15,6 +15,16 @@ import Game
 import World
 import Object
 
+type Environment m a = ReaderT Environment' m a
+
+data Environment' = MkEnvironment
+    { envGame     :: Game
+    , envWindow   :: Window
+    , envRenderer :: Renderer
+    , envTileset  :: Texture
+    }
+
+
 main :: IO ()
 main = do
     -- Initialize SDL an SDL_image
@@ -38,7 +48,12 @@ main = do
     showWindow window
 
     -- Main loop
-    runReaderT (mainLoop defaultGame) (MkGameEnvironment window renderer tileset)
+    runReaderT mainLoop $ MkEnvironment
+        { envGame     = defaultGame
+        , envWindow   = window
+        , envRenderer = renderer
+        , envTileset  = tileset
+        }
     
     -- Cleanup
     destroyRenderer renderer
@@ -46,25 +61,27 @@ main = do
     IM.quit
     SDL.quit
 
-mainLoop :: Game -> GameEnvironment IO ()
-mainLoop game = do
+mainLoop :: Environment IO ()
+mainLoop = do
     -- Wait for any event
     event <- waitEvent
     
     -- Handle game event
+    game <- asks envGame
     let (halt, newGame) = runState (gameHandleEvent event) game
     
     -- Render world
-    renderGame newGame 
+    renderGame
 
     -- Do it again
-    unless halt $ mainLoop newGame
+    unless halt $ withReaderT (\x -> x { envGame = newGame}) mainLoop
 
-renderGame :: Game -> GameEnvironment IO ()
-renderGame game = do
-    renderer <- asks gameRenderer
-    window   <- asks gameWindow
-    tileset  <- asks gameTileset
+renderGame :: Environment IO ()
+renderGame = do
+    game     <- asks envGame
+    renderer <- asks envRenderer
+    window   <- asks envWindow
+    tileset  <- asks envTileset
 
     -- Let's prepare a new fresh screen
     clear renderer
