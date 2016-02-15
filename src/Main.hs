@@ -49,12 +49,12 @@ main = do
 mainLoop :: Game -> Environment IO ()
 mainLoop game = do
     -- Wait for any event
-    event <- waitEvent
+    event  <- waitEvent
+    events <- (event:) <$> pollEvents
     
     -- As an optimisation, prevent chocking by processing all the queued up events at once
     -- Previously was:
-    --      let (halt, newGame) = runState (gameHandleEvent event) game
-    events <- (event:) <$> pollEvents
+    --     let (halt, newGame) = runState (gameHandleEvent event) game
     let (shouldHalts, newGame) = runState (traverse gameHandleEvent events) game
     
     -- Then render the new game state
