@@ -7,7 +7,8 @@ import Linear (V4(V4))
 import Control.Monad.Reader
 import Control.Monad.State
 
-import Game
+import Game (defaultGame, Game, gameHandleEvent, Environment, Environment'(..))
+import Renderer (renderGame)
 
 main :: IO ()
 main = do
@@ -39,6 +40,7 @@ main = do
         }
     
     -- Cleanup
+    destroyTexture tileset
     destroyRenderer renderer
     destroyWindow window
     Img.quit
