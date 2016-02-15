@@ -48,7 +48,7 @@ main = do
 
 mainLoop :: Game -> Environment IO ()
 mainLoop game = do
-    -- Wait for any event
+    -- Waiting for events
     event  <- waitEvent
     events <- (event:) <$> pollEvents
     
