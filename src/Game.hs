@@ -18,29 +18,29 @@ data GameEnvironment' = MkGameEnvironment
     , gameTileset  :: Texture
     }
 
-data GameState = MkGameState
+data Game= MkGame
     { _playerPosition :: Coordinate
     , _camera         :: Camera
     , _world          :: World
     }
 
 -- TODO: Wait for GHC8 and then switch to makeLenses
-camera :: Lens' GameState Camera
+camera :: Lens' Game Camera
 camera f s = (\x -> s { _camera = x }) <$> f (_camera s)
 
 -- TODO: Wait for GHC8 and then switch to makeLenses
-world :: Lens' GameState World
+world :: Lens' Game World
 world f s = (\x -> s { _world = x }) <$> f (_world s)
 
-defaultGameState :: GameState
-defaultGameState = MkGameState
+defaultGame :: Game
+defaultGame = MkGame
     { _playerPosition = defaultCoordinate
     , _camera         = defaultCamera
     , _world          = defaultWorld
     }
 
 -- | This function takes care of all events in the game and dispatches them to the appropriate handlers.
-gameHandleEvent :: Event -> State GameState Bool
+gameHandleEvent :: Event -> State Game Bool
 gameHandleEvent event =
     case eventPayload event of
         KeyboardEvent ked -> gameHandleKeyboardEvent ked
@@ -48,7 +48,7 @@ gameHandleEvent event =
         _                 -> return False
 
 -- | This function handles keyboard events in the game
-gameHandleKeyboardEvent :: KeyboardEventData -> State GameState Bool
+gameHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
 gameHandleKeyboardEvent ked =
     if keymotion == Pressed then
         case keycode of

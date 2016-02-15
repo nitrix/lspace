@@ -38,7 +38,7 @@ main = do
     showWindow window
 
     -- Main loop
-    runReaderT (mainLoop defaultGameState) (MkGameEnvironment window renderer tileset)
+    runReaderT (mainLoop defaultGame) (MkGameEnvironment window renderer tileset)
     
     -- Cleanup
     destroyRenderer renderer
@@ -46,25 +46,25 @@ main = do
     IM.quit
     SDL.quit
 
-mainLoop :: GameState -> GameEnvironment IO ()
-mainLoop gameState = do
+mainLoop :: Game -> GameEnvironment IO ()
+mainLoop game = do
     -- Wait for any event
     event <- waitEvent
     
     -- Handle game event
-    let (halt, newGameState) = runState (gameHandleEvent event) gameState
+    let (halt, newGame) = runState (gameHandleEvent event) game
     
     -- Render world
-    renderGame newGameState 
+    renderGame newGame 
 
     -- Do it again
-    unless halt $ mainLoop newGameState
+    unless halt $ mainLoop newGame
 
-renderGame :: GameState -> GameEnvironment IO ()
-renderGame gameState = do
-    renderer <- gameRenderer <$> ask
-    window   <- gameWindow   <$> ask
-    tileset  <- gameTileset  <$> ask
+renderGame :: Game -> GameEnvironment IO ()
+renderGame game = do
+    renderer <- asks gameRenderer
+    window   <- asks gameWindow
+    tileset  <- asks gameTileset
 
     -- Let's prepare a new fresh screen
     clear renderer
@@ -74,15 +74,15 @@ renderGame gameState = do
     let screenWidthInTiles = fromIntegral $ width `div` 32
     let screenHeightInTiles = fromIntegral $ height `div` 32
     
-    let cameraX = gameState ^. camera . cameraCoordinate . coordinateX
-    let cameraY = gameState ^. camera . cameraCoordinate . coordinateY
+    let cameraX = game ^. camera . cameraCoordinate . coordinateX
+    let cameraY = game ^. camera . cameraCoordinate . coordinateY
     
     let coordsToRender = [coordinate x y
                          | x <- [cameraX-1..cameraX+screenWidthInTiles+1]
                          , y <- [cameraY-1..cameraY+screenHeightInTiles+1]
                          ]
 
-    let objectsToRender = concatMap (\x -> (\y -> (x, y)) <$> worldObjectsAt (gameState ^. world) x) coordsToRender
+    let objectsToRender = concatMap (\x -> (\y -> (x, y)) <$> worldObjectsAt (game ^. world) x) coordsToRender
     
     mapM_ (\(coord, obj) -> do
         let tileRelX = fromIntegral $ coord ^. coordinateX - cameraX
