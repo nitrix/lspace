@@ -5,6 +5,7 @@ import qualified SDL.Image as IM
 import Control.Monad
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
+import Control.Monad.Reader
 import Control.Monad.State
 import Control.Lens
 
@@ -37,7 +38,7 @@ main = do
     showWindow window
 
     -- Main loop
-    mainLoop window renderer tileset defaultGameState
+    runReaderT (mainLoop defaultGameState) (MkGameEnvironment window renderer tileset)
     
     -- Cleanup
     destroyRenderer renderer
@@ -45,8 +46,8 @@ main = do
     IM.quit
     SDL.quit
 
-mainLoop :: Window -> Renderer -> Texture -> GameState -> IO ()
-mainLoop window renderer tileset gameState = do
+mainLoop :: GameState -> GameEnvironment IO ()
+mainLoop gameState = do
     -- Wait for any event
     event <- waitEvent
     
@@ -54,13 +55,17 @@ mainLoop window renderer tileset gameState = do
     let (halt, newGameState) = runState (gameHandleEvent event) gameState
     
     -- Render world
-    renderGame window renderer tileset newGameState 
+    renderGame newGameState 
 
     -- Do it again
-    unless halt $ mainLoop window renderer tileset newGameState
+    unless halt $ mainLoop newGameState
 
-renderGame :: Window -> Renderer -> Texture -> GameState -> IO ()
-renderGame window renderer tileset gameState = do
+renderGame :: GameState -> GameEnvironment IO ()
+renderGame gameState = do
+    renderer <- gameRenderer <$> ask
+    window   <- gameWindow   <$> ask
+    tileset  <- gameTileset  <$> ask
+
     -- Let's prepare a new fresh screen
     clear renderer
 
@@ -89,4 +94,4 @@ renderGame window renderer tileset gameState = do
         ) objectsToRender
 
     -- Render new screen
-    present renderer
+    present renderer 
