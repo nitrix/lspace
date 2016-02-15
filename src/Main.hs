@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import SDL
-import qualified SDL.Image as Img
 import Control.Monad
-import Linear (V4(V4))
 import Control.Monad.Reader
 import Control.Monad.State
-
-import Game (defaultGame, Game, gameHandleEvent, Environment, Environment'(..))
+import Environment
+import Game (defaultGame, Game, gameHandleEvent)
+import Linear (V4(V4))
 import Renderer (renderGame)
+import SDL
+import qualified SDL.Image as Img
 
 main :: IO ()
 main = do

@@ -4,6 +4,7 @@ import Camera
 import Control.Lens
 import Control.Monad.Reader
 import Coordinate
+import Environment
 import Game
 import Linear (V2(V2))
 import Linear.Affine (Point(P))
