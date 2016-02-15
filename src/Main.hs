@@ -49,8 +49,7 @@ main = do
 mainLoop :: Game -> Environment IO ()
 mainLoop game = do
     -- Waiting for events
-    event  <- waitEvent
-    events <- (event:) <$> pollEvents
+    events <- (:) <$> waitEvent <*> pollEvents
     
     -- As an optimisation, prevent chocking by processing all the queued up events at once
     -- Previously was:
