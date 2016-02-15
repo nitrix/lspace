@@ -51,7 +51,7 @@ mainLoop game = do
     -- Wait for any event
     event <- waitEvent
     
-    -- As a optimisation, process all the existing events at once
+    -- As an optimisation, prevent chocking by processing all the queued up events at once
     -- Previously was:
     --      let (halt, newGame) = runState (gameHandleEvent event) game
     events <- (event:) <$> pollEvents
