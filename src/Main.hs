@@ -54,6 +54,7 @@ mainLoop game = do
     -- As a optimisation, process all the existing events at once
     -- Previously was:
     --      let (halt, newGame) = runState (gameHandleEvent event) game
+    events <- (event:) <$> pollEvents
     let (shouldHalts, newGame) = runState (traverse gameHandleEvent events) game
     
     -- Then render the new game state
