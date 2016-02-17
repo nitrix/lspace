@@ -3,7 +3,7 @@ module Object.Door (doorObject, defaultDoor) where
 import Message
 import Object
 
-data DoorState = DoorOpened | DoorClosed
+data DoorState = DoorOpened | DoorClosed | DoorClosedLocked
 
 data Door = MkDoor
     { doorState :: DoorState
@@ -11,9 +11,9 @@ data Door = MkDoor
     }
 
 doorObject :: Door -> Object
-doorObject d = defaultObject
-    { objSprite = doorSprite d
-    , objUpdate = doorObject . doorUpdate d
+doorObject x = defaultObject
+    { objSprite = doorSprite x
+    , objUpdate = doorObject . doorUpdate x
     }
 
 defaultDoor :: Door
@@ -23,13 +23,18 @@ defaultDoor = MkDoor
     }
 
 doorSprite :: Door -> (Int, Int)
-doorSprite d = case doorState d of
-    DoorOpened -> (8, 1)
-    DoorClosed -> (7, 1)
+doorSprite x = case doorState x of
+    DoorOpened       -> opened
+    DoorClosed       -> closed
+    DoorClosedLocked -> closed
+    where
+        opened = (8, 1)
+        closed = (7, 1)
 
 doorUpdate :: Door -> Message -> Door
-doorUpdate d msg = case msg of
-    InteractMsg -> case doorState d of
-        DoorOpened -> d { doorState = DoorClosed }
-        DoorClosed -> d { doorState = DoorOpened }
-    _ -> d
+doorUpdate x msg = case msg of
+    InteractMsg -> case doorState x of
+        DoorOpened       -> x { doorState = DoorClosed }
+        DoorClosed       -> x { doorState = DoorOpened }
+        DoorClosedLocked -> x
+    _ -> x

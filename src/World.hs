@@ -27,6 +27,4 @@ worldObjectsAt world coord = fromMaybe [] $ M.lookup coord world
 
 -- TODO: temporary test
 worldTestInteractAll :: World -> World
-worldTestInteractAll w = map go <$> w
-    where
-        go o = objUpdate o InteractMsg
+worldTestInteractAll w = map (flip objUpdate InteractMsg) <$> w
