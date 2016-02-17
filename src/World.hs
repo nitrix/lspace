@@ -6,20 +6,21 @@ import Data.Maybe
 
 import Message
 import Object
-import Object.Door
+import Object.Box
 
 type World = M.Map Coordinate [Object]
 
 defaultWorld :: World
 defaultWorld = M.fromList
-    [ (coordinate 0 0, [doorObject defaultDoor])
-    , (coordinate 1 0, [])
-    , (coordinate 2 0, [])
-    , (coordinate 1 1, [])
-    , (coordinate 2 1, [])
-    , (coordinate 3 1, [])
-    , (coordinate 0 2, [])
-    , (coordinate 1 2, [])
+    [ (coordinate 0 0, [boxObject defaultBox])
+    , (coordinate 1 0, [boxObject defaultBox])
+    , (coordinate 0 1, [boxObject $ defaultBox { boxState = BoxOpened }])
+    , (coordinate 2 1, [boxObject $ defaultBox { boxState = BoxOpened }])
+    , (coordinate 1 2, [boxObject $ defaultBox { boxState = BoxClosedLocked }])
+    , (coordinate 3 1, [boxObject $ defaultBox { boxState = BoxOpened }])
+    , (coordinate 0 0, [boxObject $ defaultBox { boxState = BoxClosedLocked }])
+    , (coordinate 1 3, [boxObject defaultBox])
+    , (coordinate 5 2, [boxObject defaultBox])
     ]
 
 worldObjectsAt :: World -> Coordinate -> [Object]
