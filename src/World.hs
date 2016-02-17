@@ -1,34 +1,32 @@
 module World where
 
-import Data.Maybe
-import qualified Data.Map as M
-import Object
 import Coordinate
+import qualified Data.Map as M
+import Data.Maybe
 
+import Message
+import Object
 import Object.Door
 
 type World = M.Map Coordinate [Object]
 
 defaultWorld :: World
 defaultWorld = M.fromList
-    [ (coordinate 0 0, [FloorObject])
-    , (coordinate 1 0, [WallObject])
-    , (coordinate 2 0, [WallObject])
-    , (coordinate 1 1, [WallObject])
-    , (coordinate 2 1, [WallObject])
-    , (coordinate 3 1, [WallObject])
-    , (coordinate 0 2, [DoorObject DoorStateOpened])
-    , (coordinate 1 2, [DoorObject DoorStateClosed])
+    [ (coordinate 0 0, [doorObject defaultDoor])
+    , (coordinate 1 0, [])
+    , (coordinate 2 0, [])
+    , (coordinate 1 1, [])
+    , (coordinate 2 1, [])
+    , (coordinate 3 1, [])
+    , (coordinate 0 2, [])
+    , (coordinate 1 2, [])
     ]
 
 worldObjectsAt :: World -> Coordinate -> [Object]
 worldObjectsAt world coord = fromMaybe [] $ M.lookup coord world
 
 -- TODO: temporary test
-worldTestToggleDoor :: World -> World
-worldTestToggleDoor = M.adjust (map go) (coordinate 0 2)
+worldTestInteractAll :: World -> World
+worldTestInteractAll w = map go <$> w
     where
-        go :: Object -> Object
-        go (DoorObject DoorStateOpened) = DoorObject DoorStateClosed
-        go (DoorObject DoorStateClosed) = DoorObject DoorStateOpened
-        go x = x
+        go o = objUpdate o InteractMsg

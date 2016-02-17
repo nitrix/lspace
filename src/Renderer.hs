@@ -40,7 +40,7 @@ renderGame game = do
     mapM_ (\(coord, obj) -> do
         let tileRelX = fromIntegral $ coord ^. coordinateX - cameraX
         let tileRelY = fromIntegral $ coord ^. coordinateY - cameraY
-        let (objSpriteX, objSpriteY) = objectSprite obj
+        let (objSpriteX, objSpriteY) = objSprite obj
         let src = Rectangle (P $ (V2 (fromIntegral objSpriteX) (fromIntegral objSpriteY)) * V2 32 32) (V2 32 32)
         let dst = Rectangle (P $ V2 (tileRelX*32) (tileRelY*32)) (V2 32 32)
         copyEx renderer tileset (Just src) (Just dst) 0 Nothing (V2 False False)

@@ -2,12 +2,8 @@ module Game where
 
 import Camera
 import Control.Lens
-import Control.Monad.Reader
 import Control.Monad.State
 import Coordinate
-import Linear (V2(V2))
-import Linear.Affine (Point(P))
-import Object
 import SDL
 import World
 
@@ -47,11 +43,11 @@ gameHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
 gameHandleKeyboardEvent ked =
     if keymotion == Pressed then
         case keycode of
-            KeycodeUp    -> modify (camera %~ cameraMoveUp)        >> return False
-            KeycodeDown  -> modify (camera %~ cameraMoveDown)      >> return False
-            KeycodeRight -> modify (camera %~ cameraMoveRight)     >> return False
-            KeycodeLeft  -> modify (camera %~ cameraMoveLeft)      >> return False
-            KeycodeT     -> modify (world  %~ worldTestToggleDoor) >> return False
+            KeycodeUp    -> modify (camera %~ cameraMoveUp)         >> return False
+            KeycodeDown  -> modify (camera %~ cameraMoveDown)       >> return False
+            KeycodeRight -> modify (camera %~ cameraMoveRight)      >> return False
+            KeycodeLeft  -> modify (camera %~ cameraMoveLeft)       >> return False
+            KeycodeT     -> modify (world  %~ worldTestInteractAll) >> return False
             _            -> case scancode of 
                                 ScancodeEscape -> return True
                                 _              -> return False
