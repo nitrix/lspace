@@ -1,25 +1,22 @@
-module Object.Box (boxObject, defaultBox, Box(..), BoxState(..)) where
+-- module Object.Box (boxObject, defaultBox, Box(..), BoxState(..)) where
+module Object.Box where
 
 import Message
 import Object
 
 data BoxState = BoxOpened | BoxClosed | BoxClosedLocked
+data Box = MkBox { boxState :: BoxState }
 
-data Box = MkBox
-    { boxState :: BoxState
-    , boxPin   :: Int
-    }
-
-boxObject :: Box -> Object
-boxObject x = defaultObject
+boxObject :: Object -> Box -> Object
+boxObject o x = o
     { objSprite = boxSprite x
-    , objUpdate = boxObject . boxUpdate x
+    , objUpdate = boxObject o . boxUpdate x
+    , objMsg = boxMsg x
     }
 
 defaultBox :: Box
 defaultBox = MkBox 
     { boxState = BoxOpened
-    , boxPin = 0
     }
 
 boxSprite :: Box -> (Int, Int)
@@ -32,9 +29,12 @@ boxSprite x = case boxState x of
         closed = (3, 3)
 
 boxUpdate :: Box -> Message -> Box
-boxUpdate x msg = case msg of
+boxUpdate x m = case m of
     InteractMsg -> case boxState x of
         BoxOpened       -> x { boxState = BoxClosed }
         BoxClosed       -> x { boxState = BoxOpened }
         BoxClosedLocked -> x
     _ -> x
+
+boxMsg :: Box -> Message -> [Message]
+boxMsg _ _ = []

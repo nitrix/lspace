@@ -3,14 +3,16 @@ module Object where
 import Message
 
 data Object = MkObject
-    { objId :: Integer
+    { objSolid :: Bool
     , objSprite :: (Int, Int)
+    , objMsg :: Message -> [Message]
     , objUpdate :: Message -> Object
     }
 
 defaultObject :: Object
 defaultObject = MkObject
-    { objId = 0
+    { objSolid = True
     , objSprite = (0, 0)
+    , objMsg = const []
     , objUpdate = const defaultObject
     }
