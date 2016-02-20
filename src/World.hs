@@ -28,4 +28,4 @@ worldObjectsAt world coord = fromMaybe [] $ M.lookup coord world
 
 -- TODO: temporary test
 worldTestInteractAll :: World -> World
-worldTestInteractAll w = map (\o -> snd $ objUpdate o InteractMsg) <$> w -- output msgs are discarded
+worldTestInteractAll w = map (\o -> snd $ objMsg o InteractMsg) <$> w -- output msgs are discarded

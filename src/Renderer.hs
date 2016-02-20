@@ -35,15 +35,17 @@ renderGame game = do
                          , y <- [cameraY-1..cameraY+screenHeightInTiles+1]
                          ]
 
-    let objectsToRender = concatMap (\x -> (\y -> (x, y)) <$> worldObjectsAt (game ^. world) x) coordsToRender
+    let objectsToRender = concatMap (\coord -> (\obj -> (coord, obj)) <$> worldObjectsAt (game ^. world) coord) coordsToRender
     
     mapM_ (\(coord, obj) -> do
         let tileRelX = fromIntegral $ coord ^. coordinateX - cameraX
         let tileRelY = fromIntegral $ coord ^. coordinateY - cameraY
-        let (objSpriteX, objSpriteY) = objSprite obj
-        let src = Rectangle (P $ (V2 (fromIntegral objSpriteX) (fromIntegral objSpriteY)) * V2 32 32) (V2 32 32)
-        let dst = Rectangle (P $ V2 (tileRelX*32) (tileRelY*32)) (V2 32 32)
-        copyEx renderer tileset (Just src) (Just dst) 0 Nothing (V2 False False)
+        mapM (\sprite -> do
+            let (spriteRelX, spriteRelY, spriteX, spriteY) = over each fromIntegral sprite
+            let src = Rectangle (P $ (V2 (fromIntegral spriteX) (fromIntegral spriteY)) * V2 32 32) (V2 32 32)
+            let dst = Rectangle (P $ V2 (tileRelX*32 + spriteRelX*32) (tileRelY*32 + spriteRelY*32)) (V2 32 32)
+            copyEx renderer tileset (Just src) (Just dst) 0 Nothing (V2 False False)
+            ) $ objSprite obj
         ) objectsToRender
 
     -- Render new screen
