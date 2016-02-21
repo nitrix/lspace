@@ -1,5 +1,6 @@
 module World
     ( World
+    , demoContent
     , defaultWorld
     , worldObjectsAt
     , worldTestInteractAll
@@ -48,6 +49,7 @@ demoContent = A.fromList
     , (coordinate 0 0, 1)
     , (coordinate 1 3, 1)
     , (coordinate 5 2, 0)
+    , (coordinate 5 5, 0)
     , (coordinate 5 5, 2)
     ]
 
