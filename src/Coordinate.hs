@@ -4,7 +4,7 @@ import Linear (V2(V2))
 import Linear.Affine (Point(P))
 import Control.Lens
 
-newtype Coordinate = MkCoordinate { _coordinate :: Point V2 Integer } deriving (Eq, Ord)
+newtype Coordinate = MkCoordinate { _coordinate :: Point V2 Integer } deriving (Eq, Ord, Show)
 
 -- TODO: Wait for GHC8 and then switch to makeLenses
 coordinateX :: Lens' Coordinate Integer

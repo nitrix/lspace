@@ -36,10 +36,9 @@ renderGame game = do
                          ]
 
     let thingsToRender = let objects    = concatMap getObjects coordsToRender
-                             entities   = worldEntities (game ^. world)
                              getObjects = (\coord -> (\obj -> (coord, obj)) <$> worldObjectsAt (game ^. world) coord)
                          in
-                             objects ++ entities
+                             objects
     
     mapM_ (\(coord, obj) -> do
         let tileRelX = fromIntegral $ coord ^. coordinateX - cameraX

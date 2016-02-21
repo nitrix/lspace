@@ -1,46 +1,53 @@
--- module Object.Box (boxObject, defaultBox, Box(..), BoxState(..)) where
-module Object.Box where
+module Object.Box
+    ( boxObject
+    , defaultBox
+    , Box(..)
+    , BoxState(..)
+    )
+where
 
 import Control.Monad.State
 import Message
 import Object
 import Sprite
 
-data BoxState = BoxOpened | BoxClosed | BoxClosedLocked
-data Box = MkBox { boxState :: BoxState }
+data BoxState = BoxOpened | BoxClosed
+
+data Box = MkBox
+    { boxState  :: BoxState
+    , boxLocked :: Bool
+    }
 
 boxObject :: Object -> Box -> Object
 boxObject obj box = obj
-    { objSolid = True
+    { objSolid  = True
     , objSprite = boxSprite box
-    , objMsg = \msg -> boxObject obj <$> runState (boxMsg msg) box
+    , objMsg    = \msg -> boxObject obj <$> runState (boxMsg msg) box
     }
 
 defaultBox :: Box
 defaultBox = MkBox 
-    { boxState = BoxOpened
+    { boxState  = BoxOpened
+    , boxLocked = False
     }
 
 boxSprite :: Box -> Sprite
 boxSprite box = case boxState box of
-    BoxOpened       -> opened
-    BoxClosed       -> closed
-    BoxClosedLocked -> closed
-    where
-        -- opened = [spritePart 0 0 2 2, spritePart 0 1 0 0]
-        opened = sprite 0 2
-        closed = sprite 0 1
+    BoxOpened -> sprite 0 2
+    BoxClosed -> sprite 0 1
 
 boxMsg :: Message -> State Box [Message]
 boxMsg m = do
     case m of
         InteractMsg -> boxInteract
-        _ -> return []
+        _           -> return []
 
 boxInteract :: State Box [Message]
 boxInteract = do
     box <- get
-    case boxState box of
-        BoxOpened       -> (modify $ \x -> x { boxState = BoxClosed }) >> return []
-        BoxClosed       -> (modify $ \x -> x { boxState = BoxOpened }) >> return []
-        BoxClosedLocked -> return []
+    if (boxLocked box) then
+        return []
+    else
+        case boxState box of
+            BoxOpened -> (modify $ \x -> x { boxState = BoxClosed }) >> return []
+            BoxClosed -> (modify $ \x -> x { boxState = BoxOpened }) >> return []

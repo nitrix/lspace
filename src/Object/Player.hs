@@ -22,7 +22,7 @@ playerObject obj p = obj
 defaultPlayer :: Player
 defaultPlayer = MkPlayer 
     { playerHealth = 100
-    , playerDirection  = FacingUp
+    , playerDirection  = FacingDown
     }
 
 playerSprite :: Player -> Sprite
