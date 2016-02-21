@@ -27,8 +27,9 @@ boxSprite box = case boxState box of
     BoxClosed       -> closed
     BoxClosedLocked -> closed
     where
-        opened = [spritePart 0 0 2 2, spritePart 0 1 0 0]
-        closed = sprite 3 3
+        -- opened = [spritePart 0 0 2 2, spritePart 0 1 0 0]
+        opened = sprite 0 2
+        closed = sprite 0 1
 
 boxMsg :: Message -> State Box [Message]
 boxMsg m = do

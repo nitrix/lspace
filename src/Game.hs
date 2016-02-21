@@ -3,15 +3,15 @@ module Game where
 import Camera
 import Control.Lens
 import Control.Monad.State
-import Coordinate
+import Object
 import SDL
 import World
 
 -- | Contains the state of the game (things that will change over time)
 data Game = MkGame
-    { _playerPosition :: Coordinate
-    , _camera         :: Camera
-    , _world          :: World
+    { _player  :: ObjectId
+    , _camera  :: Camera
+    , _world   :: World
     }
 
 -- TODO: Wait for GHC8 and then switch to makeLenses
@@ -25,9 +25,9 @@ world f s = (\x -> s { _world = x }) <$> f (_world s)
 -- | Default game state with an empty world, player and camera at 0,0
 defaultGame :: Game
 defaultGame = MkGame
-    { _playerPosition = defaultCoordinate
-    , _camera         = defaultCamera
-    , _world          = defaultWorld
+    { _player  = 2 -- TODO: change back to 0
+    , _camera  = defaultCamera
+    , _world   = defaultWorld
     }
 
 -- | This function takes care of all events in the game and dispatches them to the appropriate handlers.
@@ -48,6 +48,7 @@ gameHandleKeyboardEvent ked =
             KeycodeRight -> modify (camera %~ cameraMoveRight)      >> return False
             KeycodeLeft  -> modify (camera %~ cameraMoveLeft)       >> return False
             KeycodeT     -> modify (world  %~ worldTestInteractAll) >> return False
+            KeycodeW     -> modify (world  %~ playerMoveUp)         >> return False
             _            -> case scancode of 
                                 ScancodeEscape -> return True
                                 _              -> return False

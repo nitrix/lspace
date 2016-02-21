@@ -3,6 +3,8 @@ module Object where
 import Message
 import Sprite
 
+type ObjectId = Integer
+
 data Object = MkObject
     { objSolid :: Bool
     , objSprite :: Sprite
