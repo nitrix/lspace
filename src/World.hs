@@ -4,7 +4,7 @@ module World
     , defaultWorld
     , worldObjectsAt
     , worldTestInteractAll
-    , playerMoveUp
+    , selfMoveUp
 ) where
 
 import qualified Assoc as A
@@ -63,5 +63,6 @@ worldTestInteractAll w = w { objects = go $ objects w }
         go :: M.Map ObjectId Object -> M.Map ObjectId Object
         go objs = (\o -> snd $ objMsg o InteractMsg) <$> objs -- output msgs are discarded
 
-playerMoveUp :: World -> World
-playerMoveUp = id
+selfMoveUp :: ObjectId -> World -> World
+selfMoveUp obj w = w
+-- selfMoveUp objid w = w { content = A.adjustR _ objid (content w) }
