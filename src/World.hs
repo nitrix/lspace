@@ -64,5 +64,5 @@ worldTestInteractAll w = w { objects = go $ objects w }
         go objs = (\o -> snd $ objMsg o InteractMsg) <$> objs -- output msgs are discarded
 
 selfMoveUp :: ObjectId -> World -> World
-selfMoveUp obj w = w
+selfMoveUp _ w = w
 -- selfMoveUp objid w = w { content = A.adjustR _ objid (content w) }
