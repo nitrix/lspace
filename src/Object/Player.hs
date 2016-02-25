@@ -1,5 +1,6 @@
 module Object.Player where
 
+import Control.Lens
 import Control.Monad.State
 import Coordinate
 import Message
@@ -10,6 +11,9 @@ data Player = MkPlayer
     { _playerHealth :: Int
     , _playerDirection :: Direction
     }
+
+playerDirection :: Lens' Player Direction
+playerDirection f p = (\s -> p { _playerDirection = s } ) <$> (f $ _playerDirection p)
 
 playerObject :: Object -> Player -> Object
 playerObject obj p = obj
@@ -34,5 +38,6 @@ playerSprite p = case _playerDirection p of
 playerMsg :: Message -> State Player [Message]
 playerMsg m = do
     case m of
-        (MovedMsg direction) -> modify (\p -> p { _playerDirection = direction }) >> return []
-        _ -> return []
+        (MovedMsg direction) -> modify $ playerDirection .~ direction
+        _ -> return ()
+    return []
