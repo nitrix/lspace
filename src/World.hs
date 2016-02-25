@@ -9,6 +9,7 @@ module World
 
 import qualified Assoc as A
 import Coordinate
+import Control.Lens
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.Maybe
@@ -17,18 +18,27 @@ import Object
 import Object.Box
 import Object.Player
 
+type ObjectMapping = M.Map ObjectId Object
+type ContentAssoc = A.Assoc Coordinate ObjectId
+
 data World = MkWorld
-    { content :: A.Assoc Coordinate ObjectId
-    , objects :: M.Map ObjectId Object  
+    { _content :: ContentAssoc
+    , _objects :: ObjectMapping
     }
 
+content :: Lens' World ContentAssoc
+content f s = (\x -> s { _content = x }) <$> f (_content s)
+
+objects :: Lens' World ObjectMapping
+objects f s = (\x -> s { _objects = x }) <$> f (_objects s)
+
 getObjectById :: World -> ObjectId -> Maybe Object
-getObjectById w oid = M.lookup oid (objects w)
+getObjectById w oid = M.lookup oid (_objects w)
 
 defaultWorld :: World
 defaultWorld = MkWorld
-    { content = demoContent
-    , objects = demoObjects
+    { _content = demoContent
+    , _objects = demoObjects
     }
 
 demoObjects :: M.Map ObjectId Object
@@ -54,18 +64,19 @@ demoContent = A.fromList
     ]
 
 worldObjectsAt :: World -> Coordinate -> [Object]
-worldObjectsAt w c = catMaybes $ map (getObjectById w) $ S.toList $ A.lookup c (content w)
+worldObjectsAt w c = catMaybes $ map (getObjectById w) $ S.toList $ A.lookup c (_content w)
 
+-- worldMapObjects :: World -> (Object -> Object) 
 -- TODO
 worldTestInteractAll :: World -> World
-worldTestInteractAll w = w { objects = go $ objects w }
+worldTestInteractAll = objects %~ go
     where
         go :: M.Map ObjectId Object -> M.Map ObjectId Object
         go objs = (\o -> snd $ objMsg o InteractMsg) <$> objs -- output msgs are discarded
 
 -- Needs to handle messag responses eventually
 worldMessage :: Message -> ObjectId -> World -> World
-worldMessage msg objid w = w { objects = M.adjust newObject objid (objects w) }
+worldMessage msg objid = objects %~ M.adjust newObject objid
     where
         newObject o = snd $ msgedObject o
         msgedObject o = objMsg o msg
@@ -74,4 +85,4 @@ thingMove :: Direction -> ObjectId -> World -> World
 thingMove direction objid = msgOrientation . updateCoordinate
     where
         msgOrientation w = worldMessage (MovedMsg direction) objid w
-        updateCoordinate w = w { content = A.adjustR (coordinateMove direction) objid (content w) } 
+        updateCoordinate = content %~ A.adjustR (coordinateMove direction) objid

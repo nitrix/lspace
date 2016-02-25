@@ -7,8 +7,8 @@ import Object
 import Sprite
 
 data Player = MkPlayer
-    { playerHealth :: Int
-    , playerDirection :: Direction
+    { _playerHealth :: Int
+    , _playerDirection :: Direction
     }
 
 playerObject :: Object -> Player -> Object
@@ -20,12 +20,12 @@ playerObject obj p = obj
 
 defaultPlayer :: Player
 defaultPlayer = MkPlayer 
-    { playerHealth = 100
-    , playerDirection  = DownDirection
+    { _playerHealth = 100
+    , _playerDirection  = DownDirection
     }
 
 playerSprite :: Player -> Sprite
-playerSprite p = case playerDirection p of
+playerSprite p = case _playerDirection p of
     UpDirection    -> sprite 1 0
     DownDirection  -> sprite 1 2
     LeftDirection  -> sprite 1 1
@@ -34,5 +34,5 @@ playerSprite p = case playerDirection p of
 playerMsg :: Message -> State Player [Message]
 playerMsg m = do
     case m of
-        (MovedMsg direction) -> modify (\p -> p { playerDirection = direction }) >> return []
+        (MovedMsg direction) -> modify (\p -> p { _playerDirection = direction }) >> return []
         _ -> return []

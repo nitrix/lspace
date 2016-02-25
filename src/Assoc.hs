@@ -3,7 +3,7 @@ module Assoc
     , Assoc.fromList
     , Assoc.lookup
     , Assoc.lookupR
---    , Assoc.adjust
+    , Assoc.adjust
     , Assoc.adjustR
     )
 where
@@ -28,13 +28,14 @@ fromList xs = MkAssoc
     where
         innerInsert (a, b) m = M.insertWith S.union a (S.singleton b) m
 
-{-
-adjust :: (b -> b) -> a -> Assoc a b -> Assoc a b
-adjust f k (MkAssoc left right) = MkAssoc (leftGo left) (right)
+adjust :: (Ord a, Ord b) => (b -> b) -> a -> Assoc a b -> Assoc a b
+adjust f k (MkAssoc left right) = MkAssoc goLeft goRight
     where
-        leftGo :: M.Map a (S.Set b) -> M.Map a (S.Set b)
-        leftGo x = M.adjust () k x
--}
+        goRight = foldr (\c m -> M.insertWith S.union c (S.singleton k) m) rightClean newLeftValues
+        rightClean = foldr (M.adjust (S.delete k)) right oldLeftValues
+        goLeft = M.adjust (const $ newLeftValues) k left
+        oldLeftValues = fromMaybe S.empty $ M.lookup k left
+        newLeftValues = S.map f oldLeftValues
 
 adjustR :: (Ord a, Ord b) => (a -> a) -> b -> Assoc a b -> Assoc a b
 adjustR f k (MkAssoc left right) = MkAssoc goLeft goRight

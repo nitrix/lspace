@@ -27,8 +27,8 @@ renderGame game = do
     let screenWidthInTiles = fromIntegral $ width `div` 32
     let screenHeightInTiles = fromIntegral $ height `div` 32
     
-    let cameraX = game ^. camera . cameraCoordinate . coordinateX
-    let cameraY = game ^. camera . cameraCoordinate . coordinateY
+    let cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
+    let cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
     
     let coordsToRender = [coordinate x y
                          | x <- [cameraX-1..cameraX+screenWidthInTiles+1]
@@ -36,7 +36,7 @@ renderGame game = do
                          ]
 
     let thingsToRender = let objects    = concatMap getObjects coordsToRender
-                             getObjects = (\coord -> (\obj -> (coord, obj)) <$> worldObjectsAt (game ^. world) coord)
+                             getObjects = (\coord -> (\obj -> (coord, obj)) <$> worldObjectsAt (game ^. gameWorld) coord)
                          in
                              objects
     
