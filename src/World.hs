@@ -64,7 +64,7 @@ demoContent = A.fromList
     ]
 
 worldObjectsAt :: World -> Coordinate -> [Object]
-worldObjectsAt w c = catMaybes $ map (getObjectById w) $ S.toList $ A.lookup c (_content w)
+worldObjectsAt w c = catMaybes . map (getObjectById w) . S.toList . A.lookup c $ view content w
 
 -- worldMapObjects :: World -> (Object -> Object) 
 -- TODO
