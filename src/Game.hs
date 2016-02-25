@@ -1,6 +1,7 @@
 module Game where
 
 import Camera
+import Coordinate
 import Control.Lens
 import Control.Monad.State as S
 import Object
@@ -48,12 +49,15 @@ gameHandleKeyboardEvent ked = do
     game <- S.get
     if keymotion == Pressed then
         case keycode of
-            KeycodeUp    -> modify (camera %~ cameraMoveUp)                >> return False
-            KeycodeDown  -> modify (camera %~ cameraMoveDown)              >> return False
-            KeycodeRight -> modify (camera %~ cameraMoveRight)             >> return False
-            KeycodeLeft  -> modify (camera %~ cameraMoveLeft)              >> return False
-            KeycodeT     -> modify (world  %~ worldTestInteractAll)        >> return False
-            KeycodeW     -> modify (world  %~ selfMoveUp (game ^. player)) >> return False
+            KeycodeUp    -> modify (camera %~ cameraMoveUp)                              >> return False
+            KeycodeDown  -> modify (camera %~ cameraMoveDown)                            >> return False
+            KeycodeRight -> modify (camera %~ cameraMoveRight)                           >> return False
+            KeycodeLeft  -> modify (camera %~ cameraMoveLeft)                            >> return False
+            KeycodeT     -> modify (world  %~ worldTestInteractAll)                      >> return False
+            KeycodeW     -> modify (world  %~ thingMove UpDirection    (game ^. player)) >> return False
+            KeycodeS     -> modify (world  %~ thingMove DownDirection  (game ^. player)) >> return False
+            KeycodeA     -> modify (world  %~ thingMove LeftDirection  (game ^. player)) >> return False
+            KeycodeD     -> modify (world  %~ thingMove RightDirection (game ^. player)) >> return False
             _            -> case scancode of 
                                 ScancodeEscape -> return True
                                 _              -> return False

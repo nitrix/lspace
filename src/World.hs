@@ -4,7 +4,7 @@ module World
     , defaultWorld
     , worldObjectsAt
     , worldTestInteractAll
-    , selfMoveUp
+    , thingMove
 ) where
 
 import qualified Assoc as A
@@ -63,6 +63,15 @@ worldTestInteractAll w = w { objects = go $ objects w }
         go :: M.Map ObjectId Object -> M.Map ObjectId Object
         go objs = (\o -> snd $ objMsg o InteractMsg) <$> objs -- output msgs are discarded
 
-selfMoveUp :: ObjectId -> World -> World
-selfMoveUp _ w = w
--- selfMoveUp objid w = w { content = A.adjustR _ objid (content w) }
+-- Needs to handle messag responses eventually
+worldMessage :: Message -> ObjectId -> World -> World
+worldMessage msg objid w = w { objects = M.adjust newObject objid (objects w) }
+    where
+        newObject o = snd $ msgedObject o
+        msgedObject o = objMsg o msg
+
+thingMove :: Direction -> ObjectId -> World -> World
+thingMove direction objid = msgOrientation . updateCoordinate
+    where
+        msgOrientation w = worldMessage (MovedMsg direction) objid w
+        updateCoordinate w = w { content = A.adjustR (coordinateMove direction) objid (content w) } 

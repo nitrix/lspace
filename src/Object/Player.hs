@@ -1,11 +1,10 @@
 module Object.Player where
 
 import Control.Monad.State
+import Coordinate
 import Message
 import Object
 import Sprite
-
-data Direction = FacingUp | FacingDown | FacingLeft | FacingRight
 
 data Player = MkPlayer
     { playerHealth :: Int
@@ -22,15 +21,15 @@ playerObject obj p = obj
 defaultPlayer :: Player
 defaultPlayer = MkPlayer 
     { playerHealth = 100
-    , playerDirection  = FacingDown
+    , playerDirection  = DownDirection
     }
 
 playerSprite :: Player -> Sprite
 playerSprite p = case playerDirection p of
-    FacingUp -> sprite 1 0
-    FacingDown -> sprite 1 2
-    FacingLeft -> sprite 1 1
-    FacingRight -> sprite 1 3
+    UpDirection    -> sprite 1 0
+    DownDirection  -> sprite 1 2
+    LeftDirection  -> sprite 1 1
+    RightDirection -> sprite 1 3
 
 playerMsg :: Message -> State Player [Message]
 playerMsg m = do

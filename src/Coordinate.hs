@@ -1,8 +1,11 @@
 module Coordinate where
 
+import Prelude hiding (Left, Right)
 import Linear (V2(V2))
 import Linear.Affine (Point(P))
 import Control.Lens
+
+data Direction = UpDirection | DownDirection | LeftDirection | RightDirection
 
 newtype Coordinate = MkCoordinate { _coordinate :: Point V2 Integer } deriving (Eq, Ord, Show)
 
@@ -18,6 +21,12 @@ coordinateY f s = let (P (V2 cx cy)) = _coordinate s in
 
 coordinate :: Integer -> Integer -> Coordinate
 coordinate x y = MkCoordinate $ P $ V2 x y
+
+coordinateMove :: Direction -> Coordinate -> Coordinate
+coordinateMove UpDirection    = coordinateY %~ subtract 1
+coordinateMove DownDirection  = coordinateY %~ (+1)
+coordinateMove LeftDirection  = coordinateX %~ subtract 1
+coordinateMove RightDirection = coordinateX %~ (+1)
 
 defaultCoordinate :: Coordinate
 defaultCoordinate = coordinate 0 0
