@@ -6,6 +6,7 @@ module Object.Box
     )
 where
 
+import Control.Lens
 import Control.Monad.State
 import Message
 import Object
@@ -14,9 +15,15 @@ import Sprite
 data BoxState = BoxOpened | BoxClosed
 
 data Box = MkBox
-    { boxState  :: BoxState
-    , boxLocked :: Bool
+    { _boxState  :: BoxState
+    , _boxLocked :: Bool
     }
+
+-- Lenses
+boxState :: Lens' Box BoxState
+boxLocked :: Lens' Box Bool
+boxState f x = (\s -> x { _boxState = s }) <$> (f $ _boxState x)
+boxLocked f x = (\s -> x { _boxLocked = s }) <$> (f $ _boxLocked x)
 
 boxObject :: Object -> Box -> Object
 boxObject obj box = obj
@@ -27,12 +34,12 @@ boxObject obj box = obj
 
 defaultBox :: Box
 defaultBox = MkBox 
-    { boxState  = BoxOpened
-    , boxLocked = False
+    { _boxState  = BoxOpened
+    , _boxLocked = False
     }
 
 boxSprite :: Box -> Sprite
-boxSprite box = case boxState box of
+boxSprite box = case _boxState box of
     BoxOpened -> sprite 0 2
     BoxClosed -> sprite 0 1
 
@@ -45,9 +52,10 @@ boxMsg m = do
 boxInteract :: State Box [Message]
 boxInteract = do
     box <- get
-    if (boxLocked box) then
-        return []
+    if box ^. boxLocked then
+        return ()
     else
-        case boxState box of
-            BoxOpened -> (modify $ \x -> x { boxState = BoxClosed }) >> return []
-            BoxClosed -> (modify $ \x -> x { boxState = BoxOpened }) >> return []
+        case box ^. boxState of
+            BoxOpened -> modify $ boxState .~ BoxClosed
+            BoxClosed -> modify $ boxState .~ BoxOpened
+    return []

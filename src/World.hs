@@ -44,7 +44,7 @@ defaultWorld = MkWorld
 demoObjects :: M.Map ObjectId Object
 demoObjects = M.fromList
     [ (0, boxObject defaultObject defaultBox)
-    , (1, boxObject defaultObject $ defaultBox { boxLocked = True })
+    , (1, boxObject defaultObject $ defaultBox { _boxLocked = True })
     , (2, playerObject defaultObject defaultPlayer)
     ]
 

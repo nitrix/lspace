@@ -42,7 +42,7 @@ gameHandleEvent event =
 -- | This function handles keyboard events in the game
 gameHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
 gameHandleKeyboardEvent ked = do
-    player <- (^. gamePlayer) <$> S.get
+    player <- view gamePlayer <$> S.get
     when (keymotion == Pressed) $ do
         case keycode of
             KeycodeUp    -> modify $ gameCamera %~ cameraMove UpDirection
