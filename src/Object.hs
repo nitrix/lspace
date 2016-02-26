@@ -1,6 +1,6 @@
 module Object where
 
-import Message
+import System.Message
 import Sprite
 
 type ObjectId = Integer

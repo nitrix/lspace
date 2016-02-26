@@ -1,4 +1,4 @@
-module Message where
+module System.Message where
 
 import Coordinate (Direction)
 

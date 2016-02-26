@@ -8,9 +8,9 @@ where
 
 import Control.Lens
 import Control.Monad.State
-import Message
 import Object
 import Sprite
+import System.Message
 
 data BoxState = BoxOpened | BoxClosed
 

@@ -13,10 +13,10 @@ import Control.Lens
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.Maybe
-import Message
 import Object
 import Object.Box
 import Object.Player
+import System.Message
 
 type ObjectMapping = M.Map ObjectId Object
 type ContentAssoc = A.Assoc Coordinate ObjectId

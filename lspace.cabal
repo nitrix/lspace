@@ -26,5 +26,15 @@ executable lspace
   default-language:    Haskell2010
   extra-libraries:     SDL2_image
   ghc-options:         -threaded -with-rtsopts=-T
-  other-modules:       Game, Camera, Coordinate, Object, World, Object.Box
-                     , Environment, Renderer, Message, Assoc, Object.Player, Sprite
+  other-modules:       Assoc
+                     , Camera
+                     , Coordinate
+                     , Environment
+                     , Game
+                     , Object
+                     , Object.Box
+                     , Object.Player
+                     , Renderer
+                     , Sprite
+                     , System.Message
+                     , World
