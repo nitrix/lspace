@@ -66,22 +66,21 @@ demoContent = A.fromList
 worldObjectsAt :: World -> Coordinate -> [Object]
 worldObjectsAt w c = catMaybes . map (getObjectById w) . S.toList . A.lookup c $ view content w
 
--- worldMapObjects :: World -> (Object -> Object) 
--- TODO
+-- TODO: Remove this enventually
 worldTestInteractAll :: World -> World
 worldTestInteractAll = objects %~ go
     where
         go :: M.Map ObjectId Object -> M.Map ObjectId Object
         go objs = (\o -> snd $ objMsg o InteractMsg) <$> objs -- output msgs are discarded
 
--- Needs to handle messag responses eventually
+-- TODO: Needs to handle messag responses eventually
 worldMessage :: Message -> ObjectId -> World -> World
 worldMessage msg objid = objects %~ M.adjust newObject objid
     where
         newObject o = snd $ msgedObject o
         msgedObject o = objMsg o msg
 
--- TODO: needs a serious rewrite
+-- TODO: Needs a serious rewrite eventually
 worldMoveObject :: Direction -> ObjectId -> World -> World
 worldMoveObject direction objid w =
     if (all (==False) $ map objSolid $ worldObjectsAt w newCoordinate)
