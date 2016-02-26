@@ -4,7 +4,7 @@ module World
     , defaultWorld
     , worldObjectsAt
     , worldTestInteractAll
-    , thingMove
+    , worldMoveObject
 ) where
 
 import qualified Assoc as A
@@ -60,7 +60,7 @@ demoContent = A.fromList
     , (coordinate 1 3, 1)
     , (coordinate 5 2, 0)
     , (coordinate 5 5, 0)
-    , (coordinate 5 5, 2)
+    , (coordinate 5 6, 2)
     ]
 
 worldObjectsAt :: World -> Coordinate -> [Object]
@@ -81,8 +81,14 @@ worldMessage msg objid = objects %~ M.adjust newObject objid
         newObject o = snd $ msgedObject o
         msgedObject o = objMsg o msg
 
-thingMove :: Direction -> ObjectId -> World -> World
-thingMove direction objid = msgOrientation . updateCoordinate
+-- TODO: needs a serious rewrite
+worldMoveObject :: Direction -> ObjectId -> World -> World
+worldMoveObject direction objid w =
+    if (all (==False) $ map objSolid $ worldObjectsAt w newCoordinate)
+    then msgOrientation . updateCoordinate $ w
+    else msgOrientation w
     where
-        msgOrientation w = worldMessage (MovedMsg direction) objid w
+        msgOrientation z = worldMessage (MovedMsg direction) objid z
         updateCoordinate = content %~ A.adjustR (coordinateMove direction) objid
+        currentCoordinate = S.elemAt 0 $ A.lookupR objid (w ^. content)
+        newCoordinate = coordinateMove direction currentCoordinate

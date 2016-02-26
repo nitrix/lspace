@@ -49,10 +49,10 @@ gameHandleKeyboardEvent ked = do
             KeycodeDown  -> modify $ gameCamera %~ cameraMove DownDirection
             KeycodeRight -> modify $ gameCamera %~ cameraMove RightDirection
             KeycodeLeft  -> modify $ gameCamera %~ cameraMove LeftDirection
-            KeycodeW     -> modify $ gameWorld  %~ thingMove UpDirection    player
-            KeycodeS     -> modify $ gameWorld  %~ thingMove DownDirection  player
-            KeycodeA     -> modify $ gameWorld  %~ thingMove LeftDirection  player
-            KeycodeD     -> modify $ gameWorld  %~ thingMove RightDirection player
+            KeycodeW     -> modify $ gameWorld  %~ worldMoveObject UpDirection    player
+            KeycodeS     -> modify $ gameWorld  %~ worldMoveObject DownDirection  player
+            KeycodeA     -> modify $ gameWorld  %~ worldMoveObject LeftDirection  player
+            KeycodeD     -> modify $ gameWorld  %~ worldMoveObject RightDirection player
             KeycodeT     -> modify $ gameWorld  %~ worldTestInteractAll
             _            -> return ()
     return $ scancode == ScancodeEscape
