@@ -36,15 +36,11 @@ main = do
     showWindow window
 
     -- Main loop
-    done <- newEmptyMVar 
-    _ <- forkOn 2 $ do
-        runReaderT (mainLoop defaultGame) $ MkEnvironment
-            { envWindow   = window
-            , envRenderer = renderer
-            , envTileset  = tileset
-            }
-        putMVar done ()
-    takeMVar done
+    runReaderT (mainLoop defaultGame) $ MkEnvironment
+        { envWindow   = window
+        , envRenderer = renderer
+        , envTileset  = tileset
+        }
     
     -- Cleanup
     killThread $ serverThreadId ekg
@@ -56,7 +52,7 @@ main = do
 
 mainLoop :: Game -> Environment IO ()
 mainLoop game = do
-    -- Waiting for events
+    -- Waiting for events; those can only be called in the same thread that set up the video mode
     events <- (:) <$> waitEvent <*> pollEvents
     
     -- As an optimisation, prevent chocking by processing all the queued up events at once
