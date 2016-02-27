@@ -53,7 +53,6 @@ gameHandleKeyboardEvent ked = do
             KeycodeS     -> modify $ gameWorld  %~ worldMoveObject DownDirection  player
             KeycodeA     -> modify $ gameWorld  %~ worldMoveObject LeftDirection  player
             KeycodeD     -> modify $ gameWorld  %~ worldMoveObject RightDirection player
-         -- KeycodeT     -> modify $ gameWorld  %~ worldTestInteractAll
             _            -> return ()
     return $ scancode == ScancodeEscape
     where
