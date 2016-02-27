@@ -3,7 +3,6 @@ module World
     , demoContent
     , defaultWorld
     , worldObjectsAt
-    , worldTestInteractAll
     , worldMoveObject
 ) where
 
@@ -18,26 +17,23 @@ import Object.Box
 import Object.Player
 import System.Message
 
+type Layer = A.Assoc Coordinate ObjectId
 type ObjectMapping = M.Map ObjectId Object
-type ContentAssoc = A.Assoc Coordinate ObjectId
 
 data World = MkWorld
-    { _content :: ContentAssoc
+    { _layer   :: Layer -- TODO: multiple layers
     , _objects :: ObjectMapping
     }
 
-content :: Lens' World ContentAssoc
-content f s = (\x -> s { _content = x }) <$> f (_content s)
+layer :: Lens' World Layer
+layer f s = (\x -> s { _layer = x }) <$> f (_layer s)
 
 objects :: Lens' World ObjectMapping
 objects f s = (\x -> s { _objects = x }) <$> f (_objects s)
 
-getObjectById :: World -> ObjectId -> Maybe Object
-getObjectById w oid = M.lookup oid (_objects w)
-
 defaultWorld :: World
 defaultWorld = MkWorld
-    { _content = demoContent
+    { _layer   = demoContent
     , _objects = demoObjects
     }
 
@@ -63,15 +59,14 @@ demoContent = A.fromList
     , (coordinate 5 6, 2)
     ]
 
-worldObjectsAt :: World -> Coordinate -> [Object]
-worldObjectsAt w c = catMaybes . map (getObjectById w) . S.toList . A.lookup c $ view content w
+worldObjectById :: World -> ObjectId -> Maybe Object
+worldObjectById w oid = M.lookup oid $ view objects w
 
--- TODO: Remove this enventually
-worldTestInteractAll :: World -> World
-worldTestInteractAll = objects %~ go
-    where
-        go :: M.Map ObjectId Object -> M.Map ObjectId Object
-        go objs = (\o -> snd $ objMsg o InteractMsg) <$> objs -- output msgs are discarded
+worldObjectIdsAt :: World -> Coordinate -> [ObjectId]
+worldObjectIdsAt w c = S.toList $ A.lookup c $ view layer w
+
+worldObjectsAt :: World -> Coordinate -> [Object]
+worldObjectsAt w c = mapMaybe (worldObjectById w) (worldObjectIdsAt w c)
 
 -- TODO: Needs to handle messag responses eventually
 worldMessage :: Message -> ObjectId -> World -> World
@@ -87,7 +82,7 @@ worldMoveObject direction objid w =
     then msgOrientation . updateCoordinate $ w
     else msgOrientation w
     where
-        msgOrientation z = worldMessage (MovedMsg direction) objid z
-        updateCoordinate = content %~ A.adjustR (coordinateMove direction) objid
-        currentCoordinate = S.elemAt 0 $ A.lookupR objid (w ^. content)
+        msgOrientation z = worldMessage (MkMessage $ MovedMsg direction) objid z
+        updateCoordinate = layer %~ A.adjustR (coordinateMove direction) objid
+        currentCoordinate = S.elemAt 0 $ A.lookupR objid (w ^. layer)
         newCoordinate = coordinateMove direction currentCoordinate

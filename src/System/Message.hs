@@ -2,7 +2,12 @@ module System.Message where
 
 import Coordinate (Direction)
 
-data Message = InteractMsg
-             | ProximityMsg
-             | SteppedOnMsg
-             | MovedMsg Direction
+data Message = MkMessage
+    { msgType :: MessageType
+    -- , msgFrom :: Integer -- TOOD: ObjectId
+    }
+
+data MessageType = ProximityMsg Direction
+                 | MovedMsg Direction
+                 | SteppedOnMsg
+                 | UnknownMsg
