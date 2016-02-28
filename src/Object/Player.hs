@@ -13,7 +13,7 @@ data Player = MkPlayer
     }
 
 playerDirection :: Lens' Player Direction
-playerDirection f p = (\s -> p { _playerDirection = s } ) <$> (f $ _playerDirection p)
+playerDirection = lens _playerDirection (\s x -> s { _playerDirection = x })
 
 playerObject :: Object -> Player -> Object
 playerObject obj p = obj

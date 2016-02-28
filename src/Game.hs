@@ -17,11 +17,11 @@ data Game = MkGame
 
 -- Lenses
 gameCamera :: Lens' Game Camera
-gameWorld :: Lens' Game World
+gameWorld  :: Lens' Game World
 gamePlayer :: Lens' Game ObjectId
-gameCamera f s = (\x -> s { _gameCamera = x }) <$> f (_gameCamera s)
-gameWorld f s = (\x -> s { _gameWorld = x }) <$> f (_gameWorld s)
-gamePlayer f s = (\x -> s { _gamePlayer = x }) <$> f (_gamePlayer s)
+gameCamera = lens _gameCamera (\s x -> s { _gameCamera = x })
+gameWorld  = lens _gameWorld  (\s x -> s { _gameWorld  = x })
+gamePlayer = lens _gamePlayer (\s x -> s { _gamePlayer = x })
 
 -- | Default game state with an empty world, player and camera at 0,0
 defaultGame :: Game

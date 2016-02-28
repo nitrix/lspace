@@ -13,7 +13,7 @@ defaultCamera = MkCamera { _cameraCoordinate = defaultCoordinate }
 
 -- Lenses
 cameraCoordinate :: Lens' Camera Coordinate
-cameraCoordinate f s = (\x -> s { _cameraCoordinate = x }) <$> (f $ _cameraCoordinate s )
+cameraCoordinate = lens _cameraCoordinate (\s x -> s { _cameraCoordinate = x })
 
 -- | Move the camera in a specified Direction
 cameraMove :: Direction -> Camera -> Camera

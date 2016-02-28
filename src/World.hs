@@ -25,11 +25,10 @@ data World = MkWorld
     , _objects :: ObjectMapping
     }
 
-layer :: Lens' World Layer
-layer f s = (\x -> s { _layer = x }) <$> f (_layer s)
-
+layer   :: Lens' World Layer
 objects :: Lens' World ObjectMapping
-objects f s = (\x -> s { _objects = x }) <$> f (_objects s)
+layer   = lens _layer   (\s x -> s { _layer = x })
+objects = lens _objects (\s x -> s { _objects = x })
 
 defaultWorld :: World
 defaultWorld = MkWorld
