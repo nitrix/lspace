@@ -44,8 +44,12 @@ renderGame game = do
         let tileRelX = fromIntegral $ coord ^. coordinateX - cameraX
         let tileRelY = fromIntegral $ coord ^. coordinateY - cameraY
         mapM (\sprite -> do
-            let (spriteRelX, spriteRelY, spriteX, spriteY) = over each fromIntegral sprite
-            let src = Rectangle (P $ (V2 (fromIntegral spriteX) (fromIntegral spriteY)) * V2 32 32) (V2 32 32)
+            let (spriteRelCoord, spriteCoord) = sprite
+            let spriteRelX = fromInteger $ spriteRelCoord ^. coordinateX
+            let spriteRelY = fromInteger $ spriteRelCoord ^. coordinateY
+            let spriteX = fromInteger $ spriteCoord ^. coordinateX
+            let spriteY = fromInteger $ spriteCoord ^. coordinateY
+            let src = Rectangle (P $ (V2 (fromInteger spriteX) (fromInteger spriteY)) * V2 32 32) (V2 32 32)
             let dst = Rectangle (P $ V2 (tileRelX*32 + spriteRelX*32) (tileRelY*32 + spriteRelY*32)) (V2 32 32)
             copyEx renderer tileset (Just src) (Just dst) 0 Nothing (V2 False False)
             ) $ objSprite obj

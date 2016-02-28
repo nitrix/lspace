@@ -1,12 +1,14 @@
 module Sprite where
 
-type Sprite = [(Int, Int, Int, Int)] -- ^ relX, relY, spriteX, spriteY
+import Coordinate
 
-sprite :: Int -> Int -> Sprite
+type Sprite = [(Coordinate, Coordinate)]
+
+sprite :: Integer -> Integer -> Sprite
 sprite x y = [spritePart 0 0 x y]
 
-spritePart :: Int -> Int -> Int -> Int -> (Int, Int, Int, Int)
-spritePart = (,,,)
+spritePart :: Integer -> Integer -> Integer -> Integer -> (Coordinate, Coordinate)
+spritePart relX relY spriteX spriteY = (coordinate relX relY, coordinate spriteX spriteY)
 
 defaultSprite :: Sprite
 defaultSprite = sprite 0 0
