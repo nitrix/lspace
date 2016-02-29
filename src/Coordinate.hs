@@ -1,7 +1,7 @@
 module Coordinate where
 
 import Prelude hiding (Left, Right)
-import Linear (V2(V2))
+import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 import Control.Lens
 
@@ -12,8 +12,8 @@ type Coordinate = Point V2 Integer
 -- Lenses
 coordinateX :: Lens' Coordinate Integer
 coordinateY :: Lens' Coordinate Integer
-coordinateX f s = let (P (V2 cx cy)) = s in (\x -> coordinate x cy) <$> f cx
-coordinateY f s = let (P (V2 cx cy)) = s in (\y -> coordinate cx y) <$> f cy
+coordinateX = _x
+coordinateY = _y
 
 -- | Simplified Coordinate constructor
 coordinate :: Integer -> Integer -> Coordinate
