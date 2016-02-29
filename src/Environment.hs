@@ -1,4 +1,7 @@
-module Environment where
+module Environment
+    ( Environment
+    , Environment'(..)
+    ) where
 
 import SDL
 import Control.Monad.Reader

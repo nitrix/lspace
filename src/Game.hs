@@ -1,4 +1,12 @@
-module Game where
+module Game
+    ( Game
+    , defaultGame
+    , gameCamera
+    , gamePlayer
+    , gameWorld
+    , gameHandleEvent
+    , gameHandleKeyboardEvent
+    ) where
 
 import Camera
 import Coordinate

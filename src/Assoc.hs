@@ -1,13 +1,14 @@
 module Assoc
     ( Assoc
-    , Assoc.fromList
-    , Assoc.lookup
-    , Assoc.lookupR
-    , Assoc.adjust
-    , Assoc.adjustR
+    , adjust
+    , adjustR
+    , fromList
+    , lookup
+    , lookupR
     )
 where
 
+import Prelude (const, foldr, Ord, (<$>), ($))
 import Data.Maybe
 import qualified Data.Map as M
 import qualified Data.Set as S

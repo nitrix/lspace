@@ -1,4 +1,8 @@
-module Object where
+module Object
+    ( Object(..)
+    , ObjectId
+    , defaultObject
+    ) where
 
 import System.Message
 import Sprite

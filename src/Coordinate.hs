@@ -1,4 +1,12 @@
-module Coordinate where
+module Coordinate
+    ( Coordinate
+    , Direction(..)
+    , coordinate
+    , coordinateMove
+    , coordinateX
+    , coordinateY
+    , defaultCoordinate
+    ) where
 
 import Prelude hiding (Left, Right)
 import Linear (V2(V2), _x, _y)

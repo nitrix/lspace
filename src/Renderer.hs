@@ -1,4 +1,6 @@
-module Renderer where
+module Renderer
+    ( renderGame
+    ) where
 
 import Camera
 import Control.Lens

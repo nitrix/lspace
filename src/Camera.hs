@@ -1,4 +1,9 @@
-module Camera where
+module Camera
+    ( Camera
+    , cameraCoordinate
+    , cameraMove
+    , defaultCamera
+    ) where
 
 import Control.Lens
 import Coordinate

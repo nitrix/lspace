@@ -1,4 +1,9 @@
-module Sprite where
+module Sprite
+    ( Sprite
+    , defaultSprite
+    , sprite
+    , spritePart
+    ) where
 
 import Coordinate
 
