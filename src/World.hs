@@ -34,14 +34,13 @@ defaultWorld = MkWorld
     , _objects = demoObjects
     }
 
-worldObjectById :: World -> ObjectId -> Maybe Object
-worldObjectById w oid = M.lookup oid $ view objects w
-
-worldObjectIdsAt :: World -> Coordinate -> [ObjectId]
-worldObjectIdsAt w c = S.toList $ A.lookup c $ view layer w
-
 worldObjectsAt :: World -> Coordinate -> [Object]
-worldObjectsAt w c = mapMaybe (worldObjectById w) (worldObjectIdsAt w c)
+worldObjectsAt w c = mapMaybe resolveObjectIds objectIds
+    where
+        resolveObjectIds :: ObjectId -> Maybe Object
+        resolveObjectIds oid = M.lookup oid $ view objects w
+        objectIds :: [ObjectId]
+        objectIds = S.toList $ A.lookup c $ view layer w
 
 -- TODO: Needs to handle messag responses eventually
 worldMessage :: Message -> ObjectId -> World -> World
