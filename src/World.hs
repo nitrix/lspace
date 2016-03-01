@@ -1,21 +1,19 @@
 module World
     ( World
-    , demoContent
     , defaultWorld
     , worldObjectsAt
     , worldMoveObject
 ) where
 
-import qualified Assoc as A
 import Coordinate
 import Control.Lens
-import qualified Data.Set as S
-import qualified Data.Map as M
 import Data.Maybe
+import Demo
 import Object
-import Object.Box
-import Object.Player
 import System.Message
+import qualified Assoc as A
+import qualified Data.Map as M
+import qualified Data.Set as S
 
 type Layer = A.Assoc Coordinate ObjectId
 type ObjectMapping = M.Map ObjectId Object
@@ -35,28 +33,6 @@ defaultWorld = MkWorld
     { _layer   = demoContent
     , _objects = demoObjects
     }
-
-demoObjects :: M.Map ObjectId Object
-demoObjects = M.fromList
-    [ (0, boxObject defaultObject defaultBox)
-    , (1, boxObject defaultObject $ defaultBox { _boxLocked = True })
-    , (2, playerObject defaultObject defaultPlayer)
-    ]
-
-demoContent :: A.Assoc Coordinate ObjectId
-demoContent = A.fromList
-    [ (coordinate 0 0, 0)
-    , (coordinate 1 0, 0)
-    , (coordinate 0 1, 0)
-    , (coordinate 2 1, 1)
-    , (coordinate 1 2, 0)
-    , (coordinate 3 1, 0)
-    , (coordinate 0 0, 1)
-    , (coordinate 1 3, 1)
-    , (coordinate 5 2, 0)
-    , (coordinate 5 5, 0)
-    , (coordinate 5 6, 2)
-    ]
 
 worldObjectById :: World -> ObjectId -> Maybe Object
 worldObjectById w oid = M.lookup oid $ view objects w
