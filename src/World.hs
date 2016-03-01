@@ -5,15 +5,15 @@ module World
     , worldMoveObject
 ) where
 
+import qualified Assoc as A
 import Coordinate
 import Control.Lens
+import qualified Data.Map as M
 import Data.Maybe
+import qualified Data.Set as S
 import Demo
 import Object
 import System.Message
-import qualified Assoc as A
-import qualified Data.Map as M
-import qualified Data.Set as S
 
 type Layer = A.Assoc Coordinate ObjectId
 type ObjectMapping = M.Map ObjectId Object

@@ -9,8 +9,8 @@ module Assoc
 where
 
 import Prelude (const, foldr, Ord, (<$>), ($))
-import Data.Maybe
 import qualified Data.Map as M
+import Data.Maybe
 import qualified Data.Set as S
 import Data.Tuple
 

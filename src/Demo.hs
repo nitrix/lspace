@@ -3,12 +3,12 @@ module Demo
     , demoContent
     ) where
 
+import qualified Assoc as A
 import Coordinate
+import qualified Data.Map as M
 import Object
 import Object.Box
 import Object.Player
-import qualified Assoc as A
-import qualified Data.Map as M
 
 demoObjects :: M.Map ObjectId Object
 demoObjects = M.fromList
@@ -31,4 +31,3 @@ demoContent = A.fromList
     , (coordinate 5 5, 0)
     , (coordinate 5 6, 2)
     ]
-

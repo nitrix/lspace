@@ -3,8 +3,8 @@ module Environment
     , Environment'(..)
     ) where
 
-import SDL
 import Control.Monad.Reader
+import SDL
 
 -- | Convenience type to express computations that needs the Environment' to do their work
 type Environment m a = ReaderT Environment' m a
@@ -15,4 +15,3 @@ data Environment' = MkEnvironment
     , envRenderer :: Renderer
     , envTileset  :: Texture
     }
-

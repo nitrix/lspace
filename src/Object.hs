@@ -4,8 +4,8 @@ module Object
     , defaultObject
     ) where
 
-import System.Message
 import Sprite
+import System.Message
 
 type ObjectId = Integer
 
