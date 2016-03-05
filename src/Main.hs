@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Control.Concurrent
+-- import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
@@ -10,14 +10,14 @@ import Linear (V4(V4))
 import Renderer (renderGame)
 import SDL
 import qualified SDL.Image as Img
-import System.Remote.Monitoring
+-- import System.Remote.Monitoring
 
 main :: IO ()
 main = do
     -- Initialize SDL an SDL_image
     initializeAll
     Img.initialize [Img.InitPNG]
-    ekg <- forkServer "localhost" 8080
+    -- ekg <- forkServer "localhost" 8080
 
     -- Fullscreen window with the default renderer
     window <- createWindow "LoneSome Space" defaultWindow { windowMode = FullscreenDesktop }
@@ -43,7 +43,7 @@ main = do
         }
     
     -- Cleanup
-    killThread $ serverThreadId ekg
+    -- killThread $ serverThreadId ekg
     destroyTexture tileset
     destroyRenderer renderer
     destroyWindow window
