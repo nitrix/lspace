@@ -35,8 +35,6 @@ main = runInBoundThread $ do -- ^ TODO: GHC bug #11682
     present renderer
     showWindow window
 
-    isCurrentThreadBound >>= print
-
     runReaderT (mainLoop defaultGame) $ MkEnvironment
         { envWindow   = window
         , envRenderer = renderer

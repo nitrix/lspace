@@ -29,6 +29,7 @@ executable lspace
   other-modules:       Assoc
                      , Camera
                      , Coordinate
+                     , Demo
                      , Environment
                      , Game
                      , Object

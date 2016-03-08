@@ -4,7 +4,8 @@ import Coordinate (Direction)
 
 data Message = MkMessage
     { msgType :: MessageType
-    -- , msgFrom :: Integer -- TOOD: ObjectId
+    , msgFrom :: Integer      -- TODO: circular dependency ObjectId
+    , msgTo   :: Integer      -- TODO: circular dependency ObjectId
     }
 
 data MessageType = ProximityMsg Direction

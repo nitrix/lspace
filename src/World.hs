@@ -43,11 +43,25 @@ worldObjectsAt w c = mapMaybe resolveObjectIds objectIds
         objectIds = S.toList $ A.lookup c $ view layer w
 
 -- TODO: Needs to handle messag responses eventually
-worldMessage :: Message -> ObjectId -> World -> World
-worldMessage msg objid = objects %~ M.adjust newObject objid
+worldMessage :: Message -> World -> World
+worldMessage msg = objects %~ M.adjust newObject objid
     where
         newObject o = snd $ msgedObject o
         msgedObject o = objMsg o msg
+        objid = msgTo msg
+
+-- TODO: Possible replacement; but needs proper msgTo and msgFrom as it's passing data around
+worldMessage' :: Message -> World -> World
+worldMessage' m = objects %~ updateObjects m
+    where
+        updateObjects :: Message -> ObjectMapping -> ObjectMapping
+        updateObjects m objs = case msgedObj of
+                Just (msgs, obj) -> foldr updateObjects (M.insert objId obj objs) msgs
+                Nothing          -> objs
+            where
+                objId = msgTo m
+                msgedObj :: Maybe ([Message], Object)
+                msgedObj = flip objMsg m <$> M.lookup objId objs
 
 -- TODO: Needs a serious rewrite eventually
 worldMoveObject :: Direction -> ObjectId -> World -> World
@@ -56,7 +70,7 @@ worldMoveObject direction objid w =
     then msgOrientation . updateCoordinate $ w
     else msgOrientation w
     where
-        msgOrientation z = worldMessage (MkMessage $ MovedMsg direction) objid z
+        msgOrientation z = worldMessage (MkMessage { msgType = MovedMsg direction, msgTo = objid}) z
         updateCoordinate = layer %~ A.adjustR (coordinateMove direction) objid
         currentCoordinate = S.elemAt 0 $ A.lookupR objid (w ^. layer)
         newCoordinate = coordinateMove direction currentCoordinate
