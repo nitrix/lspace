@@ -11,6 +11,7 @@ import Control.Lens
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as S
+import Debug.Trace
 import Demo
 import Object
 import System.Message
@@ -42,26 +43,30 @@ worldObjectsAt w c = mapMaybe resolveObjectIds objectIds
         objectIds :: [ObjectId]
         objectIds = S.toList $ A.lookup c $ view layer w
 
--- TODO: Needs to handle messag responses eventually
-worldMessage :: Message -> World -> World
-worldMessage msg = objects %~ M.adjust newObject objid
-    where
-        newObject o = snd $ msgedObject o
-        msgedObject o = objMsg o msg
-        objid = msgTo msg
+worldMessage :: Maybe ObjectId -> Maybe ObjectId -> Message -> World -> World
+worldMessage fromObjId Nothing        = worldMessageSystem fromObjId
+worldMessage fromObjId (Just toObjId) = worldMessageObject fromObjId toObjId
 
--- TODO: Possible replacement; but needs proper msgTo and msgFrom as it's passing data around
-worldMessage' :: Message -> World -> World
-worldMessage' m = objects %~ updateObjects m
+worldMessageObject :: Maybe ObjectId -> ObjectId -> Message -> World -> World
+worldMessageObject fromObjId toObjId m w =
+    trace ("From object id: " ++ show fromObjId) $
+    trace ("To object id: " ++ show toObjId) $
+    trace ("Message: " ++ show m) $
+    case response of
+        Just (newMsgs, newObj) -> foldr (worldMessage (Just toObjId) fromObjId)
+                                        (objects %~ M.insert toObjId newObj $ w)
+                                        newMsgs
+        Nothing                -> w
     where
-        updateObjects :: Message -> ObjectMapping -> ObjectMapping
-        updateObjects m objs = case msgedObj of
-                Just (msgs, obj) -> foldr updateObjects (M.insert objId obj objs) msgs
-                Nothing          -> objs
-            where
-                objId = msgTo m
-                msgedObj :: Maybe ([Message], Object)
-                msgedObj = flip objMsg m <$> M.lookup objId objs
+        response :: Maybe ([Message], Object)
+        response = flip objMsg m <$> M.lookup toObjId (_objects w)
+
+worldMessageSystem :: Maybe ObjectId -> Message -> World -> World
+worldMessageSystem fromObjId msg w =
+    trace ("From object id: " ++ show fromObjId) $
+    trace ("To: System") $
+    trace ("Message: " ++ show msg) $
+    w
 
 -- TODO: Needs a serious rewrite eventually
 worldMoveObject :: Direction -> ObjectId -> World -> World
@@ -70,7 +75,7 @@ worldMoveObject direction objid w =
     then msgOrientation . updateCoordinate $ w
     else msgOrientation w
     where
-        msgOrientation z = worldMessage (MkMessage { msgType = MovedMsg direction, msgTo = objid}) z
+        msgOrientation z = worldMessage Nothing (Just objid) (MovedMsg direction) z
         updateCoordinate = layer %~ A.adjustR (coordinateMove direction) objid
         currentCoordinate = S.elemAt 0 $ A.lookupR objid (w ^. layer)
         newCoordinate = coordinateMove direction currentCoordinate

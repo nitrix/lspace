@@ -46,10 +46,7 @@ boxSprite box = case _boxState box of
     BoxClosed -> sprite 0 1
 
 boxMsg :: Message -> State Box [Message]
-boxMsg m = do
-    case msgType m of
-        -- InteractMsg -> boxInteract
-        _           -> return []
+boxMsg _ = return []
 
 {-
 boxInteract :: State Box [Message]
