@@ -2,6 +2,7 @@ module Assoc
     ( Assoc
     , adjust
     , adjustR
+    , empty
     , fromList
     , lookup
     , lookupR
@@ -46,3 +47,6 @@ adjustR f k (MkAssoc left right) = MkAssoc goLeft goRight
         goRight = M.adjust (const $ newRightValues) k right
         oldRightValues = fromMaybe S.empty $ M.lookup k right
         newRightValues = S.map f oldRightValues
+
+empty :: Assoc a b
+empty = MkAssoc M.empty M.empty

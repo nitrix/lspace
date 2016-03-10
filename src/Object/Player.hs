@@ -38,5 +38,5 @@ playerSprite p = case _playerDirection p of
 playerMsg :: Message -> State Player [Message]
 playerMsg m = do
     case m of
-        (MovedMsg direction) -> (modify $ playerDirection .~ direction) >> return [UnknownMsg]
+        (MovedMsg direction) -> (modify $ playerDirection .~ direction) >> return []
         _ -> return []

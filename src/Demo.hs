@@ -1,6 +1,6 @@
 module Demo
     ( demoObjects
-    , demoContent
+    , demoLayer
     ) where
 
 import qualified Assoc as A
@@ -9,16 +9,17 @@ import qualified Data.Map as M
 import Object
 import Object.Box
 import Object.Player
+import World
 
-demoObjects :: M.Map ObjectId Object
+demoObjects :: WorldObjects
 demoObjects = M.fromList
     [ (0, boxObject defaultObject defaultBox)
     , (1, boxObject defaultObject $ defaultBox { _boxLocked = True })
     , (2, playerObject defaultObject defaultPlayer)
     ]
 
-demoContent :: A.Assoc Coordinate ObjectId
-demoContent = A.fromList
+demoLayer :: WorldLayer
+demoLayer = A.fromList
     [ (coordinate 0 0, 0)
     , (coordinate 1 0, 0)
     , (coordinate 0 1, 0)

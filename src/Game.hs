@@ -12,6 +12,7 @@ import Camera
 import Coordinate
 import Control.Lens
 import Control.Monad.State as S
+import Demo
 import Object
 import SDL
 import World
@@ -36,7 +37,9 @@ defaultGame :: Game
 defaultGame = MkGame
     { _gamePlayer  = 2 -- TODO: change back to 0
     , _gameCamera  = defaultCamera
-    , _gameWorld   = defaultWorld
+    , _gameWorld   = defaultWorld &~ do
+                         worldLayer   .= demoLayer
+                         worldObjects .= demoObjects
     }
 
 -- | This function takes care of all events in the game and dispatches them to the appropriate handlers.
