@@ -51,31 +51,21 @@ worldObjectsAt w c = mapMaybe resolveObjectIds objectIds
 
 -- | Sends a message. The origin and the destination can both be either an object (Just) or a system (Nothing).
 worldMessage :: Maybe ObjectId -> Maybe ObjectId -> Message -> World -> World
-worldMessage fromObjId Nothing        = worldMessageSystem fromObjId
-worldMessage fromObjId (Just toObjId) = worldMessageObject fromObjId toObjId
-
--- | Sends a message to an object. The origin can either be another object (Just) or a system (Nothing).
-worldMessageObject :: Maybe ObjectId -> ObjectId -> Message -> World -> World
-worldMessageObject fromObjId toObjId m w =
-    trace ("From object id: " ++ show fromObjId) $
-    trace ("To object id: " ++ show toObjId) $
-    trace ("Message: " ++ show m) $
-    case response of
-        Just (newMsgs, newObj) -> foldr (worldMessage (Just toObjId) fromObjId)
-                                        (worldObjects %~ M.insert toObjId newObj $ w)
-                                        newMsgs
-        Nothing                -> w
-    where
-        response :: Maybe ([Message], Object)
-        response = flip objMsg m <$> M.lookup toObjId (view worldObjects w)
-
--- | Sends a message to a system. The origin can either be an object (Just) or another system (Nothing).
-worldMessageSystem :: Maybe ObjectId -> Message -> World -> World
-worldMessageSystem fromObjId msg w =
-    trace ("From object id: " ++ show fromObjId) $
-    trace ("To: System") $
-    trace ("Message: " ++ show msg) $
+worldMessage fromObjId Nothing m w = 
+    -- trace ("From object id: " ++ show fromObjId) $
+    -- trace ("To: System") $
+    -- trace ("Message: " ++ show m) $
     w
+worldMessage fromObjId (Just toObjId) m w = 
+    -- trace ("From object id: " ++ show fromObjId) $
+    -- trace ("To object id: " ++ show toObjId) $
+    -- trace ("Message: " ++ show m) $
+    case flip objMsg m <$> M.lookup toObjId (view worldObjects w) of
+        Just (newMsgs, newObj) ->
+            foldr (worldMessage (Just toObjId) fromObjId)
+                  (worldObjects %~ M.insert toObjId newObj $ w)
+                  newMsgs
+        Nothing                -> w
 
 -- TODO: Needs a serious rewrite eventually
 worldMoveObject :: Direction -> ObjectId -> World -> World
