@@ -22,10 +22,10 @@ main = runInBoundThread $ do -- ^ TODO: GHC bug #11682
     -- Fullscreen window with the default renderer
     window <- createWindow "LoneSome Space" defaultWindow { windowMode = FullscreenDesktop }
     renderer <- createRenderer window (-1) defaultRenderer
-    
+
     -- Loading texture
     tileset <- Img.loadTexture renderer "assets/tileset.png"
-    
+
     -- Some options for convenience
     disableScreenSaver
     rendererDrawColor renderer $= V4 0 0 0 0 -- black
@@ -40,7 +40,7 @@ main = runInBoundThread $ do -- ^ TODO: GHC bug #11682
         , envRenderer = renderer
         , envTileset  = tileset
         }
-    
+
     -- Cleanup
     killThread $ serverThreadId ekg
     destroyTexture tileset
@@ -49,16 +49,16 @@ main = runInBoundThread $ do -- ^ TODO: GHC bug #11682
     Img.quit
     quit
 
-mainLoop :: Game -> Environment IO ()
+mainLoop :: Game -> EnvironmentT IO ()
 mainLoop game = do
     -- Waiting for events; those can only be called in the same thread that set up the video mode
     events <- (:) <$> waitEvent <*> pollEvents
-    
+
     -- As an optimisation, prevent chocking by processing all the queued up events at once
     -- Previously was:
     --     let (halt, newGame) = runState (gameHandleEvent event) game
     let (shouldHalts, newGame) = runState (traverse gameHandleEvent events) game
-    
+
     -- Then render the new game state
     renderGame newGame
 

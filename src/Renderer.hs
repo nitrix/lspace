@@ -15,7 +15,7 @@ import SDL
 import World
 
 -- TODO: to refactor most of this, please
-renderGame :: Game -> Environment IO ()
+renderGame :: Game -> EnvironmentT IO ()
 renderGame game = do
     renderer <- asks envRenderer
     window   <- asks envWindow
