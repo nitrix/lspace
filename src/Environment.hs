@@ -5,6 +5,7 @@ module Environment
 
 import Control.Monad.Reader
 import SDL
+import SDL.TTF.FFI (TTFFont)
 
 -- | Convenience type to express computations that needs the Environment' to do their work
 type EnvironmentT m a = ReaderT Environment m a
@@ -14,4 +15,5 @@ data Environment = MkEnvironment
     { envWindow   :: Window
     , envRenderer :: Renderer
     , envTileset  :: Texture
+    , envFont     :: TTFFont
     }

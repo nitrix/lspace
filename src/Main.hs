@@ -10,10 +10,11 @@ import Linear (V4(V4))
 import Renderer (renderGame)
 import SDL
 import qualified SDL.Image as Img
+import qualified SDL.TTF as Ttf
 import System.Remote.Monitoring
 
 main :: IO ()
-main = runInBoundThread $ do -- ^ TODO: GHC bug #11682
+main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
     -- Initialize SDL an SDL_image
     initializeAll
     Img.initialize [Img.InitPNG]
@@ -25,6 +26,9 @@ main = runInBoundThread $ do -- ^ TODO: GHC bug #11682
 
     -- Loading texture
     tileset <- Img.loadTexture renderer "assets/tileset.png"
+
+    -- Loading fonts
+    font <- Ttf.openFont "assets/visitor1.ttf" 10
 
     -- Some options for convenience
     disableScreenSaver
@@ -39,10 +43,12 @@ main = runInBoundThread $ do -- ^ TODO: GHC bug #11682
         { envWindow   = window
         , envRenderer = renderer
         , envTileset  = tileset
+        , envFont     = font
         }
 
     -- Cleanup
     killThread $ serverThreadId ekg
+    Ttf.closeFont font
     destroyTexture tileset
     destroyRenderer renderer
     destroyWindow window

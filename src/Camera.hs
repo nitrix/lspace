@@ -10,7 +10,7 @@ import Coordinate
 
 -- | Top view camera onto the world (2 axis).
 -- The user can move this freely or it might temporarily be locked on the player.
-data Camera = MkCamera { _cameraCoordinate :: Coordinate }
+data Camera = MkCamera { _cameraCoordinate :: Coordinate } deriving Show
 
 -- | Default camera at the default coordinate position
 defaultCamera :: Camera

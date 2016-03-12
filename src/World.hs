@@ -15,7 +15,7 @@ import Control.Lens
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as S
-import Debug.Trace
+-- import Debug.Trace
 import Object
 import System.Message
 
@@ -51,7 +51,7 @@ worldObjectsAt w c = mapMaybe resolveObjectIds objectIds
 
 -- | Sends a message. The origin and the destination can both be either an object (Just) or a system (Nothing).
 worldMessage :: Maybe ObjectId -> Maybe ObjectId -> Message -> World -> World
-worldMessage fromObjId Nothing m w = 
+worldMessage _ Nothing _ w = 
     -- trace ("From object id: " ++ show fromObjId) $
     -- trace ("To: System") $
     -- trace ("Message: " ++ show m) $
@@ -67,14 +67,14 @@ worldMessage fromObjId (Just toObjId) m w =
                   newMsgs
         Nothing                -> w
 
--- TODO: Needs a serious rewrite eventually
+-- TODO: Needs a serious rewrite eventually; e.g. giving proximity/stepped on events and so on
 worldMoveObject :: Direction -> ObjectId -> World -> World
 worldMoveObject direction objid w =
     if (all (==False) $ map objSolid $ worldObjectsAt w newCoordinate)
     then msgOrientation . updateCoordinate $ w
     else msgOrientation w
     where
-        msgOrientation z = worldMessage Nothing (Just objid) (MovedMsg direction) z
-        updateCoordinate = worldLayer %~ A.adjustR (coordinateMove direction) objid
+        msgOrientation z  = worldMessage Nothing (Just objid) (MovedMsg direction) z
+        updateCoordinate  = worldLayer %~ A.adjustR (coordinateMove direction) objid
         currentCoordinate = S.elemAt 0 $ A.lookupR objid (view worldLayer w)
-        newCoordinate = coordinateMove direction currentCoordinate
+        newCoordinate     = coordinateMove direction currentCoordinate

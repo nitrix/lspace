@@ -3,6 +3,7 @@ module Game
     , defaultGame
     , gameCamera
     , gamePlayer
+    , gameUi
     , gameWorld
     , gameHandleEvent
     , gameHandleKeyboardEvent
@@ -15,6 +16,7 @@ import Control.Monad.State as S
 import Demo
 import Object
 import SDL
+import Ui
 import World
 
 -- | Contains the state of the game (things that will change over time)
@@ -22,21 +24,25 @@ data Game = MkGame
     { _gamePlayer  :: ObjectId
     , _gameCamera  :: Camera
     , _gameWorld   :: World
+    , _gameUi      :: Ui
     }
 
 -- Lenses
 gameCamera :: Lens' Game Camera
 gameWorld  :: Lens' Game World
 gamePlayer :: Lens' Game ObjectId
+gameUi     :: Lens' Game Ui
 gameCamera = lens _gameCamera (\s x -> s { _gameCamera = x })
 gameWorld  = lens _gameWorld  (\s x -> s { _gameWorld  = x })
 gamePlayer = lens _gamePlayer (\s x -> s { _gamePlayer = x })
+gameUi     = lens _gameUi     (\s x -> s { _gameUi = x })
 
 -- | Default game state with an empty world, player and camera at 0,0
 defaultGame :: Game
 defaultGame = MkGame
-    { _gamePlayer  = 2 -- TODO: change back to 0
-    , _gameCamera  = defaultCamera
+    { _gameCamera  = defaultCamera
+    , _gamePlayer  = 2 -- TODO: change back to 0
+    , _gameUi      = defaultUi
     , _gameWorld   = defaultWorld &~ do
                          worldLayer   .= demoLayer
                          worldObjects .= demoObjects
@@ -64,6 +70,7 @@ gameHandleKeyboardEvent ked = do
             KeycodeS     -> modify $ gameWorld  %~ worldMoveObject DownDirection  player
             KeycodeA     -> modify $ gameWorld  %~ worldMoveObject LeftDirection  player
             KeycodeD     -> modify $ gameWorld  %~ worldMoveObject RightDirection player
+            KeycodeE     -> modify $ gameUi     %~ uiToggle UiMenu
             _            -> return ()
     return $ scancode == ScancodeEscape
     where
