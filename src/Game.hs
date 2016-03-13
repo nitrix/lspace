@@ -16,6 +16,7 @@ import Control.Monad.State as S
 import Demo
 import Object
 import SDL
+import System.Message
 import Ui
 import World
 
@@ -75,7 +76,7 @@ gameHandleKeyboardEvent ked = do
             KeycodeS     -> modify $ gameWorld  %~ worldMoveObject DownDirection  player
             KeycodeA     -> modify $ gameWorld  %~ worldMoveObject LeftDirection  player
             KeycodeD     -> modify $ gameWorld  %~ worldMoveObject RightDirection player
-            KeycodeR     -> modify $ gameWorld  %~ worldRotateObject player
+            KeycodeR     -> modify $ gameWorld  %~ worldMessage Nothing (Just player) RotateMsg
             KeycodeE     -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
             _            -> modify $ id
 
