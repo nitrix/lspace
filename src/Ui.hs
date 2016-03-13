@@ -49,7 +49,7 @@ uiMenuOptions ty = case ty of
         ]
     UiMenuQuitConfirm ->
         [ "[y] Yes, confirm"
-        , "[n] No, stay"
+        , "[n] No, back"
         ]
 
 -- TODO: Rewrite this now that it works
