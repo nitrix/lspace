@@ -44,6 +44,7 @@ uiMenuOptions ty = case ty of
         , "[n] No, stay"
         ]
 
+-- TODO: Rewrite this now that it works
 uiInterceptKeycode :: Ui -> Keycode -> (Ui, Keycode, Bool)
 uiInterceptKeycode ui keycode = 
     if keycode == KeycodeEscape then
@@ -51,17 +52,17 @@ uiInterceptKeycode ui keycode =
     else
         foldr go (ui, keycode, False) (view uiVisible ui)
     where
-        go modal (ui, kc, halt) = 
+        go modal (uip, kc, halt) = 
             case modal of
                 UiMain ->
                     case kc of
-                        KeycodeQ -> (ui &~ do uiVisible %= delete UiMain
-                                              uiVisible %= (UiQuitConfirm:)
+                        KeycodeQ -> (uip &~ do uiVisible %= delete UiMain
+                                               uiVisible %= (UiQuitConfirm:)
                                     , KeycodeUnknown, halt
                                     )
-                        _        -> (ui, kc, halt)
+                        _        -> (uip, kc, halt)
                 UiQuitConfirm ->
                     case kc of
-                        KeycodeY -> (ui, KeycodeUnknown, True)
-                        KeycodeN -> (ui & uiVisible %~ delete modal & uiVisible %~ (UiMain:), KeycodeUnknown, halt)
-                        _        -> (ui, KeycodeUnknown, halt)
+                        KeycodeY -> (uip, KeycodeUnknown, True)
+                        KeycodeN -> (uip & uiVisible %~ delete modal & uiVisible %~ (UiMain:), KeycodeUnknown, halt)
+                        _        -> (uip, KeycodeUnknown, halt)
