@@ -28,7 +28,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     tileset <- Img.loadTexture renderer "assets/tileset.png"
 
     -- Loading fonts
-    font <- Ttf.openFont "assets/visitor1.ttf" 10
+    font <- Ttf.openFont "assets/terminus.ttf" 16
 
     -- Some options for convenience
     disableScreenSaver

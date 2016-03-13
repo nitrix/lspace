@@ -60,8 +60,13 @@ gameHandleEvent event =
 gameHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
 gameHandleKeyboardEvent ked = do
     player <- view gamePlayer <$> S.get
-    when (keymotion == Pressed) $ do
-        case keycode of
+    ui     <- view gameUi     <$> S.get
+
+    if (keymotion == Pressed) then do
+        let (newUi, newKeycode, shouldHalt) = uiInterceptKeycode ui keycode
+        modify $ gameUi .~ newUi
+
+        case newKeycode of
             KeycodeUp    -> modify $ gameCamera %~ cameraMove UpDirection
             KeycodeDown  -> modify $ gameCamera %~ cameraMove DownDirection
             KeycodeRight -> modify $ gameCamera %~ cameraMove RightDirection
@@ -70,11 +75,14 @@ gameHandleKeyboardEvent ked = do
             KeycodeS     -> modify $ gameWorld  %~ worldMoveObject DownDirection  player
             KeycodeA     -> modify $ gameWorld  %~ worldMoveObject LeftDirection  player
             KeycodeD     -> modify $ gameWorld  %~ worldMoveObject RightDirection player
-            KeycodeE     -> modify $ gameUi     %~ uiToggle UiMenu
-            _            -> return ()
-    return $ scancode == ScancodeEscape
+            KeycodeE     -> modify $ gameUi     %~ uiToggle UiMain
+            _            -> modify $ id
+
+        return shouldHalt
+    else 
+        return False -- $ scancode == ScancodeEscape
     where
         keymotion   = keyboardEventKeyMotion ked -- ^ Wether the key is being pressed or released
         keysym      = keyboardEventKeysym ked    -- ^ Key symbol information: keycode or scancode representation
         keycode     = keysymKeycode keysym       -- ^ Which character is received from the operating system
-        scancode    = keysymScancode keysym      -- ^ Physical key location as it would be on a US QWERTY keyboard
+        -- scancode    = keysymScancode keysym      -- ^ Physical key location as it would be on a US QWERTY keyboard
