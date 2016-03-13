@@ -14,10 +14,10 @@ import Linear.Affine (Point(P))
 import Control.Lens
 
 data Direction = UpDirection
+               | RightDirection
                | DownDirection
                | LeftDirection
-               | RightDirection
-               deriving (Show)
+               deriving (Show, Bounded, Enum)
 
 type Coordinate = Point V2 Integer
 

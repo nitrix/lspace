@@ -7,6 +7,7 @@ module World
     , worldMoveObject
     , worldObjects
     , worldObjectsAt
+    , worldRotateObject
 ) where
 
 import qualified Assoc as A
@@ -78,3 +79,6 @@ worldMoveObject direction objid w =
         updateCoordinate  = worldLayer %~ A.adjustR (coordinateMove direction) objid
         currentCoordinate = S.elemAt 0 $ A.lookupR objid (view worldLayer w)
         newCoordinate     = coordinateMove direction currentCoordinate
+
+worldRotateObject :: ObjectId -> World -> World
+worldRotateObject objid = worldMessage Nothing (Just objid) RotateMsg

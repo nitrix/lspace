@@ -43,9 +43,9 @@ uiMenuOptions :: UiTypeMenu -> [String]
 uiMenuOptions ty = case ty of
     UiMenuMain ->
         [ "[b] Build menu (wip)"
+        , "[x] Destroy mode (wip)"
         , "[i] Inventory (wip)"
         , "[q] Quit"
-        , "[x] Destroy mode (wip)"
         ]
     UiMenuQuitConfirm ->
         [ "[y] Yes, confirm"

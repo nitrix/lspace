@@ -14,7 +14,7 @@ import World
 demoObjects :: WorldObjects
 demoObjects = M.fromList
     [ (0, boxObject defaultObject defaultBox)
-    , (1, boxObject defaultObject $ defaultBox { _boxLocked = True })
+    , (1, boxObject defaultObject defaultBox)
     , (2, playerObject defaultObject defaultPlayer)
     ]
 

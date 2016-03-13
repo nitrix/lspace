@@ -8,23 +8,24 @@ import Sprite
 import System.Message
 
 data Player = MkPlayer
-    { _playerHealth :: Int
+    { _playerHealth    :: Int
     , _playerDirection :: Direction
     }
 
+-- Lenses
 playerDirection :: Lens' Player Direction
 playerDirection = lens _playerDirection (\s x -> s { _playerDirection = x })
 
 playerObject :: Object -> Player -> Object
 playerObject obj p = obj
-    { objSolid = False
+    { objSolid  = False
     , objSprite = playerSprite p
-    , objMsg = \msg -> playerObject obj <$> runState (playerMsg msg) p
+    , objMsg    = \msg -> playerObject obj <$> runState (playerMsg msg) p
     }
 
 defaultPlayer :: Player
 defaultPlayer = MkPlayer 
-    { _playerHealth = 100
+    { _playerHealth     = 100
     , _playerDirection  = DownDirection
     }
 
@@ -38,5 +39,6 @@ playerSprite p = case _playerDirection p of
 playerMsg :: Message -> State Player [Message]
 playerMsg m = do
     case m of
-        (MovedMsg direction) -> (modify $ playerDirection .~ direction) >> return []
-        _ -> return []
+        MovedMsg direction -> [] <$ (modify $ playerDirection .~ direction)
+        RotateMsg          -> [] <$ (modify $ playerDirection %~ (\d -> (enumFrom d ++ [minBound..maxBound]) !! 1))
+        _                  -> return []

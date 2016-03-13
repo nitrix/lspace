@@ -2,8 +2,10 @@ module System.Message where
 
 import Coordinate (Direction)
 
-data Message = ProximityMsg Direction
-             | MovedMsg Direction
+data Message = MovedMsg Direction
+             | RotateMsg
+             
+             | ProximityMsg Direction
              | SteppedOnMsg
              | UnknownMsg
              deriving (Show)
