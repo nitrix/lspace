@@ -1,16 +1,20 @@
 module Ui where
 
 import Control.Lens
-import Data.List
 import SDL.Input.Keyboard.Codes
 
 data Ui = MkUi
     { _uiVisible :: [UiType]
     }
 
-data UiType = UiMain
-            | UiQuitConfirm
-            deriving Eq
+data UiType = MkUiTypeMenu UiTypeMenu
+            | MkUiTypeOverlay UiTypeOverlay 
+
+data UiTypeMenu = UiMenuMain
+                | UiMenuQuitConfirm
+                deriving Eq
+
+data UiTypeOverlay = UiOverlayVitals
 
 -- Lenses
 uiVisible :: Lens' Ui [UiType]
@@ -19,27 +23,31 @@ uiVisible = lens _uiVisible (\s x -> s { _uiVisible = x })
 defaultUi :: Ui
 defaultUi = MkUi []
 
+{-
 uiToggle :: UiType -> Ui -> Ui
 uiToggle ty ui =
     if ty `elem` ui ^. uiVisible
     then ui & uiVisible %~ delete ty
     else ui & uiVisible %~ (ty:)
+-}
 
-uiIsMenu :: UiType -> Bool
-uiIsMenu = flip elem
-    [ UiMain
-    , UiQuitConfirm
-    ]
+uiMenuSwitch :: UiTypeMenu -> Ui -> Ui
+uiMenuSwitch ty ui = ui &~ do
+    uiVisible %= filter (not . uiIsMenu)
+    uiVisible %= (MkUiTypeMenu ty:)
+    where
+        uiIsMenu (MkUiTypeMenu _) = True
+        uiIsMenu (_) = False
 
-uiMenuOptions :: UiType -> [String]
+uiMenuOptions :: UiTypeMenu -> [String]
 uiMenuOptions ty = case ty of
-    UiMain ->
+    UiMenuMain ->
         [ "[b] Build menu (wip)"
         , "[i] Inventory (wip)"
         , "[q] Quit"
         , "[x] Destroy mode (wip)"
         ]
-    UiQuitConfirm ->
+    UiMenuQuitConfirm ->
         [ "[y] Yes, confirm"
         , "[n] No, stay"
         ]
@@ -54,15 +62,13 @@ uiInterceptKeycode ui keycode =
     where
         go modal (uip, kc, halt) = 
             case modal of
-                UiMain ->
+                MkUiTypeMenu UiMenuMain ->
                     case kc of
-                        KeycodeQ -> (uip &~ do uiVisible %= delete UiMain
-                                               uiVisible %= (UiQuitConfirm:)
-                                    , KeycodeUnknown, halt
-                                    )
+                        KeycodeQ -> (uiMenuSwitch UiMenuQuitConfirm uip, KeycodeUnknown, halt)
                         _        -> (uip, kc, halt)
-                UiQuitConfirm ->
+                MkUiTypeMenu UiMenuQuitConfirm ->
                     case kc of
                         KeycodeY -> (uip, KeycodeUnknown, True)
-                        KeycodeN -> (uip & uiVisible %~ delete modal & uiVisible %~ (UiMain:), KeycodeUnknown, halt)
-                        _        -> (uip, KeycodeUnknown, halt)
+                        KeycodeN -> (uiMenuSwitch UiMenuMain uip, KeycodeUnknown, halt)
+                        _        -> (uip, kc, halt)
+                _ -> (uip, kc, halt)

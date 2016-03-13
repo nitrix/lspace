@@ -75,7 +75,7 @@ gameHandleKeyboardEvent ked = do
             KeycodeS     -> modify $ gameWorld  %~ worldMoveObject DownDirection  player
             KeycodeA     -> modify $ gameWorld  %~ worldMoveObject LeftDirection  player
             KeycodeD     -> modify $ gameWorld  %~ worldMoveObject RightDirection player
-            KeycodeE     -> modify $ gameUi     %~ uiToggle UiMain
+            KeycodeE     -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
             _            -> modify $ id
 
         return shouldHalt

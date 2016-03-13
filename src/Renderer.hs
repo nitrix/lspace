@@ -39,17 +39,17 @@ renderUi game = do
     V2 _ height <- SDL.get $ windowSize window
     
     forM_ (game ^. gameUi . uiVisible) $ \modalType -> do
-        if uiIsMenu modalType then
-            forM (zip [0..] $ reverse $ uiMenuOptions modalType) $ \(row, text) -> do
-                surface <- Ttf.renderTextShaded font text (Srt.Color 255 255 255 0) (Srt.Color 0 0 0 0)
-                V2 surfaceWidth surfaceHeight <- surfaceDimensions surface
-                texture <- createTextureFromSurface renderer surface
-                freeSurface surface
-                let dst = Rectangle (P $ V2 0 (height - surfaceHeight - (row * 15))) (V2 surfaceWidth surfaceHeight)
-                copyEx renderer texture Nothing (Just dst) 0 Nothing (V2 False False)
-                destroyTexture texture
-        else
-            return []
+        case modalType of
+            (MkUiTypeMenu mt) -> do
+                forM (zip [0..] $ reverse $ uiMenuOptions mt) $ \(row, text) -> do
+                    surface <- Ttf.renderTextShaded font text (Srt.Color 255 255 255 0) (Srt.Color 0 0 0 0)
+                    V2 surfaceWidth surfaceHeight <- surfaceDimensions surface
+                    texture <- createTextureFromSurface renderer surface
+                    freeSurface surface
+                    let dst = Rectangle (P $ V2 0 (height - surfaceHeight - (row * 15))) (V2 surfaceWidth surfaceHeight)
+                    copyEx renderer texture Nothing (Just dst) 0 Nothing (V2 False False)
+                    destroyTexture texture
+            _ -> return []
 
 renderWorld :: Game -> EnvironmentT IO ()
 renderWorld game = do
