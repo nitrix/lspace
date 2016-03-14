@@ -7,6 +7,4 @@ packages:
 extra-deps:
 - sdl2-2.1.0
 - sdl2-ttf-1.0.0
-- persistent-sqlite-2.2.1
-- persistent-2.2.4
 resolver: lts-5.6
