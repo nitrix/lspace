@@ -64,7 +64,8 @@ gameHandleKeyboardEvent ked = do
     ui     <- view gameUi     <$> S.get
 
     if (keymotion == Pressed) then do
-        let (newUi, newKeycode, shouldHalt) = uiInterceptKeycode ui keycode
+        let (newUi, newKeycode, shouldHalt, systems) = uiInterceptKeycode ui keycode
+        foldr withState S.get systems
         modify $ gameUi .~ newUi
 
         case newKeycode of
@@ -88,3 +89,24 @@ gameHandleKeyboardEvent ked = do
         keysym      = keyboardEventKeysym ked    -- ^ Key symbol information: keycode or scancode representation
         keycode     = keysymKeycode keysym       -- ^ Which character is received from the operating system
         -- scancode    = keysymScancode keysym      -- ^ Physical key location as it would be on a US QWERTY keyboard
+
+-- TODO: Rewrite this now that it works
+uiInterceptKeycode :: Ui -> Keycode -> (Ui, Keycode, Bool, [(Game -> Game)])
+uiInterceptKeycode ui keycode = 
+    if keycode == KeycodeEscape then
+        (ui { _uiVisible = [] }, KeycodeUnknown, False, [])
+    else
+        foldr go (ui, keycode, False, []) (view uiVisible ui)
+    where
+        go modal (uip, kc, halt, systems) = 
+            case modal of
+                MkUiTypeMenu UiMenuMain ->
+                    case kc of
+                        KeycodeQ -> (uiMenuSwitch UiMenuQuitConfirm uip, KeycodeUnknown, halt, systems)
+                        _        -> (uip, kc, halt, systems)
+                MkUiTypeMenu UiMenuQuitConfirm ->
+                    case kc of
+                        KeycodeY -> (uip, KeycodeUnknown, True, systems)
+                        KeycodeN -> (uiMenuSwitch UiMenuMain uip, KeycodeUnknown, halt, systems)
+                        _        -> (uip, kc, halt, systems)
+                _ -> (uip, kc, halt, systems)
