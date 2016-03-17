@@ -13,7 +13,6 @@ import Control.Monad.State as S
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as S
-import Debug.Trace
 import Game
 import Message
 import Object
@@ -48,7 +47,7 @@ engineHandleKeyboardEvent ked = do
                         _        -> return False
                 _ -> engineHandleBareKeycode keycode
 
-        if (or shouldHalts) then engineHandleBareKeycode keycode else _
+        if (or shouldHalts) then return True else engineHandleBareKeycode keycode
     else 
         return False -- $ scancode == ScancodeEscape
     where

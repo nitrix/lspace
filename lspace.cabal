@@ -33,11 +33,11 @@ executable lspace
                      , Demo
                      , Environment
                      , Game
+                     , Message
                      , Object
                      , Object.Box
                      , Object.Player
                      , Renderer
                      , Sprite
-                     , System.Message
                      , Ui
                      , World
