@@ -71,7 +71,7 @@ engineHandleBareKeycode keycode = do
         KeycodeD      -> modify $ gameWorld  %~ engineMoveObject RightDirection player
         KeycodeR      -> modify $ gameWorld  %~ engineMessage Nothing (Just player) RotateMsg
         KeycodeE      -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
-        KeycodeEscape -> modify $ gameUi . uiVisible .~ []
+        KeycodeEscape -> modify $ gameUi     %~ uiMenuClear
         _             -> modify $ id
 
     return False
