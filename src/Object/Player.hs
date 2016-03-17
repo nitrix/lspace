@@ -3,9 +3,9 @@ module Object.Player where
 import Control.Lens
 import Control.Monad.State
 import Coordinate
+import Message
 import Object
 import Sprite
-import System.Message
 
 data Player = MkPlayer
     { _playerHealth    :: Int

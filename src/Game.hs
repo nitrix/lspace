@@ -8,13 +8,9 @@ module Game
     ) where
 
 import Camera
-import Coordinate
 import Control.Lens
-import Control.Monad.State as S
 import Demo
 import Object
-import SDL
-import System.Message
 import Ui
 import World
 

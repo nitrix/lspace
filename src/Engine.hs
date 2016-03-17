@@ -6,19 +6,19 @@ module Engine
     ) where
 
 import qualified Assoc as A
-import qualified Data.Map as M
-import qualified Data.Set as S
-import Data.Maybe
 import Camera
 import Coordinate
 import Control.Lens
 import Control.Monad.State as S
+import qualified Data.Map as M
+import Data.Maybe
+import qualified Data.Set as S
+import Game
+import Message
+import Object
 import SDL
-import System.Message
 import Ui
 import World
-import Game
-import Object
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> State Game Bool
