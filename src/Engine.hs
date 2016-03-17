@@ -13,6 +13,7 @@ import Control.Monad.State as S
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as S
+import Debug.Trace
 import Game
 import Message
 import Object
@@ -31,28 +32,23 @@ engineHandleEvent event =
 -- | This function handles keyboard events in the engine
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
 engineHandleKeyboardEvent ked = do
-    player <- view gamePlayer <$> S.get
-    ui     <- view gameUi     <$> S.get
+    modals <- view (gameUi . uiVisible) <$> S.get
 
     if (keymotion == Pressed) then do
-        let (newUi, newKeycode, shouldHalt, systems) = uiInterceptKeycode ui keycode
-        foldr withState S.get systems
-        modify $ gameUi .~ newUi
+        shouldHalts <- forM modals $ \modal -> do
+            case modal of
+                MkUiTypeMenu UiMenuMain ->
+                    case keycode of
+                        KeycodeQ -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuQuitConfirm)
+                        _        -> return False
+                MkUiTypeMenu UiMenuQuitConfirm ->
+                    case keycode of
+                        KeycodeY -> return True
+                        KeycodeN -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuMain)
+                        _        -> return False
+                _ -> engineHandleBareKeycode keycode
 
-        case newKeycode of
-            KeycodeUp    -> modify $ gameCamera %~ cameraMove UpDirection
-            KeycodeDown  -> modify $ gameCamera %~ cameraMove DownDirection
-            KeycodeRight -> modify $ gameCamera %~ cameraMove RightDirection
-            KeycodeLeft  -> modify $ gameCamera %~ cameraMove LeftDirection
-            KeycodeW     -> modify $ gameWorld  %~ engineMoveObject UpDirection    player
-            KeycodeS     -> modify $ gameWorld  %~ engineMoveObject DownDirection  player
-            KeycodeA     -> modify $ gameWorld  %~ engineMoveObject LeftDirection  player
-            KeycodeD     -> modify $ gameWorld  %~ engineMoveObject RightDirection player
-            KeycodeR     -> modify $ gameWorld  %~ engineMessage Nothing (Just player) RotateMsg
-            KeycodeE     -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
-            _            -> modify $ id
-
-        return shouldHalt
+        if (or shouldHalts) then engineHandleBareKeycode keycode else _
     else 
         return False -- $ scancode == ScancodeEscape
     where
@@ -60,27 +56,26 @@ engineHandleKeyboardEvent ked = do
         keysym      = keyboardEventKeysym ked    -- ^ Key symbol information: keycode or scancode representation
         keycode     = keysymKeycode keysym       -- ^ Which character is received from the operating system
         -- scancode    = keysymScancode keysym      -- ^ Physical key location as it would be on a US QWERTY keyboard
+        
+engineHandleBareKeycode :: Keycode -> State Game Bool
+engineHandleBareKeycode keycode = do
+    player <- view gamePlayer <$> S.get
 
--- TODO: Rewrite this now that it works
-uiInterceptKeycode :: Ui -> Keycode -> (Ui, Keycode, Bool, [(Game -> Game)])
-uiInterceptKeycode ui keycode = 
-    if keycode == KeycodeEscape then
-        (ui { _uiVisible = [] }, KeycodeUnknown, False, [])
-    else
-        foldr go (ui, keycode, False, []) (view uiVisible ui)
-    where
-        go modal (uip, kc, halt, systems) = 
-            case modal of
-                MkUiTypeMenu UiMenuMain ->
-                    case kc of
-                        KeycodeQ -> (uiMenuSwitch UiMenuQuitConfirm uip, KeycodeUnknown, halt, systems)
-                        _        -> (uip, kc, halt, systems)
-                MkUiTypeMenu UiMenuQuitConfirm ->
-                    case kc of
-                        KeycodeY -> (uip, KeycodeUnknown, True, systems)
-                        KeycodeN -> (uiMenuSwitch UiMenuMain uip, KeycodeUnknown, halt, systems)
-                        _        -> (uip, kc, halt, systems)
-                _ -> (uip, kc, halt, systems)
+    case keycode of
+        KeycodeUp     -> modify $ gameCamera %~ cameraMove UpDirection
+        KeycodeDown   -> modify $ gameCamera %~ cameraMove DownDirection
+        KeycodeRight  -> modify $ gameCamera %~ cameraMove RightDirection
+        KeycodeLeft   -> modify $ gameCamera %~ cameraMove LeftDirection
+        KeycodeW      -> modify $ gameWorld  %~ engineMoveObject UpDirection    player
+        KeycodeS      -> modify $ gameWorld  %~ engineMoveObject DownDirection  player
+        KeycodeA      -> modify $ gameWorld  %~ engineMoveObject LeftDirection  player
+        KeycodeD      -> modify $ gameWorld  %~ engineMoveObject RightDirection player
+        KeycodeR      -> modify $ gameWorld  %~ engineMessage Nothing (Just player) RotateMsg
+        KeycodeE      -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
+        KeycodeEscape -> modify $ gameUi . uiVisible .~ []
+        _             -> modify $ id
+
+    return False
 
 -- | Sends a message. The origin and the destination can both be either an object (Just) or a system (Nothing).
 engineMessage :: Maybe ObjectId -> Maybe ObjectId -> Message -> World -> World
