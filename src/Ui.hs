@@ -19,6 +19,7 @@ data UiType = MkUiTypeMenu UiTypeMenu
             | MkUiTypeOverlay UiTypeOverlay 
 
 data UiTypeMenu = UiMenuMain
+                | UiMenuBuild
                 | UiMenuQuitConfirm
                 deriving Eq
 
@@ -54,4 +55,7 @@ uiMenuOptions ty = case ty of
     UiMenuQuitConfirm ->
         [ "[y] Yes, confirm"
         , "[n] No, back"
+        ]
+    UiMenuBuild ->
+        [ "[b] Box"
         ]

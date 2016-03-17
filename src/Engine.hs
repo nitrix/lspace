@@ -19,6 +19,7 @@ import Object
 import SDL
 import Ui
 import World
+import Object.Box
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> State Game Bool
@@ -32,12 +33,22 @@ engineHandleEvent event =
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
 engineHandleKeyboardEvent ked = do
     modals <- view (gameUi . uiVisible) <$> S.get
+    player <- view gamePlayer <$> S.get
+    world  <- view gameWorld <$> S.get
 
     if (keymotion == Pressed) then do
         shouldHalts <- forM modals $ \modal -> do
             case modal of
+                MkUiTypeMenu UiMenuBuild ->
+                    case keycode of
+                        KeycodeB -> False <$ (modify $ \game -> game &~ do
+                            gameWorld %= engineAddObject (boxObject defaultObject defaultBox) (coordinateObjectId world player)
+                            gameUi    %= uiMenuClear
+                            )
+                        _        -> return False
                 MkUiTypeMenu UiMenuMain ->
                     case keycode of
+                        KeycodeB -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuBuild)
                         KeycodeQ -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuQuitConfirm)
                         _        -> return False
                 MkUiTypeMenu UiMenuQuitConfirm ->
@@ -94,6 +105,9 @@ engineMessage fromObjId (Just toObjId) m w =
                   newMsgs
         Nothing                -> w
 
+coordinateObjectId :: World -> ObjectId -> Coordinate
+coordinateObjectId w objid = S.elemAt 0 $ A.lookupR objid (view worldLayer w)
+
 -- | Gives the list of objects at a given world coordinate (regardless of their layer)
 engineObjectsAt :: World -> Coordinate -> [Object]
 engineObjectsAt w c = mapMaybe resolveObjectIds objectIds
@@ -113,4 +127,10 @@ engineMoveObject direction objid w =
         msgOrientation z  = engineMessage Nothing (Just objid) (MovedMsg direction) z
         updateCoordinate  = worldLayer %~ A.adjustR (coordinateMove direction) objid
         currentCoordinate = S.elemAt 0 $ A.lookupR objid (view worldLayer w)
-        newCoordinate     = coordinateMove direction currentCoordinate
+        newCoordinate     = coordinateMove direction $ coordinateObjectId w objid
+
+-- TODO: Actually adding objects
+engineAddObject :: Object -> Coordinate -> World -> World
+engineAddObject obj coord w = w &~ do
+    worldObjects %= id
+    worldLayer %= id
