@@ -5,7 +5,8 @@ import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 import Environment
-import Game (defaultGame, Game, gameHandleEvent)
+import Engine (engineHandleEvent)
+import Game (Game, defaultGame)
 import Linear (V4(V4))
 import Renderer (renderGame)
 import SDL
@@ -34,11 +35,12 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     disableScreenSaver
     rendererDrawColor renderer $= V4 0 0 0 0 -- black
 
-    -- Prepare game
+    -- Prepare all the things
     clear renderer
     present renderer
     showWindow window
 
+    -- Main loop
     runReaderT (mainLoop defaultGame) $ MkEnvironment
         { envWindow   = window
         , envRenderer = renderer
@@ -63,7 +65,7 @@ mainLoop game = do
     -- As an optimisation, prevent chocking by processing all the queued up events at once
     -- Previously was:
     --     let (halt, newGame) = runState (gameHandleEvent event) game
-    let (shouldHalts, newGame) = runState (traverse gameHandleEvent events) game
+    let (shouldHalts, newGame) = runState (traverse engineHandleEvent events) game
 
     -- Then render the new game state
     renderGame newGame

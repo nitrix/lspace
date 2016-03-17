@@ -16,7 +16,7 @@ import SDL
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import Ui
-import World
+import Engine
 
 -- TODO: to refactor most of this, please
 renderGame :: Game -> EnvironmentT IO ()
@@ -65,7 +65,7 @@ renderWorld game = do
                       ]
           
     forM_ coordinates $ \coord -> do 
-        forM_ (worldObjectsAt world coord) $ \obj -> do
+        forM_ (engineObjectsAt world coord) $ \obj -> do
             forM_ (objSprite obj) $ \(coordSpriteRel, coordSpriteTile) -> do
                 -- Bunch of positions to calculate
                 let srcTileX    = fromInteger  $ coordSpriteTile ^. coordinateX
