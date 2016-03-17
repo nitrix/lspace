@@ -28,20 +28,20 @@ data UiTypeOverlay = UiOverlayVitals
 uiVisible :: Lens' Ui [UiType]
 uiVisible = lens _uiVisible (\s x -> s { _uiVisible = x })
 
+-- Prisms
+_UiTypeMenu :: Prism' UiType UiTypeMenu
+_UiTypeMenu = prism' MkUiTypeMenu $ \m -> case m of
+    MkUiTypeMenu x -> Just x
+    _              -> Nothing
+
 defaultUi :: Ui
 defaultUi = MkUi []
 
 uiMenuClear :: Ui -> Ui
-uiMenuClear = uiVisible %~ filter (not . uiIsMenu)
+uiMenuClear = uiVisible %~ filter (isn't _UiTypeMenu)
 
 uiMenuSwitch :: UiTypeMenu -> Ui -> Ui
-uiMenuSwitch ty ui = ui &~ do
-    uiVisible %= filter (not . uiIsMenu)
-    uiVisible %= (MkUiTypeMenu ty:)
-
-uiIsMenu :: UiType -> Bool
-uiIsMenu (MkUiTypeMenu _) = True
-uiIsMenu (_) = False
+uiMenuSwitch ty ui = uiMenuClear ui & uiVisible %~ (MkUiTypeMenu ty:)
 
 uiMenuOptions :: UiTypeMenu -> [String]
 uiMenuOptions ty = case ty of
