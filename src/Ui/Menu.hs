@@ -4,6 +4,8 @@ import Ui
 import Game
 import Control.Monad.State as S
 import Control.Lens
+import Data.Biapplicative
+import Data.List
 import SDL
 import Object
 import Object.Box
@@ -54,7 +56,7 @@ uiMenuInterceptKeycode keycode = do
                     _        -> ignore
             _ -> ignore
 
-    return $ foldr (\(k1,b1) (k2,b2) -> (min k1 k2, b1 || b2)) (keycode, False) results
+    return $ foldl' (biliftA2 min (||)) (keycode, False) results
 
     where
         terminate = return (KeycodeUnknown, True)
