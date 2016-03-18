@@ -53,6 +53,7 @@ engineHandleBareKeycode keycode = do
         KeycodeRight  -> modify $ gameCamera %~ cameraMove RightDirection
         KeycodeLeft   -> modify $ gameCamera %~ cameraMove LeftDirection
         KeycodeW      -> modify $ gameWorld  %~ engineMoveObject UpDirection    player
+        KeycodeB      -> modify $ gameWorld  %~ engineMoveObject UpDirection    player
         KeycodeS      -> modify $ gameWorld  %~ engineMoveObject DownDirection  player
         KeycodeA      -> modify $ gameWorld  %~ engineMoveObject LeftDirection  player
         KeycodeD      -> modify $ gameWorld  %~ engineMoveObject RightDirection player

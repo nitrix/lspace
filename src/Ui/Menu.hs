@@ -18,39 +18,45 @@ uiMenuSwitch ty ui = uiMenuClear ui & uiVisible %~ (MkUiTypeMenu ty:)
 uiMenuOptions :: UiTypeMenu -> [String]
 uiMenuOptions ty = case ty of
     UiMenuMain ->
-        [ "[b] Build menu (wip)"
-        , "[x] Destroy mode (wip)"
-        , "[i] Inventory (wip)"
+        [ "[b] Build menu (soon)"
+        , "[x] Destroy mode (soon)"
+        , "[i] Inventory (soon)"
         , "[q] Quit"
         ]
     UiMenuQuitConfirm ->
         [ "[y] Yes, confirm"
-        , "[n] No, back"
+        , "[n] No, go back"
         ]
     UiMenuBuild ->
-        [ "[b] Box"
+        [ "[b] Box (wip)"
         ]
 
-uiMenuInterceptKeycode :: Keycode -> State Game [Bool]
+uiMenuInterceptKeycode :: Keycode -> State Game (Keycode, Bool)
 uiMenuInterceptKeycode keycode = do
     modals <- view (gameUi . uiVisible) <$> S.get
     
-    forM modals $ \modal -> do
+    results <- forM modals $ \modal -> do
         case modal of
             MkUiTypeMenu UiMenuBuild ->
                 case keycode of
-                    KeycodeB -> False <$ do
-                                sysWorldAddObjectAtPlayer $ boxObject defaultObject defaultBox
-                                modify $ gameUi %~ uiMenuClear
-                    _        -> return False
+                    KeycodeB -> do sysWorldAddObjectAtPlayer $ boxObject defaultObject defaultBox
+                                   hook $ gameUi %~ uiMenuClear
+                    _        -> ignore
             MkUiTypeMenu UiMenuMain ->
                 case keycode of
-                    KeycodeB -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuBuild)
-                    KeycodeQ -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuQuitConfirm)
-                    _        -> return False
+                    KeycodeB -> hook $ gameUi %~ uiMenuSwitch UiMenuBuild
+                    KeycodeQ -> hook $ gameUi %~ uiMenuSwitch UiMenuQuitConfirm
+                    _        -> ignore
             MkUiTypeMenu UiMenuQuitConfirm ->
                 case keycode of
-                    KeycodeY -> return True
-                    KeycodeN -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuMain)
-                    _        -> return False
-            _ -> return False
+                    KeycodeY -> terminate
+                    KeycodeN -> hook $ gameUi %~ uiMenuSwitch UiMenuMain
+                    _        -> ignore
+            _ -> ignore
+
+    return $ foldr (\(k1,b1) (k2,b2) -> (min k1 k2, b1 || b2)) (keycode, False) results
+
+    where
+        terminate = return (KeycodeUnknown, True)
+        ignore    = return (KeycodeUnknown, False)
+        hook f    = (KeycodeUnknown, False) <$ modify f
