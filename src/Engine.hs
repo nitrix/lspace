@@ -18,8 +18,8 @@ import Message
 import Object
 import SDL
 import Ui
+import Ui.Menu
 import World
-import Object.Box
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> State Game Bool
@@ -32,32 +32,8 @@ engineHandleEvent event =
 -- | This function handles keyboard events in the engine
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
 engineHandleKeyboardEvent ked = do
-    modals <- view (gameUi . uiVisible) <$> S.get
-    player <- view gamePlayer <$> S.get
-    world  <- view gameWorld <$> S.get
-
     if (keymotion == Pressed) then do
-        shouldHalts <- forM modals $ \modal -> do
-            case modal of
-                MkUiTypeMenu UiMenuBuild ->
-                    case keycode of
-                        KeycodeB -> False <$ (modify $ \game -> game &~ do
-                            gameWorld %= engineAddObject (boxObject defaultObject defaultBox) (coordinateObjectId world player)
-                            gameUi    %= uiMenuClear
-                            )
-                        _        -> return False
-                MkUiTypeMenu UiMenuMain ->
-                    case keycode of
-                        KeycodeB -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuBuild)
-                        KeycodeQ -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuQuitConfirm)
-                        _        -> return False
-                MkUiTypeMenu UiMenuQuitConfirm ->
-                    case keycode of
-                        KeycodeY -> return True
-                        KeycodeN -> False <$ (modify $ gameUi %~ uiMenuSwitch UiMenuMain)
-                        _        -> return False
-                _ -> engineHandleBareKeycode keycode
-
+        shouldHalts <- uiMenuInterceptKeycode keycode
         if (or shouldHalts) then return True else engineHandleBareKeycode keycode
     else 
         return False -- $ scancode == ScancodeEscape
@@ -66,7 +42,7 @@ engineHandleKeyboardEvent ked = do
         keysym      = keyboardEventKeysym ked    -- ^ Key symbol information: keycode or scancode representation
         keycode     = keysymKeycode keysym       -- ^ Which character is received from the operating system
         -- scancode    = keysymScancode keysym      -- ^ Physical key location as it would be on a US QWERTY keyboard
-        
+
 engineHandleBareKeycode :: Keycode -> State Game Bool
 engineHandleBareKeycode keycode = do
     player <- view gamePlayer <$> S.get
@@ -126,11 +102,12 @@ engineMoveObject direction objid w =
     where
         msgOrientation z  = engineMessage Nothing (Just objid) (MovedMsg direction) z
         updateCoordinate  = worldLayer %~ A.adjustR (coordinateMove direction) objid
-        currentCoordinate = S.elemAt 0 $ A.lookupR objid (view worldLayer w)
         newCoordinate     = coordinateMove direction $ coordinateObjectId w objid
 
 -- TODO: Actually adding objects
+{-
 engineAddObject :: Object -> Coordinate -> World -> World
 engineAddObject obj coord w = w &~ do
     worldObjects %= id
     worldLayer %= id
+-}

@@ -4,9 +4,7 @@ module Ui
     , UiTypeMenu(..)
     , defaultUi
     , uiVisible
-    , uiMenuClear
-    , uiMenuOptions
-    , uiMenuSwitch
+    , _UiTypeMenu
     ) where
 
 import Control.Lens
@@ -23,7 +21,7 @@ data UiTypeMenu = UiMenuMain
                 | UiMenuQuitConfirm
                 deriving Eq
 
-data UiTypeOverlay = UiOverlayVitals
+data UiTypeOverlay = UiOverlayVitals -- TODO: defined but not used
 
 -- Lenses
 uiVisible :: Lens' Ui [UiType]
@@ -37,25 +35,3 @@ _UiTypeMenu = prism' MkUiTypeMenu $ \m -> case m of
 
 defaultUi :: Ui
 defaultUi = MkUi []
-
-uiMenuClear :: Ui -> Ui
-uiMenuClear = uiVisible %~ filter (isn't _UiTypeMenu)
-
-uiMenuSwitch :: UiTypeMenu -> Ui -> Ui
-uiMenuSwitch ty ui = uiMenuClear ui & uiVisible %~ (MkUiTypeMenu ty:)
-
-uiMenuOptions :: UiTypeMenu -> [String]
-uiMenuOptions ty = case ty of
-    UiMenuMain ->
-        [ "[b] Build menu (wip)"
-        , "[x] Destroy mode (wip)"
-        , "[i] Inventory (wip)"
-        , "[q] Quit"
-        ]
-    UiMenuQuitConfirm ->
-        [ "[y] Yes, confirm"
-        , "[n] No, back"
-        ]
-    UiMenuBuild ->
-        [ "[b] Box"
-        ]

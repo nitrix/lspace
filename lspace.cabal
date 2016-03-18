@@ -31,6 +31,7 @@ executable lspace
                      , Camera
                      , Coordinate
                      , Demo
+                     , Engine
                      , Environment
                      , Game
                      , Message
@@ -39,5 +40,7 @@ executable lspace
                      , Object.Player
                      , Renderer
                      , Sprite
+                     , System.World
                      , Ui
+                     , Ui.Menu
                      , World
