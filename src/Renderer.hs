@@ -18,6 +18,7 @@ import qualified SDL.TTF as Ttf
 import Ui
 import Ui.Menu
 import Engine
+import System.World
 
 -- TODO: to refactor most of this, please
 renderGame :: Game -> EnvironmentT IO ()
@@ -66,7 +67,7 @@ renderWorld game = do
                       ]
           
     forM_ coordinates $ \coord -> do 
-        forM_ (engineObjectsAt world coord) $ \obj -> do
+        forM_ (sysWorldObjectsAt world coord) $ \obj -> do
             forM_ (objSprite obj) $ \(coordSpriteRel, coordSpriteTile) -> do
                 -- Bunch of positions to calculate
                 let srcTileX    = fromInteger  $ coordSpriteTile ^. coordinateX
