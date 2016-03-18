@@ -33,8 +33,8 @@ engineHandleEvent event =
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
 engineHandleKeyboardEvent ked = do
     if (keymotion == Pressed) then do
-        shouldHalts <- uiMenuInterceptKeycode keycode
-        if (or shouldHalts) then return True else engineHandleBareKeycode keycode
+        (newKeycode, shouldHalt) <- uiMenuInterceptKeycode keycode
+        if shouldHalt then return True else engineHandleBareKeycode newKeycode
     else 
         return False -- $ scancode == ScancodeEscape
     where

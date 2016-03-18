@@ -58,5 +58,5 @@ uiMenuInterceptKeycode keycode = do
 
     where
         terminate = return (KeycodeUnknown, True)
-        ignore    = return (KeycodeUnknown, False)
+        ignore    = return (keycode, False)
         hook f    = (KeycodeUnknown, False) <$ modify f
