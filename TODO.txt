@@ -2,3 +2,4 @@
 - Change WorldLayer to WorldLayers (maybe use a Map?)
 - Saving and reloading the game state
 - Multiplayer
+- Revisit parallax stars

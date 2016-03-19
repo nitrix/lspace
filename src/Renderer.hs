@@ -93,21 +93,24 @@ renderWorld game = do
 
 renderVoid :: Game -> EnvironmentT IO ()
 renderVoid game = do
-    renderer <- asks envRenderer
+    renderer        <- asks envRenderer
+    window          <- asks envWindow
+    V2 width height <- SDL.get $ windowSize window
 
-    let points1 = V.generate 100 (randomPoint 1)
-    let points2 = V.generate 100 (randomPoint 2)
-    let points3 = V.generate 100 (randomPoint 3)
+    let cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
+    let cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
+        
+    let fixedRandomPoint prlx n = P $ V2
+            (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(1337*prlx)) + negate cameraX * fromIntegral prlx) `mod` width)
+            (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(7331*prlx)) + negate cameraY * fromIntegral prlx) `mod` height)
 
-    rendererDrawColor renderer $= V4 255 255 255 85 -- white
+    let points1 = V.generate 100 (fixedRandomPoint 1)
+    let points2 = V.generate 100 (fixedRandomPoint 2)
+    let points3 = V.generate 100 (fixedRandomPoint 3)
+
+    rendererDrawColor renderer $= V4 85 85 85 255    -- white quite dark
     drawPoints renderer points1
-    rendererDrawColor renderer $= V4 255 255 255 170 -- white
+    rendererDrawColor renderer $= V4 170 170 170 255 -- white kinda visible
     drawPoints renderer points2
-    rendererDrawColor renderer $= V4 255 255 255 255 -- white
+    rendererDrawColor renderer $= V4 255 255 255 255 -- white too bright
     drawPoints renderer points3
-    where
-        cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
-        cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
-        randomPoint prlx n = P $ V2
-            (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(1337*prlx)) + negate cameraX * fromIntegral prlx) `mod` 1920)
-            (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(7331*prlx)) + negate cameraY * fromIntegral prlx) `mod` 1080)
