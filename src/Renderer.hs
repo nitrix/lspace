@@ -17,7 +17,6 @@ import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import Ui
 import Ui.Menu
-import Engine
 import System.World
 
 -- TODO: to refactor most of this, please

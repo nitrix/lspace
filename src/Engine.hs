@@ -3,20 +3,16 @@ module Engine
     , engineHandleKeyboardEvent
     ) where
 
-import qualified Assoc as A
 import Camera
 import Coordinate
 import Control.Lens
 import Control.Monad.State as S
-import qualified Data.Set as S
 import Game
 import Message
-import Object
 import SDL
 import System.World
 import Ui
 import Ui.Menu
-import World
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> State Game Bool

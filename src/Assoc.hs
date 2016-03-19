@@ -4,6 +4,7 @@ module Assoc
     , adjustR
     , empty
     , fromList
+    , insert
     , lookup
     , lookupR
     )
@@ -50,3 +51,9 @@ adjustR f k (MkAssoc left right) = MkAssoc goLeft goRight
 
 empty :: Assoc a b
 empty = MkAssoc M.empty M.empty
+
+insert :: (Ord a, Ord b) => a -> b -> Assoc a b -> Assoc a b
+insert x y (MkAssoc left right) = MkAssoc newLeft newRight
+    where
+        newLeft  = M.insertWith S.union x (S.singleton y) left
+        newRight = M.insertWith S.union y (S.singleton x) right

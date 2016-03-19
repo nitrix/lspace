@@ -12,14 +12,11 @@ import Message
 import Object
 import World
 
-coordinateObjectId :: World -> ObjectId -> Coordinate
-coordinateObjectId w objid = S.elemAt 0 $ A.lookupR objid (view worldLayer w)
+sysWorldCoordObjectId :: World -> ObjectId -> Maybe Coordinate
+sysWorldCoordObjectId w objid = if S.size result > 0 then Just (S.elemAt 0 result) else Nothing
+    where
+        result = A.lookupR objid (view worldLayer w)
 
-sysWorldAddObjectAtPlayer :: Object -> State Game ()
-sysWorldAddObjectAtPlayer obj = do
-    player <- gets $ view gamePlayer
-    return ()
-    
 -- | Sends a message. The origin and the destination can both be either an object (Just) or a system (Nothing).
 sysWorldMessage :: Maybe ObjectId -> Maybe ObjectId -> Message -> World -> World
 sysWorldMessage _ Nothing _ w = 
@@ -50,10 +47,24 @@ sysWorldObjectsAt w c = mapMaybe resolveObjectIds objectIds
 -- TODO: Needs a serious rewrite eventually; e.g. giving proximity/stepped on events and so on
 sysWorldMoveObject :: Direction -> ObjectId -> World -> World
 sysWorldMoveObject direction objid w =
-    if (all (==False) $ map objSolid $ sysWorldObjectsAt w newCoordinate)
+    if (fromMaybe False $ all (==False) <$> map objSolid <$> sysWorldObjectsAt w <$> maybeNewCoordinate)
     then msgOrientation . updateCoordinate $ w
     else msgOrientation w
     where
-        msgOrientation z  = sysWorldMessage Nothing (Just objid) (MovedMsg direction) z
-        updateCoordinate  = worldLayer %~ A.adjustR (coordinateMove direction) objid
-        newCoordinate     = coordinateMove direction $ coordinateObjectId w objid
+        msgOrientation z   = sysWorldMessage Nothing (Just objid) (MovedMsg direction) z
+        updateCoordinate   = worldLayer %~ A.adjustR (coordinateMove direction) objid
+        maybeNewCoordinate = coordinateMove direction <$> sysWorldCoordObjectId w objid
+
+sysWorldAddObjectAtPlayer :: Object -> State Game ()
+sysWorldAddObjectAtPlayer obj = do
+    -- Increment world next object id
+    -- modify $ gameWorld . worldNextObjectId +~ 1
+    objid <- gets $ succ . fst . M.findMax . view (gameWorld . worldObjects)
+
+    -- Add our object to worldObjects
+    modify $ gameWorld . worldObjects %~ M.insert objid obj
+
+    -- Add our object to worldLayer
+    player <- gets $ view gamePlayer
+    world  <- gets $ view gameWorld 
+    modify $ gameWorld . worldLayer %~ fromMaybe id ((\coord -> A.insert (coord) objid) <$> sysWorldCoordObjectId world player)
