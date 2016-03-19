@@ -7,7 +7,6 @@ import Control.Monad.State
 import Environment
 import Engine (engineHandleEvent)
 import Game (Game, defaultGame)
-import Linear (V4(V4))
 import Renderer (renderGame)
 import SDL
 import qualified SDL.Image as Img
@@ -33,7 +32,6 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
 
     -- Some options for convenience
     disableScreenSaver
-    rendererDrawColor renderer $= V4 0 0 0 0 -- black
 
     -- Prepare all the things
     clear renderer

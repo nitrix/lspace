@@ -67,4 +67,4 @@ sysWorldAddObjectAtPlayer obj = do
     -- Add our object to worldLayer
     player <- gets $ view gamePlayer
     world  <- gets $ view gameWorld 
-    modify $ gameWorld . worldLayer %~ fromMaybe id ((\coord -> A.insert (coord) objid) <$> sysWorldCoordObjectId world player)
+    modify $ gameWorld . worldLayer %~ fromMaybe id ((\coord -> A.insert coord objid) <$> sysWorldCoordObjectId world player)

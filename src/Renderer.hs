@@ -7,9 +7,11 @@ import Camera
 import Control.Lens
 import Control.Monad.Reader
 import Coordinate
+import Data.Hash (hashInt, asWord64)
+import qualified Data.Vector.Storable as V
 import Environment
 import Game
-import Linear (V2(V2))
+import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
 import Object
 import SDL
@@ -24,8 +26,10 @@ renderGame :: Game -> EnvironmentT IO ()
 renderGame game = do
     renderer <- asks envRenderer
     -- Let's prepare a new fresh screen
+    rendererDrawColor renderer $= V4 0 0 0 0 -- black
     clear renderer
     -- Render various things
+    renderVoid game
     renderWorld game
     renderUi game
     -- Present to the screen
@@ -86,3 +90,24 @@ renderWorld game = do
         cameraX  = game ^. gameCamera . cameraCoordinate . coordinateX
         cameraY  = game ^. gameCamera . cameraCoordinate . coordinateY
         world    = game ^. gameWorld
+
+renderVoid :: Game -> EnvironmentT IO ()
+renderVoid game = do
+    renderer <- asks envRenderer
+
+    let points1 = V.generate 100 (randomPoint 1)
+    let points2 = V.generate 100 (randomPoint 2)
+    let points3 = V.generate 100 (randomPoint 3)
+
+    rendererDrawColor renderer $= V4 255 255 255 85 -- white
+    drawPoints renderer points1
+    rendererDrawColor renderer $= V4 255 255 255 170 -- white
+    drawPoints renderer points2
+    rendererDrawColor renderer $= V4 255 255 255 255 -- white
+    drawPoints renderer points3
+    where
+        cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
+        cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
+        randomPoint prlx n = P $ V2
+            (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(1337*prlx)) + negate cameraX * fromIntegral prlx) `mod` 1920)
+            (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(7331*prlx)) + negate cameraY * fromIntegral prlx) `mod` 1080)
