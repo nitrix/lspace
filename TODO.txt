@@ -1,0 +1,4 @@
+- Moving the camera when active player is near the screen edges, moving outwards.
+- Change WorldLayer to WorldLayers (maybe use a Map?)
+- Saving and reloading the game state
+- Multiplayer
