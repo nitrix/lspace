@@ -29,15 +29,9 @@ enginePokeIO game = do
 engineHandleEvent :: Event -> State Game Bool
 engineHandleEvent event =
     case eventPayload event of
-        WindowSizeChangedEvent sced -> engineHandleResize sced
         KeyboardEvent ked           -> engineHandleKeyboardEvent ked
         QuitEvent                   -> return True
         _                           -> return False
-
-engineHandleResize :: WindowSizeChangedEventData -> State Game Bool
-engineHandleResize sced = do
-    -- modify $ gameCamera . cameraViewport %~ (windowInitialSize $ windowSizeChangedEventWindow sced)
-    return False
 
 -- | This function handles keyboard events in the engine
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool

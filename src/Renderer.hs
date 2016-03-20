@@ -10,7 +10,6 @@ import Coordinate
 import Data.Hash (hashInt, asWord64)
 import qualified Data.Vector.Storable as V
 import Environment
-import Foreign.C.Types
 import Game
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
