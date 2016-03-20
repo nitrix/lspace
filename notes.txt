@@ -1,4 +1,5 @@
 - Revisit parallax stars
+- Revisit world layer / camera zoom
 
 - Change WorldLayer to WorldLayers (maybe use a Map?)
 - Saving and reloading the game state
@@ -21,4 +22,4 @@
 - Air locks (pressure?)
 - Air/heat leaks
 - Lighting
-- Center camera on player on boot
+- Center camera on player on boot or zoom
