@@ -73,8 +73,9 @@ sysWorldMovePlayer player direction game = newGame & gameCamera %~ fixCamera
         padding    = min (maxCameraX `div` 4) (maxCameraY `div` 4)
         minCameraX = view (gameCamera . cameraCoordinate . coordinateX) newGame
         minCameraY = view (gameCamera . cameraCoordinate . coordinateY) newGame
-        maxCameraX = toInteger $ view (gameCamera . cameraViewport . _x) newGame
-        maxCameraY = toInteger $ view (gameCamera . cameraViewport . _y) newGame
+        maxCameraX = (!!zoomLevel) $ iterate (*2) $ toInteger $ view (gameCamera . cameraViewport . _x) newGame
+        maxCameraY = (!!zoomLevel) $ iterate (*2) $ toInteger $ view (gameCamera . cameraViewport . _y) newGame
+        zoomLevel  = game ^. gameCamera . cameraZoomLevel
 
 sysWorldAddObjectAtPlayer :: Object -> State Game ()
 sysWorldAddObjectAtPlayer obj = do

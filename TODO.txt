@@ -1,7 +1,8 @@
+- Revisit parallax stars
+
 - Change WorldLayer to WorldLayers (maybe use a Map?)
 - Saving and reloading the game state
 - Multiplayer
-- Revisit parallax stars
 - Docking layers merges the layers. Detaching from a ship recreates a new layer.
 - Kessler effect; to avoid saves growing exponentially with all the asteroids and stuff,
   algorithmically generate a layer and apply "patches" of the transformations done.
@@ -20,3 +21,4 @@
 - Air locks (pressure?)
 - Air/heat leaks
 - Lighting
+- Center camera on player on boot

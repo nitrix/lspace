@@ -66,10 +66,10 @@ renderWorld game = do
     tileSize        <- asks envTileSize
     V2 width height <- SDL.get $ windowSize window
     
-    --let zoomLevels = reverse $ filter (<= tileSize) $ iterate (*2) 1
     let zoomLevel = game ^. gameCamera . cameraZoomLevel
-    let svtile    = V2 tileSize tileSize
     let zoomedTileSize = fromIntegral $ (iterate (`div`2) tileSize) !! zoomLevel
+
+    let svtile    = V2 tileSize tileSize
     let dvtile    = V2 zoomedTileSize zoomedTileSize
     
     let coordinates = [ coordinate x y
