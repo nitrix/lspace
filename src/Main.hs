@@ -44,6 +44,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
         , envRenderer = renderer
         , envTileset  = tileset
         , envFont     = font
+        , envTileSize = 32
         }
 
     -- Cleanup

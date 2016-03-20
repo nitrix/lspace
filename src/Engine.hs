@@ -21,8 +21,9 @@ import Ui.Menu
 enginePokeIO :: Game -> EnvironmentT IO Game
 enginePokeIO game = do
     window          <- asks envWindow
+    tileSize        <- asks envTileSize
     V2 width height <- SDL.get $ windowSize window
-    return $ game & gameCamera . cameraViewport .~ V2 (width `div` 32) (height `div` 32)
+    return $ game & gameCamera . cameraViewport .~ V2 (width `div` fromIntegral tileSize) (height `div` fromIntegral tileSize)
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> State Game Bool
@@ -57,18 +58,20 @@ engineHandleBareKeycode keycode = do
     player <- gets $ view gamePlayer
 
     case keycode of
-        KeycodeW      -> modify $ sysWorldMovePlayer player UpDirection
-        KeycodeB      -> modify $ sysWorldMovePlayer player UpDirection
-        KeycodeS      -> modify $ sysWorldMovePlayer player DownDirection
-        KeycodeA      -> modify $ sysWorldMovePlayer player LeftDirection
-        KeycodeD      -> modify $ sysWorldMovePlayer player RightDirection
-        KeycodeUp     -> modify $ gameCamera %~ cameraMove UpDirection
-        KeycodeDown   -> modify $ gameCamera %~ cameraMove DownDirection
-        KeycodeRight  -> modify $ gameCamera %~ cameraMove RightDirection
-        KeycodeLeft   -> modify $ gameCamera %~ cameraMove LeftDirection
-        KeycodeR      -> modify $ gameWorld  %~ sysWorldMessage Nothing (Just player) RotateMsg
-        KeycodeE      -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
-        KeycodeEscape -> modify $ gameUi     %~ uiMenuClear
-        _             -> modify $ id
+        KeycodeW       -> modify $ sysWorldMovePlayer player UpDirection
+        KeycodeB       -> modify $ sysWorldMovePlayer player UpDirection
+        KeycodeS       -> modify $ sysWorldMovePlayer player DownDirection
+        KeycodeA       -> modify $ sysWorldMovePlayer player LeftDirection
+        KeycodeD       -> modify $ sysWorldMovePlayer player RightDirection
+        KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
+        KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
+        KeycodeUp      -> modify $ gameCamera %~ cameraMove UpDirection
+        KeycodeDown    -> modify $ gameCamera %~ cameraMove DownDirection
+        KeycodeRight   -> modify $ gameCamera %~ cameraMove RightDirection
+        KeycodeLeft    -> modify $ gameCamera %~ cameraMove LeftDirection
+        KeycodeR       -> modify $ gameWorld  %~ sysWorldMessage Nothing (Just player) RotateMsg
+        KeycodeE       -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
+        KeycodeEscape  -> modify $ gameUi     %~ uiMenuClear
+        _              -> modify $ id
 
     return False

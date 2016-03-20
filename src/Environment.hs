@@ -4,6 +4,7 @@ module Environment
     ) where
 
 import Control.Monad.Reader
+import Foreign.C.Types
 import SDL
 import SDL.TTF.FFI (TTFFont)
 
@@ -16,4 +17,5 @@ data Environment = MkEnvironment
     , envRenderer :: Renderer
     , envTileset  :: Texture
     , envFont     :: TTFFont
+    , envTileSize :: CInt
     }

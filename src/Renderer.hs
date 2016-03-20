@@ -10,6 +10,7 @@ import Coordinate
 import Data.Hash (hashInt, asWord64)
 import qualified Data.Vector.Storable as V
 import Environment
+import Foreign.C.Types
 import Game
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
@@ -62,13 +63,20 @@ renderWorld game = do
     renderer        <- asks envRenderer
     window          <- asks envWindow
     tileset         <- asks envTileset
+    tileSize        <- asks envTileSize
     V2 width height <- SDL.get $ windowSize window
     
+    --let zoomLevels = reverse $ filter (<= tileSize) $ iterate (*2) 1
+    let zoomLevel = game ^. gameCamera . cameraZoomLevel
+    let svtile    = V2 tileSize tileSize
+    let zoomedTileSize = fromIntegral $ (iterate (`div`2) tileSize) !! zoomLevel
+    let dvtile    = V2 zoomedTileSize zoomedTileSize
+    
     let coordinates = [ coordinate x y
-                      | x <- [cameraX .. cameraX + (fromIntegral $ width `div` 32) + 1]
-                      , y <- [cameraY .. cameraY + (fromIntegral $ height `div` 32) + 1]
+                      | x <- [cameraX .. cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1]
+                      , y <- [cameraY .. cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1]
                       ]
-          
+
     forM_ coordinates $ \coord -> do 
         forM_ (sysWorldObjectsAt world coord) $ \obj -> do
             forM_ (objSprite obj) $ \(coordSpriteRel, coordSpriteTile) -> do
@@ -81,8 +89,8 @@ renderWorld game = do
                 let dstTileRelY = fromIntegral $ coord           ^. coordinateY - cameraY
                 
                 -- Final src and dst rectangles for SDL
-                let src = Rectangle (P $ (V2 srcTileX srcTileY) * V2 32 32) (V2 32 32)
-                let dst = Rectangle (P $ V2 (dstTileRelX + dstRelX) (dstTileRelY + dstRelY) * V2 32 32) (V2 32 32)
+                let src = Rectangle (P $ (V2 srcTileX srcTileY) * svtile) svtile
+                let dst = Rectangle (P $ V2 (dstTileRelX + dstRelX) (dstTileRelY + dstRelY) * dvtile) dvtile
                 
                 -- Render!
                 copyEx renderer tileset (Just src) (Just dst) 0 Nothing (V2 False False)
