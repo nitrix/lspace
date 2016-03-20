@@ -1,26 +1,42 @@
 module Engine
     ( engineHandleEvent
     , engineHandleKeyboardEvent
+    , enginePokeIO
     ) where
 
 import Camera
 import Coordinate
 import Control.Lens
+import Control.Monad.Reader
 import Control.Monad.State as S
+import Environment
 import Game
+import Linear (V2(V2))
 import Message
 import SDL
 import System.World
 import Ui
 import Ui.Menu
 
+enginePokeIO :: Game -> EnvironmentT IO Game
+enginePokeIO game = do
+    window          <- asks envWindow
+    V2 width height <- SDL.get $ windowSize window
+    return $ game & gameCamera . cameraViewport .~ V2 (width `div` 32) (height `div` 32)
+
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> State Game Bool
 engineHandleEvent event =
     case eventPayload event of
-        KeyboardEvent ked -> engineHandleKeyboardEvent ked
-        QuitEvent         -> return True
-        _                 -> return False
+        WindowSizeChangedEvent sced -> engineHandleResize sced
+        KeyboardEvent ked           -> engineHandleKeyboardEvent ked
+        QuitEvent                   -> return True
+        _                           -> return False
+
+engineHandleResize :: WindowSizeChangedEventData -> State Game Bool
+engineHandleResize sced = do
+    -- modify $ gameCamera . cameraViewport %~ (windowInitialSize $ windowSizeChangedEventWindow sced)
+    return False
 
 -- | This function handles keyboard events in the engine
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
@@ -41,15 +57,15 @@ engineHandleBareKeycode keycode = do
     player <- gets $ view gamePlayer
 
     case keycode of
+        KeycodeW      -> modify $ sysWorldMovePlayer player UpDirection
+        KeycodeB      -> modify $ sysWorldMovePlayer player UpDirection
+        KeycodeS      -> modify $ sysWorldMovePlayer player DownDirection
+        KeycodeA      -> modify $ sysWorldMovePlayer player LeftDirection
+        KeycodeD      -> modify $ sysWorldMovePlayer player RightDirection
         KeycodeUp     -> modify $ gameCamera %~ cameraMove UpDirection
         KeycodeDown   -> modify $ gameCamera %~ cameraMove DownDirection
         KeycodeRight  -> modify $ gameCamera %~ cameraMove RightDirection
         KeycodeLeft   -> modify $ gameCamera %~ cameraMove LeftDirection
-        KeycodeW      -> modify $ gameWorld  %~ sysWorldMoveObject UpDirection    player
-        KeycodeB      -> modify $ gameWorld  %~ sysWorldMoveObject UpDirection    player
-        KeycodeS      -> modify $ gameWorld  %~ sysWorldMoveObject DownDirection  player
-        KeycodeA      -> modify $ gameWorld  %~ sysWorldMoveObject LeftDirection  player
-        KeycodeD      -> modify $ gameWorld  %~ sysWorldMoveObject RightDirection player
         KeycodeR      -> modify $ gameWorld  %~ sysWorldMessage Nothing (Just player) RotateMsg
         KeycodeE      -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
         KeycodeEscape -> modify $ gameUi     %~ uiMenuClear

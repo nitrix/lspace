@@ -1,6 +1,7 @@
 module System.World where
 
 import qualified Assoc as A
+import Camera
 import Coordinate
 import Control.Lens
 import Control.Monad.State
@@ -8,6 +9,8 @@ import Data.Maybe
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Game
+import Linear (V2(V2), _x, _y)
+import Linear.Affine (Point(P))
 import Message
 import Object
 import World
@@ -54,6 +57,23 @@ sysWorldMoveObject direction objid w =
         msgOrientation z   = sysWorldMessage Nothing (Just objid) (MovedMsg direction) z
         updateCoordinate   = worldLayer %~ A.adjustR (coordinateMove direction) objid
         maybeNewCoordinate = coordinateMove direction <$> sysWorldCoordObjectId w objid
+
+-- TODO: Should be named and moved into a System.Camera module... maybe sysCameraBoundedPlayer
+-- Also, this needs a serious rewriting
+sysWorldMovePlayer :: ObjectId -> Direction -> Game -> Game
+sysWorldMovePlayer player direction game = newGame & gameCamera %~ fixCamera
+    where
+        world = view gameWorld newGame
+        newGame = game & gameWorld %~ sysWorldMoveObject direction player
+        fixCamera = fromMaybe id (focus <$> sysWorldCoordObjectId world player)
+        focus (P (V2 x y)) camera = camera &~ do
+            cameraCoordinate .= coordinate (min minCameraX x) (min minCameraY y)
+            cameraCoordinate %= \(P (V2 cx cy)) -> if x >= cx+maxCameraX-1 then coordinate (x-maxCameraX+1) cy else coordinate cx cy
+            cameraCoordinate %= \(P (V2 cx cy)) -> if y >= cy+maxCameraY-1 then coordinate cx (y-maxCameraY+1) else coordinate cx cy
+        minCameraX = view (gameCamera . cameraCoordinate . coordinateX) newGame
+        minCameraY = view (gameCamera . cameraCoordinate . coordinateY) newGame
+        maxCameraX = toInteger $ view (gameCamera . cameraViewport . _x) newGame
+        maxCameraY = toInteger $ view (gameCamera . cameraViewport . _y) newGame
 
 sysWorldAddObjectAtPlayer :: Object -> State Game ()
 sysWorldAddObjectAtPlayer obj = do

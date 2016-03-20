@@ -1,5 +1,22 @@
-- Moving the camera when active player is near the screen edges, moving outwards.
 - Change WorldLayer to WorldLayers (maybe use a Map?)
 - Saving and reloading the game state
 - Multiplayer
 - Revisit parallax stars
+- Docking layers merges the layers. Detaching from a ship recreates a new layer.
+- Kessler effect; to avoid saves growing exponentially with all the asteroids and stuff,
+  algorithmically generate a layer and apply "patches" of the transformations done.
+- Building more stuff than boxes
+- Logistic system
+- Pipe system
+- Electric system
+- Oxygen system
+- Heat system
+- Humidity system
+- Hunger / hydroponics
+- Singularity electric generator
+- Give layers velocity and mass (amount of blocks).
+- Collision detection; upon collision transfer of energy; if tiles too fragile, break
+- Solar panels
+- Air locks (pressure?)
+- Air/heat leaks
+- Lighting
