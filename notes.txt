@@ -1,6 +1,9 @@
 - Revisit parallax stars
 - Revisit world layer / camera zoom
+- Revisit camera pinning & camera bounding
 
+- Walls that connects together with angles
+- Star amount proportional to the screen surface area
 - Change WorldLayer to WorldLayers (maybe use a Map?)
 - Saving and reloading the game state
 - Multiplayer
@@ -22,4 +25,4 @@
 - Air locks (pressure?)
 - Air/heat leaks
 - Lighting
-- Center camera on player on boot or zoom
+- Stardust, nebula, glares and whatnot in the background

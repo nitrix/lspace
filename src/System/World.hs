@@ -64,18 +64,8 @@ sysWorldMovePlayer :: ObjectId -> Direction -> Game -> Game
 sysWorldMovePlayer player direction game = newGame & gameCamera %~ fixCamera
     where
         world = view gameWorld newGame
+        fixCamera = fromMaybe id (cameraAuto <$> sysWorldCoordObjectId world player)
         newGame = game & gameWorld %~ sysWorldMoveObject direction player
-        fixCamera = fromMaybe id (focus <$> sysWorldCoordObjectId world player)
-        focus (P (V2 x y)) camera = camera &~ do
-            cameraCoordinate .= coordinate (min minCameraX (x-padding)) (min minCameraY (y-padding))
-            cameraCoordinate %= \(P (V2 cx cy)) -> if x >= cx+maxCameraX-1-padding then coordinate (x-maxCameraX+1+padding) cy else coordinate cx cy
-            cameraCoordinate %= \(P (V2 cx cy)) -> if y >= cy+maxCameraY-1-padding then coordinate cx (y-maxCameraY+1+padding) else coordinate cx cy
-        padding    = min (maxCameraX `div` 4) (maxCameraY `div` 4)
-        minCameraX = view (gameCamera . cameraCoordinate . coordinateX) newGame
-        minCameraY = view (gameCamera . cameraCoordinate . coordinateY) newGame
-        maxCameraX = (!!zoomLevel) $ iterate (*2) $ toInteger $ view (gameCamera . cameraViewport . _x) newGame
-        maxCameraY = (!!zoomLevel) $ iterate (*2) $ toInteger $ view (gameCamera . cameraViewport . _y) newGame
-        zoomLevel  = game ^. gameCamera . cameraZoomLevel
 
 sysWorldAddObjectAtPlayer :: Object -> State Game ()
 sysWorldAddObjectAtPlayer obj = do
