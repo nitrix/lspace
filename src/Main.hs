@@ -5,7 +5,7 @@ import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 import Environment
-import Engine (engineHandleEvent, enginePokeIO)
+import Engine (engineHandleEvent, enginePokeIO, engineInit)
 import Game (Game, defaultGame)
 import Renderer (renderGame)
 import SDL
@@ -39,14 +39,14 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     showWindow window
 
     -- Main loop
-    runReaderT (mainLoop defaultGame) $ MkEnvironment
+    runReaderT (engineInit defaultGame >>= mainLoop) $ MkEnvironment
         { envWindow   = window
         , envRenderer = renderer
         , envTileset  = tileset
         , envFont     = font
         , envTileSize = 32
         }
-
+    
     -- Cleanup
     killThread $ serverThreadId ekg
     Ttf.closeFont font

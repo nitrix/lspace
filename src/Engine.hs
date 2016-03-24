@@ -1,6 +1,7 @@
 module Engine
     ( engineHandleEvent
     , engineHandleKeyboardEvent
+    , engineInit
     , enginePokeIO
     ) where
 
@@ -9,6 +10,7 @@ import Coordinate
 import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
+import Data.Maybe
 import Environment
 import Game
 import Linear (V2(V2))
@@ -24,6 +26,14 @@ enginePokeIO game = do
     tileSize        <- asks envTileSize
     V2 width height <- SDL.get $ windowSize window
     return $ game & gameCamera . cameraViewport .~ V2 (width `div` fromIntegral tileSize) (height `div` fromIntegral tileSize)
+
+engineInit :: Game -> ReaderT Environment IO Game
+engineInit game = do
+    newGame <- enginePokeIO game
+    return $ fromMaybe newGame ((\coord -> newGame & gameCamera %~ cameraCenter coord) <$> playerCoord)
+    where
+        world       = view gameWorld game
+        playerCoord = sysWorldCoordObjectId world $ view gamePlayer game
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> State Game Bool
@@ -50,6 +60,7 @@ engineHandleKeyboardEvent ked = do
 engineHandleBareKeycode :: Keycode -> State Game Bool
 engineHandleBareKeycode keycode = do
     player <- gets $ view gamePlayer
+    world  <- gets $ view gameWorld
 
     case keycode of
         KeycodeW       -> modify $ sysWorldMovePlayer player UpDirection
@@ -63,6 +74,7 @@ engineHandleBareKeycode keycode = do
         KeycodeDown    -> modify $ gameCamera %~ cameraMove DownDirection
         KeycodeRight   -> modify $ gameCamera %~ cameraMove RightDirection
         KeycodeLeft    -> modify $ gameCamera %~ cameraMove LeftDirection
+        KeycodeY       -> modify $ gameCamera %~ (fromMaybe id (cameraTogglePinned <$> sysWorldCoordObjectId world player)) -- TODO: eeeww
         KeycodeR       -> modify $ gameWorld  %~ sysWorldMessage Nothing (Just player) RotateMsg
         KeycodeE       -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
         KeycodeEscape  -> modify $ gameUi     %~ uiMenuClear
