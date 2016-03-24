@@ -65,11 +65,11 @@ sysWorldMovePlayer player direction game = newGame & gameCamera %~ fixCamera
     where
         world = view gameWorld newGame
         newGame = game & gameWorld %~ sysWorldMoveObject direction player
-        fixCamera = fromMaybe id (focus <$> sysWorldCoordObjectId world player)
+        fixCamera = fromMaybe id (focus . getCoordinate <$> sysWorldCoordObjectId world player)
         focus (P (V2 x y)) camera = camera &~ do
             cameraCoordinate .= coordinate (min minCameraX (x-padding)) (min minCameraY (y-padding))
-            cameraCoordinate %= \(P (V2 cx cy)) -> if x >= cx+maxCameraX-1-padding then coordinate (x-maxCameraX+1+padding) cy else coordinate cx cy
-            cameraCoordinate %= \(P (V2 cx cy)) -> if y >= cy+maxCameraY-1-padding then coordinate cx (y-maxCameraY+1+padding) else coordinate cx cy
+            cameraCoordinate %= (\(P (V2 cx cy)) -> if x >= cx+maxCameraX-1-padding then coordinate (x-maxCameraX+1+padding) cy else coordinate cx cy) . getCoordinate
+            cameraCoordinate %= (\(P (V2 cx cy)) -> if y >= cy+maxCameraY-1-padding then coordinate cx (y-maxCameraY+1+padding) else coordinate cx cy) . getCoordinate
         padding    = min (maxCameraX `div` 4) (maxCameraY `div` 4)
         minCameraX = view (gameCamera . cameraCoordinate . coordinateX) newGame
         minCameraY = view (gameCamera . cameraCoordinate . coordinateY) newGame

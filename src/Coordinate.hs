@@ -1,5 +1,5 @@
 module Coordinate
-    ( Coordinate
+    ( Coordinate(getCoordinate) -- TODO: ewww
     , Direction(..)
     , coordinate
     , coordinateMove
@@ -19,17 +19,17 @@ data Direction = UpDirection
                | LeftDirection
                deriving (Show, Bounded, Enum)
 
-type Coordinate = Point V2 Integer
+newtype Coordinate = Coordinate { getCoordinate :: Point V2 Integer } deriving (Eq, Ord)
 
 -- Lenses
 coordinateX :: Lens' Coordinate Integer
 coordinateY :: Lens' Coordinate Integer
-coordinateX = _x
-coordinateY = _y
+coordinateX = lens (view _x . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _y .~ z)
+coordinateY = lens (view _y . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _y .~ z)
 
 -- | Simplified Coordinate constructor
 coordinate :: Integer -> Integer -> Coordinate
-coordinate x y = P $ V2 x y
+coordinate x y = Coordinate $ P $ V2 x y
 
 -- | Compute a new coordinate relative to an existing coordinate in a given direction
 coordinateMove :: Direction -> Coordinate -> Coordinate

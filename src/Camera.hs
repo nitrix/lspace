@@ -19,7 +19,7 @@ data Camera = MkCamera
     { _cameraCoordinate :: Coordinate
     , _cameraViewport   :: V2 CInt
     , _cameraZoomLevel  :: Int
-    } deriving Show
+    }
 
 -- | Default camera at the default coordinate position
 defaultCamera :: Camera
@@ -44,5 +44,6 @@ cameraMove DownDirection  = cameraCoordinate . coordinateY %~ (+1)
 cameraMove LeftDirection  = cameraCoordinate . coordinateX %~ subtract 1
 cameraMove RightDirection = cameraCoordinate . coordinateX %~ (+1)
 
+-- | Zoom out the camera; the higher the zoom level, the further, to a maximum of 4 levels.
 cameraZoom :: (Int -> Int) -> Camera -> Camera
 cameraZoom f = cameraZoomLevel %~ (\n -> if n < 0 then 0 else (if n > 4 then 4 else n)) . f
