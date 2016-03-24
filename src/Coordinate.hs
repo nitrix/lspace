@@ -24,7 +24,7 @@ newtype Coordinate = Coordinate { getCoordinate :: Point V2 Integer } deriving (
 -- Lenses
 coordinateX :: Lens' Coordinate Integer
 coordinateY :: Lens' Coordinate Integer
-coordinateX = lens (view _x . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _y .~ z)
+coordinateX = lens (view _x . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _x .~ z)
 coordinateY = lens (view _y . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _y .~ z)
 
 -- | Simplified Coordinate constructor
