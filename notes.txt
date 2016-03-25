@@ -2,15 +2,15 @@
 - Revisit world layer / camera zoom
 - Revisit camera pinning & camera bounding
 
-- Walls that connects together with angles
 - Star amount proportional to the screen surface area
+- Walls that connects together with angles
 - Change WorldLayer to WorldLayers (maybe use a Map?)
 - Saving and reloading the game state
+
 - Multiplayer
 - Docking layers merges the layers. Detaching from a ship recreates a new layer.
 - Kessler effect; to avoid saves growing exponentially with all the asteroids and stuff,
   algorithmically generate a layer and apply "patches" of the transformations done.
-- Building more stuff than boxes
 - Logistic system
 - Pipe system
 - Electric system
