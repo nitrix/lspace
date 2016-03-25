@@ -117,8 +117,8 @@ renderVoid game = do
             (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(1337*prlx)) + negate cameraX * fromIntegral prlx) `mod` width)
             (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(7331*prlx)) + negate cameraY * fromIntegral prlx) `mod` height)
 
-    let points1 = V.generate 100 (fixedRandomPoint 1)
-    let points2 = V.generate 100 (fixedRandomPoint 2)
+    let points1 = V.generate 500 (fixedRandomPoint 1)
+    let points2 = V.generate 200 (fixedRandomPoint 2)
     let points3 = V.generate 100 (fixedRandomPoint 3)
 
     rendererDrawColor renderer $= V4 85 85 85 255    -- white quite dark
