@@ -8,4 +8,3 @@ data Message = MovedMsg Direction
              | ProximityMsg Direction
              | SteppedOnMsg
              | UnknownMsg
-             deriving (Show)

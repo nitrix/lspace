@@ -10,6 +10,7 @@ import Coordinate
 import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
+import Demo
 import Data.Maybe
 import Environment
 import Game
@@ -19,6 +20,7 @@ import SDL
 import System.World
 import Ui
 import Ui.Menu
+import World
 
 enginePokeIO :: Game -> EnvironmentT IO Game
 enginePokeIO game = do
@@ -29,10 +31,12 @@ enginePokeIO game = do
 
 engineInit :: Game -> ReaderT Environment IO Game
 engineInit game = do
-    newGame <- enginePokeIO game
+    newGame <- enginePokeIO $ gamePlayer .~ demoPlayer $ game
     return $ fromMaybe newGame ((\coord -> newGame & gameCamera %~ cameraCenter coord) <$> playerCoord)
     where
-        world       = view gameWorld game
+        world = view gameWorld game &~ do
+             worldLayer   .= demoLayer
+             worldObjects .= demoObjects
         playerCoord = sysWorldCoordObjectId world $ view gamePlayer game
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.

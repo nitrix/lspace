@@ -36,7 +36,7 @@ gameUi     = lens _gameUi     (\s x -> s { _gameUi = x })
 defaultGame :: Game
 defaultGame = MkGame
     { _gameCamera  = defaultCamera
-    , _gamePlayer  = 2 -- TODO: change back to 0
+    , _gamePlayer  = 0
     , _gameUi      = defaultUi
     , _gameWorld   = defaultWorld &~ do
                          worldLayer   .= demoLayer

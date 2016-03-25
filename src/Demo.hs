@@ -1,6 +1,7 @@
 module Demo
     ( demoObjects
     , demoLayer
+    , demoPlayer
     ) where
 
 import qualified Assoc as A
@@ -32,3 +33,6 @@ demoLayer = A.fromList
     , (coordinate 5 5, 0)
     , (coordinate 5 6, 2)
     ]
+
+demoPlayer :: ObjectId
+demoPlayer = 2
