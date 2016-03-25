@@ -20,6 +20,7 @@ playerObject :: Object -> Player -> Object
 playerObject obj p = obj
     { objSolid  = False
     , objSprite = playerSprite p
+    , objFacing = view playerDirection p
     , objMsg    = \msg -> playerObject obj <$> runState (playerMsg msg) p
     }
 
@@ -31,10 +32,10 @@ defaultPlayer = MkPlayer
 
 playerSprite :: Player -> Sprite
 playerSprite p = case _playerDirection p of
-    UpDirection    -> sprite 1 0
-    DownDirection  -> sprite 1 2
-    LeftDirection  -> sprite 1 1
-    RightDirection -> sprite 1 3
+    UpDirection    -> sprite 1 0 ZOnTop
+    DownDirection  -> sprite 1 2 ZOnTop
+    LeftDirection  -> sprite 1 1 ZOnTop
+    RightDirection -> sprite 1 3 ZOnTop
 
 playerMsg :: Message -> State Player [Message]
 playerMsg m = do

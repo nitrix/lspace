@@ -4,20 +4,23 @@ module Object
     , defaultObject
     ) where
 
+import Coordinate
 import Message
 import Sprite
 
 type ObjectId = Integer
 
 data Object = MkObject
-    { objSolid :: Bool
+    { objSolid  :: Bool
+    , objFacing :: Direction
     , objSprite :: Sprite
-    , objMsg :: Message -> ([Message], Object)
-    }
+    , objMsg    :: Message -> ([Message], Object)
+    } 
 
 defaultObject :: Object
 defaultObject = MkObject
-    { objSolid = True
+    { objSolid  = True
+    , objFacing = DownDirection
     , objSprite = defaultSprite
-    , objMsg = const ([], defaultObject)
+    , objMsg    = const ([], defaultObject)
     }

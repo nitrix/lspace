@@ -57,12 +57,18 @@ cameraMove RightDirection c = c & cameraCoordinate . coordinateX %~ (+1)
 
 -- TODO: needs a serious refactoring
 cameraAuto :: Coordinate -> Camera -> Camera
-cameraAuto coord c = if c ^. cameraPinned then cameraCenter coord c else cameraBound (getCoordinate coord) c
+cameraAuto coord c = if c ^. cameraPinned then cameraCenter coord c else cameraBound coord c
+
+cameraBound :: Coordinate -> Camera -> Camera
+cameraBound coord c = let (P (V2 x y)) = getCoordinate coord in c &~ do
+    cameraCoordinate .= coordinate (min minCameraX (x-padding)) (min minCameraY (y-padding))
+    cameraCoordinate %= (\(P (V2 cx cy)) -> if x >= cx+maxCameraX-1-padding
+                                            then coordinate (x-maxCameraX+1+padding) cy
+                                            else coordinate cx cy) . getCoordinate
+    cameraCoordinate %= (\(P (V2 cx cy)) -> if y >= cy+maxCameraY-1-padding
+                                            then coordinate cx (y-maxCameraY+1+padding)
+                                            else coordinate cx cy) . getCoordinate
     where
-        cameraBound (P (V2 x y)) camera = camera &~ do
-            cameraCoordinate .= coordinate (min minCameraX (x-padding)) (min minCameraY (y-padding))
-            cameraCoordinate %= (\(P (V2 cx cy)) -> if x >= cx+maxCameraX-1-padding then coordinate (x-maxCameraX+1+padding) cy else coordinate cx cy) . getCoordinate
-            cameraCoordinate %= (\(P (V2 cx cy)) -> if y >= cy+maxCameraY-1-padding then coordinate cx (y-maxCameraY+1+padding) else coordinate cx cy) . getCoordinate
         padding    = min (maxCameraX `div` 4) (maxCameraY `div` 4)
         minCameraX = c ^. cameraCoordinate . coordinateX
         minCameraY = c ^. cameraCoordinate . coordinateY

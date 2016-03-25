@@ -40,7 +40,10 @@ executable lspace
                      , Message
                      , Object
                      , Object.Box
+                     , Object.Floor
+                     , Object.Plant
                      , Object.Player
+                     , Object.Wall
                      , Renderer
                      , Sprite
                      , System.World

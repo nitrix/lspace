@@ -9,8 +9,6 @@ import Data.Maybe
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Game
-import Linear (V2(V2), _x, _y)
-import Linear.Affine (Point(P))
 import Message
 import Object
 import World
@@ -79,4 +77,5 @@ sysWorldAddObjectAtPlayer obj = do
     -- Add our object to worldLayer
     player <- gets $ view gamePlayer
     world  <- gets $ view gameWorld 
-    modify $ gameWorld . worldLayer %~ fromMaybe id ((\coord -> A.insert coord objid) <$> sysWorldCoordObjectId world player)
+    let dir = objFacing $ M.findWithDefault defaultObject player $ view worldObjects world
+    modify $ gameWorld . worldLayer %~ fromMaybe id ((\coord -> A.insert (coordinateMove dir coord) objid) <$> sysWorldCoordObjectId world player)

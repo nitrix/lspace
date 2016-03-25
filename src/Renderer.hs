@@ -8,6 +8,7 @@ import Control.Lens
 import Control.Monad.Reader
 import Coordinate
 import Data.Hash (hashInt, asWord64)
+import Data.List
 import qualified Data.Vector.Storable as V
 import Environment
 import Game
@@ -76,23 +77,28 @@ renderWorld game = do
                       , y <- [cameraY .. cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1]
                       ]
 
-    forM_ coordinates $ \coord -> do 
-        forM_ (sysWorldObjectsAt world coord) $ \obj -> do
-            forM_ (objSprite obj) $ \(coordSpriteRel, coordSpriteTile) -> do
-                -- Bunch of positions to calculate
-                let srcTileX    = fromInteger  $ coordSpriteTile ^. coordinateX
-                let srcTileY    = fromInteger  $ coordSpriteTile ^. coordinateY
-                let dstRelX     = fromInteger  $ coordSpriteRel  ^. coordinateX
-                let dstRelY     = fromInteger  $ coordSpriteRel  ^. coordinateY
-                let dstTileRelX = fromIntegral $ coord           ^. coordinateX - cameraX
-                let dstTileRelY = fromIntegral $ coord           ^. coordinateY - cameraY
+    -- Collect renderables, because of zIndex
+    renderables <- concat . concat <$> do
+        forM coordinates $ \coord -> do 
+            forM (sysWorldObjectsAt world coord) $ \obj -> do
+                forM (objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
+                    -- Bunch of positions to calculate
+                    let srcTileX    = fromInteger  $ coordSpriteTile ^. coordinateX
+                    let srcTileY    = fromInteger  $ coordSpriteTile ^. coordinateY
+                    let dstRelX     = fromInteger  $ coordSpriteRel  ^. coordinateX
+                    let dstRelY     = fromInteger  $ coordSpriteRel  ^. coordinateY
+                    let dstTileRelX = fromIntegral $ coord           ^. coordinateX - cameraX
+                    let dstTileRelY = fromIntegral $ coord           ^. coordinateY - cameraY
+                    
+                    -- Final src and dst rectangles for SDL
+                    let src = Rectangle (P $ (V2 srcTileX srcTileY) * svtile) svtile
+                    let dst = Rectangle (P $ V2 (dstTileRelX + dstRelX) (dstTileRelY + dstRelY) * dvtile) dvtile
+                    return (Just src, Just dst, zIndex)
+
+    -- Render!
+    forM_ (sortOn (\(_,_,a) -> a) renderables) $ \(src, dst, _) -> do
+        copyEx renderer tileset src dst 0 Nothing (V2 False False)
                 
-                -- Final src and dst rectangles for SDL
-                let src = Rectangle (P $ (V2 srcTileX srcTileY) * svtile) svtile
-                let dst = Rectangle (P $ V2 (dstTileRelX + dstRelX) (dstTileRelY + dstRelY) * dvtile) dvtile
-                
-                -- Render!
-                copyEx renderer tileset (Just src) (Just dst) 0 Nothing (V2 False False)
     where
         cameraX  = game ^. gameCamera . cameraCoordinate . coordinateX
         cameraY  = game ^. gameCamera . cameraCoordinate . coordinateY

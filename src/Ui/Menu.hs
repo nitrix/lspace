@@ -9,6 +9,9 @@ import Data.List
 import SDL
 import Object
 import Object.Box
+import Object.Floor
+import Object.Plant
+import Object.Wall
 import System.World
 
 uiMenuClear :: Ui -> Ui
@@ -20,7 +23,7 @@ uiMenuSwitch ty ui = uiMenuClear ui & uiVisible %~ (MkUiTypeMenu ty:)
 uiMenuOptions :: UiTypeMenu -> [String]
 uiMenuOptions ty = case ty of
     UiMenuMain ->
-        [ "[b] Build menu (soon)"
+        [ "[b] Build menu (wip)"
         , "[x] Destroy mode (soon)"
         , "[i] Inventory (soon)"
         , "[q] Quit"
@@ -30,7 +33,10 @@ uiMenuOptions ty = case ty of
         , "[n] No, go back"
         ]
     UiMenuBuild ->
-        [ "[b] Box (wip)"
+        [ "[b] Box"
+        , "[f] Floor"
+        , "[p] Plant"
+        , "[w] Wall"
         ]
 
 uiMenuInterceptKeycode :: Keycode -> State Game (Keycode, Bool)
@@ -41,8 +47,10 @@ uiMenuInterceptKeycode keycode = do
         case modal of
             MkUiTypeMenu UiMenuBuild ->
                 case keycode of
-                    KeycodeB -> do sysWorldAddObjectAtPlayer $ boxObject defaultObject defaultBox
-                                   hook $ gameUi %~ uiMenuClear
+                    KeycodeB -> decisive $ sysWorldAddObjectAtPlayer $ boxObject defaultObject defaultBox
+                    KeycodeF -> decisive $ sysWorldAddObjectAtPlayer $ floorObject defaultObject defaultFloor
+                    KeycodeP -> decisive $ sysWorldAddObjectAtPlayer $ plantObject defaultObject defaultPlant
+                    KeycodeW -> decisive $ sysWorldAddObjectAtPlayer $ wallObject defaultObject defaultWall
                     _        -> ignore
             MkUiTypeMenu UiMenuMain ->
                 case keycode of
@@ -59,6 +67,8 @@ uiMenuInterceptKeycode keycode = do
     return $ foldl' (biliftA2 min (||)) (keycode, False) results
 
     where
-        terminate = return (KeycodeUnknown, True)
-        ignore    = return (keycode, False)
-        hook f    = (KeycodeUnknown, False) <$ modify f
+        decisive :: State Game () -> State Game (Keycode, Bool)
+        decisive f = f >> (hook $ gameUi %~ uiMenuClear)
+        terminate  = return (KeycodeUnknown, True)
+        ignore     = return (keycode, False)
+        hook f     = (KeycodeUnknown, False) <$ modify f

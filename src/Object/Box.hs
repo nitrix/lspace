@@ -31,8 +31,8 @@ defaultBox = MkBox
 
 boxSprite :: Box -> Sprite
 boxSprite box = case _boxState box of
-    BoxOpened -> sprite 0 2
-    BoxClosed -> sprite 0 1
+    BoxOpened -> sprite 0 2 ZOnGround
+    BoxClosed -> sprite 0 1 ZOnGround
 
 boxMsg :: Message -> State Box [Message]
 boxMsg _ = return []
