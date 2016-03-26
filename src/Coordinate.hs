@@ -8,10 +8,12 @@ module Coordinate
     , defaultCoordinate
     ) where
 
-import Prelude hiding (Left, Right)
+import Control.Lens
+import Data.Hash hiding (Hashable)
+import Data.Hashable hiding (hash)
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
-import Control.Lens
+import Prelude hiding (Left, Right)
 
 data Direction = UpDirection
                | RightDirection
@@ -41,3 +43,9 @@ coordinateMove RightDirection = coordinateX %~ (+1)
 -- | Center point
 defaultCoordinate :: Coordinate
 defaultCoordinate = coordinate 0 0
+
+instance Hashable Coordinate where
+    -- hash x = fromIntegral $ asWord64 $ hashStorable $ getCoordinate x
+    -- hash c = let (P (V2 x y)) = getCoordinate c in fromIntegral x + fromIntegral y
+    -- hashWithSalt s c = fromIntegral . asWord64 $ let (P (V2 x y)) = getCoordinate c in hash x `combine` hash y `combine` hash s
+    hashWithSalt s c = let (P (V2 x y)) = getCoordinate c in fromIntegral x * fromIntegral y * s

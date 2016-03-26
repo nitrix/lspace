@@ -113,6 +113,7 @@ renderVoid game = do
     let cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
     let cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
         
+    -- TODO 67%
     let fixedRandomPoint prlx n = P $ V2
             (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(1337*prlx)) + negate cameraX * fromIntegral prlx) `mod` width)
             (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(7331*prlx)) + negate cameraY * fromIntegral prlx) `mod` height)

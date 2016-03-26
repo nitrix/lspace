@@ -20,7 +20,7 @@ demoObjects = M.fromList
     ]
 
 demoLayer :: WorldLayer
-demoLayer = A.fromList
+demoLayer = A.fromList $
     [ (coordinate 0 0, 0)
     , (coordinate 1 0, 0)
     , (coordinate 0 1, 0)
@@ -32,7 +32,7 @@ demoLayer = A.fromList
     , (coordinate 5 2, 0)
     , (coordinate 5 5, 0)
     , (coordinate 5 6, 2)
-    ]
+    ] -- ++ [(coordinate x y,0) | x <- [10..200], y <- [10..200]]
 
 demoPlayer :: ObjectId
 demoPlayer = 2
