@@ -47,7 +47,7 @@ sysWorldObjectsAt w c = mapMaybe resolveObjectIds objectIds
 
 -- TODO: Needs a serious rewrite eventually; e.g. giving proximity/stepped on events and so on
 sysWorldMoveObject :: Direction -> ObjectId -> World -> World
-sysWorldMoveObject direction objid w =
+sysWorldMoveObject direction objid w = 
     if (fromMaybe False $ all (==False) <$> map objSolid <$> sysWorldObjectsAt w <$> maybeNewCoordinate)
     then msgOrientation . updateCoordinate $ w
     else msgOrientation w

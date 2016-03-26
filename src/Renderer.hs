@@ -1,14 +1,20 @@
+{-# LANGUAGE TupleSections #-}
+
 module Renderer
     ( renderGame
     , renderUi
     ) where
 
+import qualified Assoc as A
 import Camera
 import Control.Lens
 import Control.Monad.Reader
 import Coordinate
 import Data.Hash (hashInt, asWord64)
 import Data.List
+import qualified Data.Map as M
+import Data.Maybe
+import qualified Data.Set as S
 import qualified Data.Vector.Storable as V
 import Environment
 import Game
@@ -20,7 +26,7 @@ import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import Ui
 import Ui.Menu
-import System.World
+import World
 
 -- TODO: to refactor most of this, please
 renderGame :: Game -> EnvironmentT IO ()
@@ -72,37 +78,42 @@ renderWorld game = do
     let svtile    = V2 tileSize tileSize
     let dvtile    = V2 zoomedTileSize zoomedTileSize
     
-    let coordinates = [ coordinate x y
-                      | x <- [cameraX .. cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1]
-                      , y <- [cameraY .. cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1]
-                      ]
+    let maxCamX = cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1
+    let maxCamY = cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1
+    
+    let things = join $ map (\(c, s) -> map (c,) (map (\x -> fromMaybe defaultObject $ M.lookup x objects) $ S.toList s)) $ (M.toList $
+                 fst $ M.split (camera & coordinateY .~ maxCamY) $
+                 fst $ M.split (camera & coordinateX .~ maxCamX) $
+                 snd $ A.split camera layer)
+                 :: [(Coordinate, Object)]
 
     -- Collect renderables, because of zIndex
-    renderables <- concat . concat <$> do
-        forM coordinates $ \coord -> do 
-            forM (sysWorldObjectsAt world coord) $ \obj -> do
-                forM (objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
-                    -- Bunch of positions to calculate
-                    let srcTileX    = fromInteger  $ coordSpriteTile ^. coordinateX
-                    let srcTileY    = fromInteger  $ coordSpriteTile ^. coordinateY
-                    let dstRelX     = fromInteger  $ coordSpriteRel  ^. coordinateX
-                    let dstRelY     = fromInteger  $ coordSpriteRel  ^. coordinateY
-                    let dstTileRelX = fromIntegral $ coord           ^. coordinateX - cameraX
-                    let dstTileRelY = fromIntegral $ coord           ^. coordinateY - cameraY
-                    
-                    -- Final src and dst rectangles for SDL
-                    let src = Rectangle (P $ (V2 srcTileX srcTileY) * svtile) svtile
-                    let dst = Rectangle (P $ V2 (dstTileRelX + dstRelX) (dstTileRelY + dstRelY) * dvtile) dvtile
-                    return (Just src, Just dst, zIndex)
+    renderables <- concat <$> do
+        forM things $ \(coord, obj) -> do
+            forM (objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
+                -- Bunch of positions to calculate
+                let srcTileX    = fromInteger  $ coordSpriteTile ^. coordinateX
+                let srcTileY    = fromInteger  $ coordSpriteTile ^. coordinateY
+                let dstRelX     = fromInteger  $ coordSpriteRel  ^. coordinateX
+                let dstRelY     = fromInteger  $ coordSpriteRel  ^. coordinateY
+                let dstTileRelX = fromIntegral $ coord           ^. coordinateX - cameraX
+                let dstTileRelY = fromIntegral $ coord           ^. coordinateY - cameraY
+                
+                -- Final src and dst rectangles for SDL
+                let src = Rectangle (P $ (V2 srcTileX srcTileY) * svtile) svtile
+                let dst = Rectangle (P $ V2 (dstTileRelX + dstRelX) (dstTileRelY + dstRelY) * dvtile) dvtile
+                return (Just src, Just dst, zIndex)
 
     -- Render!
     forM_ (sortOn (\(_,_,a) -> a) renderables) $ \(src, dst, _) -> do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
                 
     where
+        camera   = game ^. gameCamera . cameraCoordinate
         cameraX  = game ^. gameCamera . cameraCoordinate . coordinateX
         cameraY  = game ^. gameCamera . cameraCoordinate . coordinateY
-        world    = game ^. gameWorld
+        layer    = game ^. gameWorld  . worldLayer
+        objects  = game ^. gameWorld  . worldObjects
 
 renderVoid :: Game -> EnvironmentT IO ()
 renderVoid game = do
