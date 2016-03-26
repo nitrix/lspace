@@ -15,6 +15,7 @@ data Wall = MkWall
     }
 
 data WallType = TypeHorizontal
+             {-
               | TypeHorizontalBranchBottom
               | TypeHorizontalBranchTop
               | TypeVertical
@@ -24,6 +25,7 @@ data WallType = TypeHorizontal
               | TypeCornerTopLeft
               | TypeCornerBottomRight
               | TypeCornerBottomLeft
+              -}
 
 wallObject :: Object -> Wall -> Object
 wallObject obj f = obj
@@ -38,7 +40,7 @@ defaultWall = MkWall TypeHorizontal
 wallSprite :: Wall -> Sprite
 wallSprite w = case _wallType w of
     TypeHorizontal -> sprite 5 2 ZGround
-    _              -> sprite 0 0 ZGround
+    -- _           -> sprite 0 0 ZGround
 
 wallMsg :: Message -> State Wall [Message]
 wallMsg _ = return []
