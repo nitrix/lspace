@@ -39,6 +39,7 @@ executable lspace
                      , Engine
                      , Environment
                      , Game
+                     , Main
                      , Message
                      , Object
                      , Object.Box
