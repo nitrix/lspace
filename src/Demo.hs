@@ -4,7 +4,7 @@ module Demo
     , demoPlayer
     ) where
 
-import qualified Assoc as A
+import qualified Bimap as A
 import Coordinate
 import qualified Data.Map as M
 import Object

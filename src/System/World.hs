@@ -1,6 +1,6 @@
 module System.World where
 
-import qualified Assoc as A
+import qualified Bimap as A
 import Camera
 import Coordinate
 import Control.Lens

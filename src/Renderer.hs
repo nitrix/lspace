@@ -5,7 +5,7 @@ module Renderer
     , renderUi
     ) where
 
-import qualified Assoc as A
+import qualified Bimap as A
 import Camera
 import Control.Lens
 import Control.Monad.Reader
