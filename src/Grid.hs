@@ -38,3 +38,5 @@ fromList xs = foldl' (\m (x, y, v) -> insert x y v m) empty xs
 adjust :: Ord k => (v -> v) -> k -> k -> Grid k v -> Grid k v
 adjust f x y (MkGrid left right) = MkGrid newLeft newRight
     where
+        newLeft  = left  -- TODO
+        newRight = right -- TODO
