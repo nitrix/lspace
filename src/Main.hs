@@ -13,6 +13,8 @@ import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
 import System.Remote.Monitoring
 
+import Grid
+
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
     -- Initialize SDL an SDL_image

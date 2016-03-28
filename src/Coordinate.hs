@@ -19,12 +19,7 @@ data Direction = UpDirection
                | LeftDirection
                deriving (Show, Bounded, Enum)
 
-newtype Coordinate = Coordinate { getCoordinate :: Point V2 Integer } deriving (Eq)
-
-instance Ord Coordinate where
-    c1 > c2  = let ((P(V2 x1 y1)), (P(V2 x2 y2))) = (getCoordinate c1, getCoordinate c2) in x1 > x2 && y1 > y2
-    c1 >= c2 = let ((P(V2 x1 y1)), (P(V2 x2 y2))) = (getCoordinate c1, getCoordinate c2) in x1 >= x2 && y1 >= y2
-    c1 <= c2 = let ((P(V2 x1 y1)), (P(V2 x2 y2))) = (getCoordinate c1, getCoordinate c2) in x1 <= x2 && y1 <= y2
+newtype Coordinate = Coordinate { getCoordinate :: Point V2 Integer } deriving (Eq, Ord)
 
 -- Lenses
 coordinateX :: Lens' Coordinate Integer
