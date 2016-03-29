@@ -19,6 +19,7 @@ demoObjects = M.fromList
     , (2, playerObject defaultObject defaultPlayer)
     ]
 
+-- TODO ObjectId must be unique, but I guess it's fine for now as long as they don't move
 demoLayer :: WorldLayer
 demoLayer = A.fromList $
     [ (coordinate 0 0, 0)

@@ -11,7 +11,7 @@ module Grid
     , lookupR
     , fromList
     , toList
-    -- , range
+    , range
     )
 where
 
@@ -21,11 +21,7 @@ import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as S
 
--- class Gridable c k where
---     fromGrid :: (k, k) -> c
---     toGrid :: c -> (k, k)
-
-class Ord k => Gridable c k | c -> k where
+class (Ord k, Num k) => Gridable c k | c -> k where
     fromGrid :: (k, k) -> c
     toGrid   :: c -> (k, k)
 
@@ -61,6 +57,13 @@ adjustR v c g@(MkGrid left right) = insert c v $ MkGrid cleanLeft cleanRight
         cleanLeft  = foldl' (\m n -> let (ox, oy) = toGrid n in M.adjust (M.adjust (S.delete v) oy) ox m) left oldKeys
         cleanRight = M.delete v right
 
-toList :: (Gridable c k) => Grid c k v -> [(k, k, v)]
+toList :: (Gridable c k) => Grid c k v -> [(c, v)]
 toList (MkGrid left _) = concat . concat $
-    map (\(k1,m) -> map (\(k2, s) -> map (\v -> (k1, k2, v)) (S.toList s)) (M.toList m)) (M.toList left)
+    map (\(k1,m) -> map (\(k2, s) -> map (\v -> (fromGrid (k1, k2), v)) (S.toList s)) (M.toList m)) (M.toList left)
+
+range :: (Gridable c k, Num k) => c -> c -> Grid c k v -> [(c, v)]
+range lc hc (MkGrid left right) = toList $ MkGrid newLeft right
+    where
+        newLeft  = ((fst . M.split (hy + 1) . snd . M.split (ly - 1)) <$> (fst . M.split (hx + 1) . snd . M.split (lx - 1) $ left))
+        (lx, ly) = toGrid lc
+        (hx, hy) = toGrid hc

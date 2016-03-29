@@ -30,8 +30,7 @@ executable lspace
   default-language:    Haskell2010
   extra-libraries:     SDL2_image
   ghc-options:         -threaded -with-rtsopts=-T
-  other-modules:       Bimap
-                     , Camera
+  other-modules:       Camera
                      , Coordinate
                      , Demo
                      , Engine

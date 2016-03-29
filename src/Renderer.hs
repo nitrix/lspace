@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module Renderer
     ( renderGame
     , renderUi
@@ -67,10 +65,10 @@ renderWorld :: Game -> EnvironmentT IO ()
 renderWorld game = do
     -- Information needed to render
     renderer        <- asks envRenderer
-    -- window          <- asks envWindow
+    window          <- asks envWindow
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
-    -- V2 width height <- SDL.get $ windowSize window
+    V2 width height <- SDL.get $ windowSize window
     
     let zoomLevel = game ^. gameCamera . cameraZoomLevel
     let zoomedTileSize = fromIntegral $ (iterate (`div`2) tileSize) !! zoomLevel
@@ -78,20 +76,14 @@ renderWorld game = do
     let svtile    = V2 tileSize tileSize
     let dvtile    = V2 zoomedTileSize zoomedTileSize
     
-    -- let maxCamX = cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1
-    -- let maxCamY = cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1
+    let cameraCoordMax = coordinate
+                         (cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1)
+                         (cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1)
     
-    {-
-    let things = join $ map (\(c, s) -> map (c,) (map (\x -> fromMaybe defaultObject $ M.lookup x objects) $ S.toList s)) $ (M.toList $
-                 fst $ M.split (camera & coordinateY .~ maxCamY) $
-                 fst $ M.split (camera & coordinateX .~ maxCamX) $
-                 snd $ A.split camera layer)
-                 :: [(Coordinate, Object)]
-    -}
-
     let things = map
-                 (\(k1, k2, v) -> (coordinate k1 k2, fromMaybe defaultObject $ M.lookup v objects))
-                 (A.toList layer) :: [(Coordinate, Object)]
+                (\pair -> (\objid -> fromMaybe defaultObject $ M.lookup objid objects) <$> pair)
+                (A.range cameraCoord cameraCoordMax layer)
+                :: [(Coordinate, Object)]
 
     -- Collect renderables, because of zIndex
     renderables <- concat <$> do
@@ -115,11 +107,11 @@ renderWorld game = do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
                 
     where
-        -- camera   = game ^. gameCamera . cameraCoordinate
-        cameraX  = game ^. gameCamera . cameraCoordinate . coordinateX
-        cameraY  = game ^. gameCamera . cameraCoordinate . coordinateY
-        layer    = game ^. gameWorld  . worldLayer
-        objects  = game ^. gameWorld  . worldObjects
+        cameraCoord = game ^. gameCamera . cameraCoordinate
+        cameraX     = game ^. gameCamera . cameraCoordinate . coordinateX
+        cameraY     = game ^. gameCamera . cameraCoordinate . coordinateY
+        layer       = game ^. gameWorld  . worldLayer
+        objects     = game ^. gameWorld  . worldObjects
 
 renderVoid :: Game -> EnvironmentT IO ()
 renderVoid game = do
