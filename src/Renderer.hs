@@ -5,7 +5,8 @@ module Renderer
     , renderUi
     ) where
 
-import qualified Bimap as A
+-- import qualified Bimap as A
+import qualified Grid as A
 import Camera
 import Control.Lens
 import Control.Monad.Reader
@@ -81,11 +82,17 @@ renderWorld game = do
     let maxCamX = cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1
     let maxCamY = cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1
     
+    {-
     let things = join $ map (\(c, s) -> map (c,) (map (\x -> fromMaybe defaultObject $ M.lookup x objects) $ S.toList s)) $ (M.toList $
                  fst $ M.split (camera & coordinateY .~ maxCamY) $
                  fst $ M.split (camera & coordinateX .~ maxCamX) $
                  snd $ A.split camera layer)
                  :: [(Coordinate, Object)]
+    -}
+
+    let things = map
+                 (\(k1, k2, v) -> (coordinate k1 k2, fromMaybe defaultObject $ M.lookup v objects))
+                 (A.toList layer) :: [(Coordinate, Object)]
 
     -- Collect renderables, because of zIndex
     renderables <- concat <$> do

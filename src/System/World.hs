@@ -1,6 +1,6 @@
 module System.World where
 
-import qualified Bimap as A
+import qualified Grid as A
 import Camera
 import Coordinate
 import Control.Lens
@@ -53,7 +53,7 @@ sysWorldMoveObject direction objid w =
     else msgOrientation w
     where
         msgOrientation z   = sysWorldMessage Nothing (Just objid) (MovedMsg direction) z
-        updateCoordinate   = worldLayer %~ A.adjustR (coordinateMove direction) objid
+        updateCoordinate   = worldLayer %~ A.adjustR objid (coordinateMove direction $ fromJust $ sysWorldCoordObjectId w objid)
         maybeNewCoordinate = coordinateMove direction <$> sysWorldCoordObjectId w objid
 
 -- TODO: Should be named and moved into a System.Camera module... maybe sysCameraBoundedPlayer

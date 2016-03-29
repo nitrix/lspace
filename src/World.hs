@@ -8,13 +8,13 @@ module World
     -- , worldNextObjectId
 ) where
 
-import qualified Bimap as A
+import qualified Grid as A
 import Coordinate
 import Control.Lens
 import qualified Data.Map as M
 import Object
 
-type WorldLayer = A.Bimap Coordinate ObjectId
+type WorldLayer = A.Grid Coordinate Integer ObjectId
 type WorldObjects = M.Map ObjectId Object
 
 data World = MkWorld

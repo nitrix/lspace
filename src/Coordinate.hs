@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Coordinate
     ( Coordinate(getCoordinate) -- TODO: ewww
     , Direction(..)
@@ -9,6 +11,7 @@ module Coordinate
     ) where
 
 import Control.Lens
+import Grid
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 import Prelude hiding (Left, Right)
@@ -20,6 +23,10 @@ data Direction = UpDirection
                deriving (Show, Bounded, Enum)
 
 newtype Coordinate = Coordinate { getCoordinate :: Point V2 Integer } deriving (Eq, Ord)
+
+instance Gridable Coordinate Integer where
+    toGrid x = (view coordinateX x, view coordinateY x)
+    fromGrid (x, y) = coordinate x y
 
 -- Lenses
 coordinateX :: Lens' Coordinate Integer

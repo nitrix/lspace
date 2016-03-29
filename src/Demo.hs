@@ -4,7 +4,7 @@ module Demo
     , demoPlayer
     ) where
 
-import qualified Bimap as A
+import qualified Grid as A
 import Coordinate
 import qualified Data.Map as M
 import Object
