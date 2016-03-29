@@ -1,4 +1,3 @@
-{-# LANGUAGE DatatypeContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
@@ -17,7 +16,6 @@ module Grid
 where
 
 import Prelude hiding (lookup)
-import Control.Lens
 import Data.Foldable (foldl')
 import qualified Data.Map as M
 import Data.Maybe
@@ -32,7 +30,7 @@ class Ord k => Gridable c k | c -> k where
     toGrid   :: c -> (k, k)
 
 -- One grid cell can have multiple object ids, but one object id is always at only one coordinate
-data Gridable c k => Grid c k v = MkGrid (M.Map k (M.Map k (S.Set v))) (M.Map v (S.Set c))
+data Grid c k v = MkGrid (M.Map k (M.Map k (S.Set v))) (M.Map v (S.Set c))
 
 empty :: Gridable c k => Grid c k v
 empty = MkGrid M.empty M.empty
@@ -60,7 +58,7 @@ adjustR :: (Gridable c k, Ord c, Ord v) => v -> c -> Grid c k v -> Grid c k v
 adjustR v c g@(MkGrid left right) = insert c v $ MkGrid cleanLeft cleanRight
     where
         oldKeys    = lookupR v g
-        cleanLeft  = foldl' (\m c -> let (ox, oy) = toGrid c in M.adjust (M.adjust (S.delete v) oy) ox m) left oldKeys
+        cleanLeft  = foldl' (\m n -> let (ox, oy) = toGrid n in M.adjust (M.adjust (S.delete v) oy) ox m) left oldKeys
         cleanRight = M.delete v right
 
 toList :: (Gridable c k) => Grid c k v -> [(k, k, v)]

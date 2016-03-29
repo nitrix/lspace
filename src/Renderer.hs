@@ -15,7 +15,6 @@ import Data.Hash (hashInt, asWord64)
 import Data.List
 import qualified Data.Map as M
 import Data.Maybe
-import qualified Data.Set as S
 import qualified Data.Vector.Storable as V
 import Environment
 import Game
@@ -68,10 +67,10 @@ renderWorld :: Game -> EnvironmentT IO ()
 renderWorld game = do
     -- Information needed to render
     renderer        <- asks envRenderer
-    window          <- asks envWindow
+    -- window          <- asks envWindow
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
-    V2 width height <- SDL.get $ windowSize window
+    -- V2 width height <- SDL.get $ windowSize window
     
     let zoomLevel = game ^. gameCamera . cameraZoomLevel
     let zoomedTileSize = fromIntegral $ (iterate (`div`2) tileSize) !! zoomLevel
@@ -79,8 +78,8 @@ renderWorld game = do
     let svtile    = V2 tileSize tileSize
     let dvtile    = V2 zoomedTileSize zoomedTileSize
     
-    let maxCamX = cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1
-    let maxCamY = cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1
+    -- let maxCamX = cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1
+    -- let maxCamY = cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1
     
     {-
     let things = join $ map (\(c, s) -> map (c,) (map (\x -> fromMaybe defaultObject $ M.lookup x objects) $ S.toList s)) $ (M.toList $
@@ -116,7 +115,7 @@ renderWorld game = do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
                 
     where
-        camera   = game ^. gameCamera . cameraCoordinate
+        -- camera   = game ^. gameCamera . cameraCoordinate
         cameraX  = game ^. gameCamera . cameraCoordinate . coordinateX
         cameraY  = game ^. gameCamera . cameraCoordinate . coordinateY
         layer    = game ^. gameWorld  . worldLayer
