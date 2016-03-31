@@ -20,7 +20,7 @@ data Object = MkObject
 defaultObject :: Object
 defaultObject = MkObject
     { objSolid  = True
-    , objFacing = DownDirection
+    , objFacing = South
     , objSprite = defaultSprite
     , objMsg    = const ([], defaultObject)
     }

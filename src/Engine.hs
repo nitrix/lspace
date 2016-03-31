@@ -67,17 +67,16 @@ engineHandleBareKeycode keycode = do
     world  <- gets $ view gameWorld
 
     case keycode of
-        KeycodeW       -> modify $ sysWorldMovePlayer player UpDirection
-        KeycodeB       -> modify $ sysWorldMovePlayer player UpDirection
-        KeycodeS       -> modify $ sysWorldMovePlayer player DownDirection
-        KeycodeA       -> modify $ sysWorldMovePlayer player LeftDirection
-        KeycodeD       -> modify $ sysWorldMovePlayer player RightDirection
+        KeycodeW       -> modify $ sysWorldMovePlayer player North
+        KeycodeS       -> modify $ sysWorldMovePlayer player South
+        KeycodeA       -> modify $ sysWorldMovePlayer player West
+        KeycodeD       -> modify $ sysWorldMovePlayer player East
         KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
         KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
-        KeycodeUp      -> modify $ gameCamera %~ cameraMove UpDirection
-        KeycodeDown    -> modify $ gameCamera %~ cameraMove DownDirection
-        KeycodeRight   -> modify $ gameCamera %~ cameraMove RightDirection
-        KeycodeLeft    -> modify $ gameCamera %~ cameraMove LeftDirection
+        KeycodeUp      -> modify $ gameCamera %~ cameraMove North
+        KeycodeDown    -> modify $ gameCamera %~ cameraMove South
+        KeycodeRight   -> modify $ gameCamera %~ cameraMove East
+        KeycodeLeft    -> modify $ gameCamera %~ cameraMove West
         KeycodeY       -> modify $ gameCamera %~ (fromMaybe id (cameraTogglePinned <$> sysWorldCoordObjectId world player)) -- TODO: eeeww
         KeycodeR       -> modify $ gameWorld  %~ sysWorldMessage Nothing (Just player) RotateMsg
         KeycodeE       -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain

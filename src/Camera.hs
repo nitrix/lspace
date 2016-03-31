@@ -50,10 +50,10 @@ cameraZoomLevel  = lens _cameraZoomLevel  (\s x -> s { _cameraZoomLevel  = x })
 
 -- | Move the camera in a specified Direction
 cameraMove :: Direction -> Camera -> Camera
-cameraMove UpDirection    c = c & cameraCoordinate . coordinateY %~ subtract 1
-cameraMove DownDirection  c = c & cameraCoordinate . coordinateY %~ (+1)
-cameraMove LeftDirection  c = c & cameraCoordinate . coordinateX %~ subtract 1
-cameraMove RightDirection c = c & cameraCoordinate . coordinateX %~ (+1)
+cameraMove North c = c & cameraCoordinate . coordinateY %~ subtract 5
+cameraMove South c = c & cameraCoordinate . coordinateY %~ (+5)
+cameraMove West  c = c & cameraCoordinate . coordinateX %~ subtract 5
+cameraMove East  c = c & cameraCoordinate . coordinateX %~ (+5)
 
 -- TODO: needs a serious refactoring
 cameraAuto :: Coordinate -> Camera -> Camera

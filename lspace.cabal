@@ -37,7 +37,6 @@ executable lspace
                      , Environment
                      , Game
                      , Grid
-                     , Main
                      , Message
                      , Object
                      , Object.Box

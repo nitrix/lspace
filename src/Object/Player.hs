@@ -27,15 +27,15 @@ playerObject obj p = obj
 defaultPlayer :: Player
 defaultPlayer = MkPlayer 
     { _playerHealth     = 100
-    , _playerDirection  = DownDirection
+    , _playerDirection  = South
     }
 
 playerSprite :: Player -> Sprite
 playerSprite p = case _playerDirection p of
-    UpDirection    -> sprite 1 0 ZOnTop
-    DownDirection  -> sprite 1 2 ZOnTop
-    LeftDirection  -> sprite 1 1 ZOnTop
-    RightDirection -> sprite 1 3 ZOnTop
+    North -> sprite 1 0 ZOnTop
+    South -> sprite 1 2 ZOnTop
+    West  -> sprite 1 1 ZOnTop
+    East  -> sprite 1 3 ZOnTop
 
 playerMsg :: Message -> State Player [Message]
 playerMsg m = do

@@ -16,10 +16,10 @@ import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 import Prelude hiding (Left, Right)
 
-data Direction = UpDirection
-               | RightDirection
-               | DownDirection
-               | LeftDirection
+data Direction = North
+               | East
+               | South
+               | West
                deriving (Show, Bounded, Enum)
 
 newtype Coordinate = Coordinate { getCoordinate :: Point V2 Integer } deriving (Eq, Ord)
@@ -40,10 +40,10 @@ coordinate x y = Coordinate $ P $ V2 x y
 
 -- | Compute a new coordinate relative to an existing coordinate in a given direction
 coordinateMove :: Direction -> Coordinate -> Coordinate
-coordinateMove UpDirection    = coordinateY %~ subtract 1
-coordinateMove DownDirection  = coordinateY %~ (+1)
-coordinateMove LeftDirection  = coordinateX %~ subtract 1
-coordinateMove RightDirection = coordinateX %~ (+1)
+coordinateMove North = coordinateY %~ subtract 1
+coordinateMove South = coordinateY %~ (+1)
+coordinateMove West  = coordinateX %~ subtract 1
+coordinateMove East  = coordinateX %~ (+1)
 
 -- | Center point
 defaultCoordinate :: Coordinate
