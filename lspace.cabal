@@ -45,6 +45,7 @@ executable lspace
                      , Object.Player
                      , Object.Wall
                      , Renderer
+                     , Ship
                      , Sprite
                      , System.World
                      , Ui
