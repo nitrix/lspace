@@ -6,19 +6,19 @@ module Engine
     ) where
 
 import Camera
-import Coordinate
 import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
 import Demo
 import Data.Maybe
-import Environment
-import Game
 import Linear (V2(V2))
-import Message
 import SDL
-import System.World
-import Ui
+import Types.Coordinate
+import Types.Environment
+import Types.Message
+import Types.Game
+import Types.Ui
+import Types.World
 import Ui.Menu
 import World
 

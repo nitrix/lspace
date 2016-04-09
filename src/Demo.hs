@@ -5,12 +5,12 @@ module Demo
     ) where
 
 import qualified Grid as A
-import Coordinate
 import qualified Data.Map as M
-import Object
 import Object.Box
 import Object.Player
-import World
+import Types.Coordinate
+import Types.Object
+import Types.World
 
 demoObjects :: WorldObjects
 demoObjects = M.fromList

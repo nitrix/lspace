@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Coordinate
+module Types.Coordinate
     ( Coordinate(getCoordinate) -- TODO: ewww
     , Direction(..)
     , coordinate

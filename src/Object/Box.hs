@@ -7,9 +7,9 @@ module Object.Box
 where
 
 import Control.Monad.State
-import Message
-import Object
-import Sprite
+import Types.Message
+import Types.Object
+import Types.Sprite
 
 data BoxState = BoxOpened | BoxClosed
 

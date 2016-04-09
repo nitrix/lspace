@@ -1,18 +1,18 @@
 module Ui.Menu where
 
-import Ui
-import Game
 import Control.Monad.State as S
 import Control.Lens
 import Data.Biapplicative
 import Data.List
 import SDL
-import Object
 import Object.Box
 import Object.Floor
 import Object.Plant
 import Object.Wall
-import System.World
+import Types.Game
+import Types.Object
+import Types.Ui
+import World
 
 uiMenuClear :: Ui -> Ui
 uiMenuClear = uiVisible %~ filter (isn't _UiTypeMenu)

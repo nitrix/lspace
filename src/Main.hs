@@ -4,16 +4,15 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
-import Environment
 import Engine (engineHandleEvent, enginePokeIO, engineInit)
-import Game (Game, defaultGame)
 import Renderer (renderGame)
 import SDL
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
-import System.Remote.Monitoring
-
 import Ship
+import System.Remote.Monitoring
+import Types.Environment
+import Types.Game (Game, defaultGame)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci

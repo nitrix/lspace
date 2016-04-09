@@ -1,4 +1,4 @@
-module Sprite
+module Types.Sprite
     ( Sprite
     , ZIndex(..)
     , defaultSprite
@@ -6,7 +6,7 @@ module Sprite
     , spritePart
     ) where
 
-import Coordinate
+import Types.Coordinate
 
 type Sprite = [SpritePart]
 type SpritePart = (Coordinate, Coordinate, ZIndex)

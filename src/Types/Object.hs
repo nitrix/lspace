@@ -1,12 +1,12 @@
-module Object
+module Types.Object
     ( Object(..)
     , ObjectId
     , defaultObject
     ) where
 
-import Coordinate
-import Message
-import Sprite
+import Types.Coordinate
+import Types.Message
+import Types.Sprite
 
 type ObjectId = Integer
 

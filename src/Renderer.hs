@@ -1,6 +1,5 @@
 module Renderer
     ( renderGame
-    , renderUi
     ) where
 
 -- import qualified Bimap as A
@@ -8,23 +7,23 @@ import qualified Grid as A
 import Camera
 import Control.Lens
 import Control.Monad.Reader
-import Coordinate
 import Data.Hash (hashInt, asWord64)
 import Data.List
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Vector.Storable as V
-import Environment
-import Game
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
-import Object
 import SDL
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
-import Ui
+import Types.Coordinate
+import Types.Environment
+import Types.Game
+import Types.Object
+import Types.Ui
+import Types.World
 import Ui.Menu
-import World
 
 -- TODO: to refactor most of this, please
 renderGame :: Game -> EnvironmentT IO ()
@@ -34,14 +33,14 @@ renderGame game = do
     rendererDrawColor renderer $= V4 0 0 0 0 -- black
     clear renderer
     -- Render various things
-    renderVoid game
-    renderWorld game
-    renderUi game
+    subRenderVoid game
+    subRenderWorld game
+    subRenderUi game
     -- Present to the screen
     present renderer
 
-renderUi :: Game -> EnvironmentT IO ()
-renderUi game = do
+subRenderUi :: Game -> EnvironmentT IO ()
+subRenderUi game = do
     -- Information needed to render
     renderer    <- asks envRenderer
     window      <- asks envWindow
@@ -61,8 +60,8 @@ renderUi game = do
                     destroyTexture texture
             _ -> return []
 
-renderWorld :: Game -> EnvironmentT IO ()
-renderWorld game = do
+subRenderWorld :: Game -> EnvironmentT IO ()
+subRenderWorld game = do
     -- Information needed to render
     renderer        <- asks envRenderer
     window          <- asks envWindow
@@ -113,8 +112,8 @@ renderWorld game = do
         layer       = game ^. gameWorld  . worldLayer
         objects     = game ^. gameWorld  . worldObjects
 
-renderVoid :: Game -> EnvironmentT IO ()
-renderVoid game = do
+subRenderVoid :: Game -> EnvironmentT IO ()
+subRenderVoid game = do
     renderer        <- asks envRenderer
     window          <- asks envWindow
     V2 width height <- SDL.get $ windowSize window

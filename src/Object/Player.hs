@@ -2,10 +2,10 @@ module Object.Player where
 
 import Control.Lens
 import Control.Monad.State
-import Coordinate
-import Message
-import Object
-import Sprite
+import Types.Coordinate
+import Types.Message
+import Types.Object
+import Types.Sprite
 
 data Player = MkPlayer
     { _playerHealth    :: Int

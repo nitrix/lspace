@@ -1,4 +1,4 @@
-module Environment
+module Types.Environment
     ( EnvironmentT
     , Environment(..)
     ) where
