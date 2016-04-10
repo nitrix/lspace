@@ -31,12 +31,11 @@ enginePokeIO game = do
 
 engineInit :: Game -> ReaderT Environment IO Game
 engineInit game = do
-    newGame <- enginePokeIO $ gamePlayer .~ demoPlayer $ game
+    newGame <- enginePokeIO $ game
     return $ fromMaybe newGame ((\coord -> newGame & gameCamera %~ cameraCenter coord) <$> playerCoord)
     where
         world = view gameWorld game &~ do
-             worldLayer   .= demoLayer
-             worldObjects .= demoObjects
+             worldShips .= demoShips
         playerCoord = sysWorldCoordObjectId world $ view gamePlayer game
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.

@@ -43,7 +43,5 @@ defaultGame = MkGame
     , _gamePlayer   = 0
     , _gameRenderer = defaultRenderer
     , _gameUi       = defaultUi
-    , _gameWorld    = defaultWorld &~ do
-                         worldLayer   .= demoLayer
-                         worldObjects .= demoObjects
+    , _gameWorld    = defaultWorld
     }

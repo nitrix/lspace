@@ -78,11 +78,14 @@ subRenderWorld game = do
     let cameraCoordMax = coordinate
                          (cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1)
                          (cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1)
-    
+    {- 
     let things = map
                 (\pair -> (\objid -> fromMaybe defaultObject $ M.lookup objid objects) <$> pair)
                 (A.range cameraCoord cameraCoordMax layer)
                 :: [(Coordinate, Object)]
+    -}
+
+    let things = []
 
     -- Collect renderables, because of zIndex
     renderables <- concat <$> do
@@ -109,8 +112,8 @@ subRenderWorld game = do
         cameraCoord = game ^. gameCamera . cameraCoordinate
         cameraX     = game ^. gameCamera . cameraCoordinate . coordinateX
         cameraY     = game ^. gameCamera . cameraCoordinate . coordinateY
-        layer       = game ^. gameWorld  . worldLayer
-        objects     = game ^. gameWorld  . worldObjects
+        -- layer       = game ^. gameWorld  . worldLayer
+        -- objects     = game ^. gameWorld  . worldObjects
 
 subRenderVoid :: Game -> EnvironmentT IO ()
 subRenderVoid game = do

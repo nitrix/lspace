@@ -1,40 +1,30 @@
 module Types.World
     ( World(..)
-    , WorldLayer
-    , WorldObjects
+    , WorldShips
     , defaultWorld
-    , worldLayer
-    , worldObjects
+    , worldShips
     -- , worldNextObjectId
 ) where
 
-import qualified Grid as A
 import Control.Lens
 import qualified Data.Map as M
+import qualified Data.Set as S
+import qualified Ship as H
 import Types.Coordinate
 import Types.Object
 
-type WorldLayer = A.Grid Coordinate Integer ObjectId
-type WorldObjects = M.Map ObjectId Object
+type WorldShips = S.Set H.Ship
 
 data World = MkWorld
-    { _worldLayer        :: WorldLayer -- TODO: multiple layers
-    , _worldObjects      :: WorldObjects
-    -- , _worldNextObjectId :: ObjectId
+    { _worldShips :: WorldShips
     }
 
 -- Lenses
-worldLayer        :: Lens' World WorldLayer
-worldObjects      :: Lens' World WorldObjects
--- worldNextObjectId :: Lens' World ObjectId
-worldLayer        = lens _worldLayer        (\s x -> s { _worldLayer        = x })
-worldObjects      = lens _worldObjects      (\s x -> s { _worldObjects      = x })
--- worldNextObjectId = lens _worldNextObjectId (\s x -> s { _worldNextObjectId = x })
+worldShips :: Lens' World WorldShips
+worldShips = lens _worldShips (\s x -> s { _worldShips = x })
 
 -- Empty world
 defaultWorld :: World
 defaultWorld = MkWorld
-    { _worldLayer        = A.empty
-    , _worldObjects      = M.empty
-    -- , _worldNextObjectId = 0
+    { _worldShips = S.empty
     }
