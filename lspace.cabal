@@ -31,14 +31,9 @@ executable lspace
   extra-libraries:     SDL2_image
   ghc-options:         -threaded -with-rtsopts=-T
   other-modules:       Camera
-                     , Coordinate
                      , Demo
                      , Engine
-                     , Environment
-                     , Game
                      , Grid
-                     , Message
-                     , Object
                      , Object.Box
                      , Object.Floor
                      , Object.Plant
@@ -46,8 +41,14 @@ executable lspace
                      , Object.Wall
                      , Renderer
                      , Ship
-                     , Sprite
-                     , System.World
-                     , Ui
+                     , Types.Coordinate
+                     , Types.Environment
+                     , Types.Game
+                     , Types.Message
+                     , Types.Object
+                     , Types.Renderer
+                     , Types.Sprite
+                     , Types.World
+                     , Types.Ui
                      , Ui.Menu
                      , World
