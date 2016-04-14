@@ -10,6 +10,7 @@ import Control.Monad.Reader
 import Data.Hash (hashInt, asWord64)
 import Data.List
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.Maybe
 import qualified Data.Vector.Storable as V
 import Linear (V2(V2), V4(V4))
@@ -75,16 +76,24 @@ subRenderWorld game = do
     let svtile    = V2 tileSize tileSize
     let dvtile    = V2 zoomedTileSize zoomedTileSize
     
-    let cameraCoordMax = coordinate
-                         (cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1)
-                         (cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1)
+    let cameraCoordMaxX = (cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1)
+    let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1)           
+    let cameraCoordMax  = coordinate cameraCoordMaxX cameraCoordMaxY
+    
     {- 
     let things = map
                 (\pair -> (\objid -> fromMaybe defaultObject $ M.lookup objid objects) <$> pair)
                 (A.range cameraCoord cameraCoordMax layer)
                 :: [(Coordinate, Object)]
     -}
-
+    
+    let chunks = [ coordinate x y
+                 | x <- [cameraX `div` 10..cameraCoordMaxX `div` 10]
+                 , y <- [cameraY `div` 10..cameraCoordMaxY `div` 10]
+                 ] :: [Coordinate]
+    
+    -- TODO: Grab chunks for each ship after offseting them based on the ship location
+    -- TODO: Also, store the texture in the renderer and use that as an optimization from now on
     let things = []
 
     -- Collect renderables, because of zIndex
@@ -112,6 +121,7 @@ subRenderWorld game = do
         cameraCoord = game ^. gameCamera . cameraCoordinate
         cameraX     = game ^. gameCamera . cameraCoordinate . coordinateX
         cameraY     = game ^. gameCamera . cameraCoordinate . coordinateY
+        ships       = game ^. gameWorld  . worldShips
         -- layer       = game ^. gameWorld  . worldLayer
         -- objects     = game ^. gameWorld  . worldObjects
 
