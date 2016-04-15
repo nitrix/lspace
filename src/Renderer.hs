@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Renderer
     ( renderGame
     ) where
@@ -16,6 +18,7 @@ import qualified Data.Vector.Storable as V
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
 import SDL
+import qualified Ship as H
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import Types.Coordinate
@@ -87,13 +90,19 @@ subRenderWorld game = do
                 :: [(Coordinate, Object)]
     -}
     
-    let chunks = [ coordinate x y
-                 | x <- [cameraX `div` 10..cameraCoordMaxX `div` 10]
-                 , y <- [cameraY `div` 10..cameraCoordMaxY `div` 10]
-                 ] :: [Coordinate]
-    
+    let chunksCoord = [ coordinate x y
+                      | x <- [cameraX `div` 10..cameraCoordMaxX `div` 10]
+                      , y <- [cameraY `div` 10..cameraCoordMaxY `div` 10]
+                      ] :: [Coordinate]
+
     -- TODO: Grab chunks for each ship after offseting them based on the ship location
     -- TODO: Also, store the texture in the renderer and use that as an optimization from now on
+    {-
+    let chunks = catMaybes
+               $ concatMap (\s -> map (\c -> (c,) <$> H.lookupChunk c s) chunksCoord)
+               $ S.toList ships :: [(Coordinate, (Bool, Data.Vector.Vector [Object]))]
+    -}
+
     let things = []
 
     -- Collect renderables, because of zIndex

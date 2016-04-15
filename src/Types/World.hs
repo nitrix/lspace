@@ -13,7 +13,7 @@ import qualified Ship as H
 import Types.Coordinate
 import Types.Object
 
-type WorldShips = S.Set (Coordinate, H.Ship)
+type WorldShips = S.Set H.Ship
 
 data World = MkWorld
     { _worldShips :: WorldShips

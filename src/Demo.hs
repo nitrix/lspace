@@ -14,7 +14,7 @@ import Types.Object
 import Types.World
 
 demoShips :: WorldShips
-demoShips = S.singleton $ (coordinate 0 0,) $ H.fromList $
+demoShips = S.singleton $ H.fromList $
     [ (coordinate 0 0, boxObject defaultObject defaultBox)
     , (coordinate 1 1, boxObject defaultObject defaultBox)
     , (coordinate 2 2, playerObject defaultObject defaultPlayer)
