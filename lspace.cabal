@@ -51,4 +51,3 @@ executable lspace
                      , Types.World
                      , Types.Ui
                      , Ui.Menu
-                     , World

@@ -9,7 +9,6 @@ import Renderer (renderGame)
 import SDL
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
-import Ship
 import System.Remote.Monitoring
 import Types.Environment
 import Types.Game (Game, defaultGame)

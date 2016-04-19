@@ -4,21 +4,19 @@ module Renderer
     ( renderGame
     ) where
 
--- import qualified Bimap as A
-import qualified Grid as A
 import Camera
 import Control.Lens
 import Control.Monad.Reader
 import Data.Hash (hashInt, asWord64)
 import Data.List
-import qualified Data.Map as M
-import qualified Data.Set as S
-import Data.Maybe
+-- import qualified Data.Map as M
+-- import qualified Data.Set as S
+-- import Data.Maybe
 import qualified Data.Vector.Storable as V
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
 import SDL
-import qualified Ship as H
+-- import qualified Ship as H
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import Types.Coordinate
@@ -26,7 +24,7 @@ import Types.Environment
 import Types.Game
 import Types.Object
 import Types.Ui
-import Types.World
+-- import Types.World
 import Ui.Menu
 
 -- TODO: to refactor most of this, please
@@ -62,16 +60,16 @@ subRenderUi game = do
                     let dst = Rectangle (P $ V2 0 (height - surfaceHeight - (row * 15))) (V2 surfaceWidth surfaceHeight)
                     copyEx renderer texture Nothing (Just dst) 0 Nothing (V2 False False)
                     destroyTexture texture
-            _ -> return []
+            -- _ -> return []
 
 subRenderWorld :: Game -> EnvironmentT IO ()
 subRenderWorld game = do
     -- Information needed to render
     renderer        <- asks envRenderer
-    window          <- asks envWindow
+    -- window          <- asks envWindow
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
-    V2 width height <- SDL.get $ windowSize window
+    -- V2 width height <- SDL.get $ windowSize window
     
     let zoomLevel = game ^. gameCamera . cameraZoomLevel
     let zoomedTileSize = fromIntegral $ (iterate (`div`2) tileSize) !! zoomLevel
@@ -79,9 +77,9 @@ subRenderWorld game = do
     let svtile    = V2 tileSize tileSize
     let dvtile    = V2 zoomedTileSize zoomedTileSize
     
-    let cameraCoordMaxX = (cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1)
-    let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1)           
-    let cameraCoordMax  = coordinate cameraCoordMaxX cameraCoordMaxY
+    -- let cameraCoordMaxX = (cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1)
+    -- let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1)           
+    -- let cameraCoordMax  = coordinate cameraCoordMaxX cameraCoordMaxY
     
     {- 
     let things = map
@@ -90,10 +88,12 @@ subRenderWorld game = do
                 :: [(Coordinate, Object)]
     -}
     
+    {-
     let chunksCoord = [ coordinate x y
                       | x <- [cameraX `div` 10..cameraCoordMaxX `div` 10]
                       , y <- [cameraY `div` 10..cameraCoordMaxY `div` 10]
                       ] :: [Coordinate]
+    -}
 
     -- TODO: Grab chunks for each ship after offseting them based on the ship location
     -- TODO: Also, store the texture in the renderer and use that as an optimization from now on
@@ -127,10 +127,10 @@ subRenderWorld game = do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
                 
     where
-        cameraCoord = game ^. gameCamera . cameraCoordinate
+        -- cameraCoord = game ^. gameCamera . cameraCoordinate
         cameraX     = game ^. gameCamera . cameraCoordinate . coordinateX
         cameraY     = game ^. gameCamera . cameraCoordinate . coordinateY
-        ships       = game ^. gameWorld  . worldShips
+        -- ships       = game ^. gameWorld  . worldShips
         -- layer       = game ^. gameWorld  . worldLayer
         -- objects     = game ^. gameWorld  . worldObjects
 

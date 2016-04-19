@@ -5,7 +5,7 @@ module Demo
     ) where
 
 import qualified Ship as H
-import qualified Data.Map as M
+-- import qualified Data.Map as M
 import qualified Data.Set as S
 import Object.Box
 import Object.Player

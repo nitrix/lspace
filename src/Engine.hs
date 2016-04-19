@@ -15,12 +15,10 @@ import Linear (V2(V2))
 import SDL
 import Types.Coordinate
 import Types.Environment
-import Types.Message
 import Types.Game
 import Types.Ui
 import Types.World
 import Ui.Menu
-import World
 
 enginePokeIO :: Game -> EnvironmentT IO Game
 enginePokeIO game = do
@@ -31,12 +29,10 @@ enginePokeIO game = do
 
 engineInit :: Game -> ReaderT Environment IO Game
 engineInit game = do
-    newGame <- enginePokeIO $ game
+    newGame <- enginePokeIO $ game & gameWorld . worldShips .~ demoShips
+    -- let playerCoord = sysWorldCoordObjectId (view gameWorld newGame) (view gamePlayer newGame)
+    let playerCoord = Nothing
     return $ fromMaybe newGame ((\coord -> newGame & gameCamera %~ cameraCenter coord) <$> playerCoord)
-    where
-        world = view gameWorld game &~ do
-             worldShips .= demoShips
-        playerCoord = sysWorldCoordObjectId world $ view gamePlayer game
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> State Game Bool
@@ -62,22 +58,19 @@ engineHandleKeyboardEvent ked = do
 
 engineHandleBareKeycode :: Keycode -> State Game Bool
 engineHandleBareKeycode keycode = do
-    player <- gets $ view gamePlayer
-    world  <- gets $ view gameWorld
-
     case keycode of
-        KeycodeW       -> modify $ sysWorldMovePlayer player North
-        KeycodeS       -> modify $ sysWorldMovePlayer player South
-        KeycodeA       -> modify $ sysWorldMovePlayer player West
-        KeycodeD       -> modify $ sysWorldMovePlayer player East
+        KeycodeW       -> modify $ id -- sysWorldMovePlayer player North
+        KeycodeS       -> modify $ id -- sysWorldMovePlayer player South
+        KeycodeA       -> modify $ id -- sysWorldMovePlayer player West
+        KeycodeD       -> modify $ id -- sysWorldMovePlayer player East
         KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
         KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
         KeycodeUp      -> modify $ gameCamera %~ cameraMove North
         KeycodeDown    -> modify $ gameCamera %~ cameraMove South
         KeycodeRight   -> modify $ gameCamera %~ cameraMove East
         KeycodeLeft    -> modify $ gameCamera %~ cameraMove West
-        KeycodeY       -> modify $ gameCamera %~ (fromMaybe id (cameraTogglePinned <$> sysWorldCoordObjectId world player)) -- TODO: eeeww
-        KeycodeR       -> modify $ gameWorld  %~ sysWorldMessage Nothing (Just player) RotateMsg
+        KeycodeY       -> modify $ id -- gameCamera %~ (fromMaybe id (cameraTogglePinned <$> sysWorldCoordObjectId world player)) -- TODO: eeeww
+        KeycodeR       -> modify $ id -- gameWorld  %~ sysWorldMessage Nothing (Just player) RotateMsg
         KeycodeE       -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
         KeycodeEscape  -> modify $ gameUi     %~ uiMenuClear
         _              -> modify $ id

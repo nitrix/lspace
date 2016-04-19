@@ -3,15 +3,14 @@ module Types.World
     , WorldShips
     , defaultWorld
     , worldShips
-    -- , worldNextObjectId
 ) where
 
 import Control.Lens
-import qualified Data.Map as M
+-- import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Ship as H
-import Types.Coordinate
-import Types.Object
+-- import Types.Coordinate
+-- import Types.Object
 
 type WorldShips = S.Set H.Ship
 
