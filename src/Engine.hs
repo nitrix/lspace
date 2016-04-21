@@ -63,8 +63,8 @@ engineHandleBareKeycode keycode = do
         KeycodeS       -> modify $ id -- sysWorldMovePlayer player South
         KeycodeA       -> modify $ id -- sysWorldMovePlayer player West
         KeycodeD       -> modify $ id -- sysWorldMovePlayer player East
-        KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
-        KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
+        -- KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
+        -- KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
         KeycodeUp      -> modify $ gameCamera %~ cameraMove North
         KeycodeDown    -> modify $ gameCamera %~ cameraMove South
         KeycodeRight   -> modify $ gameCamera %~ cameraMove East

@@ -10,13 +10,14 @@ import Control.Monad.Reader
 import Data.Hash (hashInt, asWord64)
 import Data.List
 -- import qualified Data.Map as M
--- import qualified Data.Set as S
--- import Data.Maybe
-import qualified Data.Vector.Storable as V
+import qualified Data.Set as S
+import Data.Maybe
+import qualified Data.Vector as V
+import qualified Data.Vector.Storable as VS
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
 import SDL
--- import qualified Ship as H
+import qualified Ship as H
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import Types.Coordinate
@@ -24,7 +25,7 @@ import Types.Environment
 import Types.Game
 import Types.Object
 import Types.Ui
--- import Types.World
+import Types.World
 import Ui.Menu
 
 -- TODO: to refactor most of this, please
@@ -66,73 +67,54 @@ subRenderWorld :: Game -> EnvironmentT IO ()
 subRenderWorld game = do
     -- Information needed to render
     renderer        <- asks envRenderer
-    -- window          <- asks envWindow
+    window          <- asks envWindow
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
-    -- V2 width height <- SDL.get $ windowSize window
+    V2 width height <- SDL.get $ windowSize window
     
-    let zoomLevel = game ^. gameCamera . cameraZoomLevel
-    let zoomedTileSize = fromIntegral $ (iterate (`div`2) tileSize) !! zoomLevel
-
     let svtile    = V2 tileSize tileSize
-    let dvtile    = V2 zoomedTileSize zoomedTileSize
+    let dvtile    = V2 tileSize tileSize
     
-    -- let cameraCoordMaxX = (cameraX + (fromIntegral $ width `div` zoomedTileSize) + 1)
-    -- let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` zoomedTileSize) + 1)           
-    -- let cameraCoordMax  = coordinate cameraCoordMaxX cameraCoordMaxY
+    let cameraCoordMaxX = (cameraX + (fromIntegral $ width `div` 32) + 1)
+    let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` 32) + 1)           
     
-    {- 
-    let things = map
-                (\pair -> (\objid -> fromMaybe defaultObject $ M.lookup objid objects) <$> pair)
-                (A.range cameraCoord cameraCoordMax layer)
-                :: [(Coordinate, Object)]
-    -}
-    
-    {-
     let chunksCoord = [ coordinate x y
                       | x <- [cameraX `div` 10..cameraCoordMaxX `div` 10]
                       , y <- [cameraY `div` 10..cameraCoordMaxY `div` 10]
                       ] :: [Coordinate]
-    -}
 
-    -- TODO: Grab chunks for each ship after offseting them based on the ship location
-    -- TODO: Also, store the texture in the renderer and use that as an optimization from now on
-    {-
-    let chunks = catMaybes
+    let things = catMaybes
                $ concatMap (\s -> map (\c -> (c,) <$> H.lookupChunk c s) chunksCoord)
-               $ S.toList ships :: [(Coordinate, (Bool, Data.Vector.Vector [Object]))]
-    -}
-
-    let things = []
+               $ S.toList ships -- :: [(Coordinate, Data.Vector.Vector [Object])]
 
     -- Collect renderables, because of zIndex
     renderables <- concat <$> do
-        forM things $ \(coord, obj) -> do
-            forM (objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
-                -- Bunch of positions to calculate
-                let srcTileX    = fromInteger  $ coordSpriteTile ^. coordinateX
-                let srcTileY    = fromInteger  $ coordSpriteTile ^. coordinateY
-                let dstRelX     = fromInteger  $ coordSpriteRel  ^. coordinateX
-                let dstRelY     = fromInteger  $ coordSpriteRel  ^. coordinateY
-                let dstTileRelX = fromIntegral $ coord           ^. coordinateX - cameraX
-                let dstTileRelY = fromIntegral $ coord           ^. coordinateY - cameraY
-                
-                -- Final src and dst rectangles for SDL
-                let src = Rectangle (P $ (V2 srcTileX srcTileY) * svtile) svtile
-                let dst = Rectangle (P $ V2 (dstTileRelX + dstRelX) (dstTileRelY + dstRelY) * dvtile) dvtile
-                return (Just src, Just dst, zIndex)
+        forM things $ \(coord, vobj) -> do
+            results <- flip V.imapM vobj $ \idx objs -> do
+                forM objs $ \obj -> do
+                    forM (sortOn (\(_,_,a) -> a) $ objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
+                        -- Bunch of positions to calculate
+                        let srcTileX    = fromInteger  $ coordSpriteTile ^. coordinateX
+                        let srcTileY    = fromInteger  $ coordSpriteTile ^. coordinateY
+                        let dstRelX     = fromInteger  $ coordSpriteRel  ^. coordinateX
+                        let dstRelY     = fromInteger  $ coordSpriteRel  ^. coordinateY
+                        let dstTileRelX = fromIntegral $ coord           ^. coordinateX - cameraX
+                        let dstTileRelY = fromIntegral $ coord           ^. coordinateY - cameraY
+                        
+                        -- Final src and dst rectangles for SDL
+                        let src = Rectangle (P $ (V2 srcTileX srcTileY) * svtile) svtile
+                        let dst = Rectangle (P $ V2 (dstTileRelX + dstRelX) (dstTileRelY + dstRelY) * dvtile) dvtile
+                        return (Just src, Just dst, zIndex)
+            return $ concat $ concat $ V.toList results
 
     -- Render!
     forM_ (sortOn (\(_,_,a) -> a) renderables) $ \(src, dst, _) -> do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
                 
     where
-        -- cameraCoord = game ^. gameCamera . cameraCoordinate
-        cameraX     = game ^. gameCamera . cameraCoordinate . coordinateX
-        cameraY     = game ^. gameCamera . cameraCoordinate . coordinateY
-        -- ships       = game ^. gameWorld  . worldShips
-        -- layer       = game ^. gameWorld  . worldLayer
-        -- objects     = game ^. gameWorld  . worldObjects
+        cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
+        cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
+        ships   = game ^. gameWorld  . worldShips
 
 subRenderVoid :: Game -> EnvironmentT IO ()
 subRenderVoid game = do
@@ -148,9 +130,9 @@ subRenderVoid game = do
             (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(1337*prlx)) + negate cameraX * fromIntegral prlx) `mod` width)
             (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(7331*prlx)) + negate cameraY * fromIntegral prlx) `mod` height)
 
-    let points1 = V.generate 500 (fixedRandomPoint 1)
-    let points2 = V.generate 200 (fixedRandomPoint 2)
-    let points3 = V.generate 100 (fixedRandomPoint 3)
+    let points1 = VS.generate 500 (fixedRandomPoint 1)
+    let points2 = VS.generate 200 (fixedRandomPoint 2)
+    let points3 = VS.generate 100 (fixedRandomPoint 3)
 
     rendererDrawColor renderer $= V4 85 85 85 255    -- white quite dark
     drawPoints renderer points1

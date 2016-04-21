@@ -17,7 +17,7 @@ data Ship = MkShip
     -- , _shipVelocity     :: Integer
     -- , _shipDirection    :: Direction
     , _shipCoordinate   :: Coordinate
-    , _shipChunks       :: M.Map Coordinate (Bool, V.Vector [Object])
+    , _shipChunks       :: M.Map Coordinate (V.Vector [Object])
     }
 
 defaultShip :: Ship
@@ -44,18 +44,18 @@ insert coord object ship = ship
     , _shipMass = (_shipMass ship) + 1
     }
     where
-        mutChunk _ (_, ov) = (True, ov V.// [(chunkIdx coord, object : (ov V.! chunkIdx coord))])
-        newChunk = (True, V.replicate 100 [] V.// [(chunkIdx coord, [object])])
+        mutChunk _ ov = ov V.// [(chunkIdx coord, object : (ov V.! chunkIdx coord))]
+        newChunk = V.replicate 100 [] V.// [(chunkIdx coord, [object])]
         
-lookupChunk :: Coordinate -> Ship -> Maybe (Bool, V.Vector [Object])
+lookupChunk :: Coordinate -> Ship -> Maybe (V.Vector [Object])
 lookupChunk coord ship = M.lookup (chunkCoord coord) (_shipChunks ship)
 
 lookupCell :: Coordinate -> Ship -> [Object]
-lookupCell coord ship = fromMaybe [] $ ((V.! chunkIdx coord) . snd) <$> lookupChunk coord ship
+lookupCell coord ship = fromMaybe [] $ (V.! chunkIdx coord) <$> lookupChunk coord ship
 
 adjust :: Coordinate -> ([Object] -> [Object]) -> Ship -> Ship
 adjust coord f ship = ship
-    { _shipChunks = M.adjust (\(_, v) -> (True, v V.// [((chunkIdx coord), f (v V.! chunkIdx coord))])) (chunkCoord coord) (_shipChunks ship)
+    { _shipChunks = M.adjust (\v -> v V.// [((chunkIdx coord), f (v V.! chunkIdx coord))]) (chunkCoord coord) (_shipChunks ship)
     }
 
 empty :: Ship

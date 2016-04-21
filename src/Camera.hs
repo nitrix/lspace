@@ -4,13 +4,11 @@ module Camera
     , cameraCoordinate
     , cameraPinned
     , cameraViewport
-    , cameraZoomLevel
     -- Functions
     , cameraAuto
     , cameraCenter
     , cameraMove
     , cameraTogglePinned
-    , cameraZoom
     , defaultCamera
     ) where
 
@@ -72,8 +70,8 @@ cameraBound coord c = let (P (V2 x y)) = getCoordinate coord in c &~ do
         padding    = min (maxCameraX `div` 4) (maxCameraY `div` 4)
         minCameraX = c ^. cameraCoordinate . coordinateX
         minCameraY = c ^. cameraCoordinate . coordinateY
-        maxCameraX = (!!zoomLevel) $ iterate (*2) $ toInteger $ c ^. cameraViewport . _x
-        maxCameraY = (!!zoomLevel) $ iterate (*2) $ toInteger $ c ^. cameraViewport . _y
+        maxCameraX = toInteger $ c ^. cameraViewport . _x
+        maxCameraY = toInteger $ c ^. cameraViewport . _y
         zoomLevel  = c ^. cameraZoomLevel
 
 -- | Zoom out the camera; the higher the zoom level, the further, to a maximum of 4 levels.

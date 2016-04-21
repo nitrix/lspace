@@ -24,3 +24,6 @@ defaultObject = MkObject
     , objSprite = defaultSprite
     , objMsg    = const ([], defaultObject)
     }
+
+instance Show Object where
+    show = const "{Object}"
