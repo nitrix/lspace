@@ -1,3 +1,12 @@
+- WorldShips are bimaps of objectids and coordinates
+- WorldObjects are map of objectids and objects
+- WorldSpriteParts is one bimap of coordinates and objectids
+- newtype Auto a b = Auto (a -> (b, Auto a b))
+- yampa (AFRP)
+- Data.IxSet
+- "Mark Miller showed that, with some tweaks, you can construct a *capability-safe* object system
+   if you prevent objects from being globally accessible."
+
 - Revisit parallax stars
 - Revisit world layer / camera zoom
 - Revisit camera pinning & camera bounding

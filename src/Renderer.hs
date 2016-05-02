@@ -83,9 +83,13 @@ subRenderWorld game = do
                       , y <- [cameraY `div` 10..cameraCoordMaxY `div` 10]
                       ] :: [Coordinate]
 
+    {-
     let things = catMaybes
                $ concatMap (\s -> map (\c -> (c,) <$> H.lookupChunk c s) chunksCoord)
                $ S.toList ships -- :: [(Coordinate, Data.Vector.Vector [Object])]
+    -}
+
+    let things = []
 
     -- Collect renderables, because of zIndex
     renderables <- concat <$> do
