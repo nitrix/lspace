@@ -30,19 +30,18 @@ main = do
     rendererDrawColor renderer $= V4 0 0 0 0
     
     let loop = do
-        events <- (:) <$> waitEvent <*> pollEvents
-        clear renderer
-        shouldHalts <- forM events $ \event -> do
-            case eventPayload event of
-                MouseMotionEvent d -> do
-                    let pos = (fromIntegral <$> mouseMotionEventPos d)
-                    copyEx renderer testTexture Nothing (Just $ Rectangle pos (V2 (CInt 1920) (CInt 1080))) 0 Nothing (V2 False False)
-                    return False 
-                QuitEvent -> return True
-                _ -> return False
-        present renderer
-        unless (or shouldHalts) loop
-
+            events <- (:) <$> waitEvent <*> pollEvents
+            clear renderer
+            shouldHalts <- forM events $ \event -> do
+                case eventPayload event of
+                    MouseMotionEvent d -> do
+                        let pos = (fromIntegral <$> mouseMotionEventPos d)
+                        copyEx renderer testTexture Nothing (Just $ Rectangle pos (V2 (CInt 1920) (CInt 1080))) 0 Nothing (V2 False False)
+                        return False 
+                    QuitEvent -> return True
+                    _ -> return False
+            present renderer
+            unless (or shouldHalts) loop
     loop    
     quit
 
