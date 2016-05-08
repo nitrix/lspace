@@ -13,40 +13,8 @@ import System.Remote.Monitoring
 import Types.Environment
 import Types.Game (Game, defaultGame)
 
-import Linear (V2(..), V4(..))
-import Foreign.C.Types (CInt(..))
-
 main :: IO ()
-main = do
-    initializeAll
-    window <- createWindow "LoneSome Space" defaultWindow { windowMode = FullscreenDesktop }
-    renderer <- createRenderer window (-1) defaultRenderer
-    testTexture <- createTexture renderer RGBA8888 TextureAccessTarget (V2 1920 1080)
-
-    rendererRenderTarget renderer $= Just testTexture
-    rendererDrawColor renderer $= V4 255 0 0 0
-    clear renderer
-    rendererRenderTarget renderer $= Nothing
-    rendererDrawColor renderer $= V4 0 0 0 0
-    
-    let loop = do
-            events <- (:) <$> waitEvent <*> pollEvents
-            clear renderer
-            shouldHalts <- forM events $ \event -> do
-                case eventPayload event of
-                    MouseMotionEvent d -> do
-                        let pos = (fromIntegral <$> mouseMotionEventPos d)
-                        copyEx renderer testTexture Nothing (Just $ Rectangle pos (V2 (CInt 1920) (CInt 1080))) 0 Nothing (V2 False False)
-                        return False 
-                    QuitEvent -> return True
-                    _ -> return False
-            present renderer
-            unless (or shouldHalts) loop
-    loop    
-    quit
-
-main' :: IO ()
-main' = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
+main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
     -- Initialize SDL an SDL_image
     initializeAll
     Img.initialize [Img.InitPNG]

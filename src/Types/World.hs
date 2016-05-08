@@ -6,13 +6,11 @@ module Types.World
 ) where
 
 import Control.Lens
--- import qualified Data.Map as M
-import qualified Data.Set as S
+import qualified Data.Map as M
 import qualified Ship as H
--- import Types.Coordinate
--- import Types.Object
+import Types.Coordinate
 
-type WorldShips = S.Set H.Ship
+type WorldShips = M.Map Coordinate H.Ship
 
 data World = MkWorld
     { _worldShips :: WorldShips
@@ -25,5 +23,5 @@ worldShips = lens _worldShips (\s x -> s { _worldShips = x })
 -- Empty world
 defaultWorld :: World
 defaultWorld = MkWorld
-    { _worldShips = S.empty
+    { _worldShips = M.empty
     }

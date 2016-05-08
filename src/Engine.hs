@@ -21,18 +21,22 @@ import Types.World
 import Ui.Menu
 
 enginePokeIO :: Game -> EnvironmentT IO Game
-enginePokeIO game = do
-    window          <- asks envWindow
-    tileSize        <- asks envTileSize
-    V2 width height <- SDL.get $ windowSize window
-    return $ game & gameCamera . cameraViewport .~ V2 (width `div` fromIntegral tileSize) (height `div` fromIntegral tileSize)
+enginePokeIO game = return game
 
 engineInit :: Game -> ReaderT Environment IO Game
 engineInit game = do
-    newGame <- enginePokeIO $ game & gameWorld . worldShips .~ demoShips
+    newGame <- enginePrepare $ game & gameWorld . worldShips .~ demoShips
     -- let playerCoord = sysWorldCoordObjectId (view gameWorld newGame) (view gamePlayer newGame)
     let playerCoord = Nothing
     return $ fromMaybe newGame ((\coord -> newGame & gameCamera %~ cameraCenter coord) <$> playerCoord)
+    where
+        enginePrepare :: Game -> EnvironmentT IO Game
+        enginePrepare g = do
+            window          <- asks envWindow
+            tileSize        <- asks envTileSize
+            V2 width height <- SDL.get $ windowSize window
+            return $ g & gameCamera . cameraViewport .~ V2 (width `div` fromIntegral tileSize) (height `div` fromIntegral tileSize)
+
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> State Game Bool

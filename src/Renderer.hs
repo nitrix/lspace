@@ -10,14 +10,14 @@ import Control.Monad.Reader
 import Data.Hash (hashInt, asWord64)
 import Data.List
 -- import qualified Data.Map as M
-import qualified Data.Set as S
-import Data.Maybe
+-- import qualified Data.Set as S
+-- import Data.Maybe
 import qualified Data.Vector as V
 import qualified Data.Vector.Storable as VS
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
 import SDL
-import qualified Ship as H
+-- import qualified Ship as H
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import Types.Coordinate
@@ -72,16 +72,15 @@ subRenderWorld game = do
     tileSize        <- asks envTileSize
     V2 width height <- SDL.get $ windowSize window
     
-    let svtile    = V2 tileSize tileSize
-    let dvtile    = V2 tileSize tileSize
-    
     let cameraCoordMaxX = (cameraX + (fromIntegral $ width `div` 32) + 1)
     let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` 32) + 1)           
     
+    {-
     let chunksCoord = [ coordinate x y
                       | x <- [cameraX `div` 10..cameraCoordMaxX `div` 10]
                       , y <- [cameraY `div` 10..cameraCoordMaxY `div` 10]
                       ] :: [Coordinate]
+    -}
 
     {-
     let things = catMaybes
@@ -89,14 +88,15 @@ subRenderWorld game = do
                $ S.toList ships -- :: [(Coordinate, Data.Vector.Vector [Object])]
     -}
 
-    let things = []
+    -- let things = []
 
     -- Collect renderables, because of zIndex
+    {-
     renderables <- concat <$> do
         forM things $ \(coord, vobj) -> do
-            results <- flip V.imapM vobj $ \idx objs -> do
+            results <- flip V.imapM vobj $ \_ objs -> do
                 forM objs $ \obj -> do
-                    forM (sortOn (\(_,_,a) -> a) $ objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
+                    forM (objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
                         -- Bunch of positions to calculate
                         let srcTileX    = fromInteger  $ coordSpriteTile ^. coordinateX
                         let srcTileY    = fromInteger  $ coordSpriteTile ^. coordinateY
@@ -110,10 +110,15 @@ subRenderWorld game = do
                         let dst = Rectangle (P $ V2 (dstTileRelX + dstRelX) (dstTileRelY + dstRelY) * dvtile) dvtile
                         return (Just src, Just dst, zIndex)
             return $ concat $ concat $ V.toList results
+    -}
 
     -- Render!
+    {-
     forM_ (sortOn (\(_,_,a) -> a) renderables) $ \(src, dst, _) -> do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
+    -}
+    
+    return ()
                 
     where
         cameraX = game ^. gameCamera . cameraCoordinate . coordinateX

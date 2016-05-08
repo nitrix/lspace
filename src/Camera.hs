@@ -23,7 +23,6 @@ import Types.Coordinate
 data Camera = MkCamera
     { _cameraCoordinate :: Coordinate
     , _cameraViewport   :: V2 CInt
-    , _cameraZoomLevel  :: Int
     , _cameraPinned     :: Bool
     }
 
@@ -32,7 +31,6 @@ defaultCamera :: Camera
 defaultCamera = MkCamera
     { _cameraCoordinate = defaultCoordinate
     , _cameraViewport   = V2 (CInt 0) (CInt 0)
-    , _cameraZoomLevel  = 0
     , _cameraPinned     = False
     }
 
@@ -40,11 +38,9 @@ defaultCamera = MkCamera
 cameraCoordinate :: Lens' Camera Coordinate
 cameraPinned     :: Lens' Camera Bool
 cameraViewport   :: Lens' Camera (V2 CInt)
-cameraZoomLevel  :: Lens' Camera Int
 cameraCoordinate = lens _cameraCoordinate (\s x -> s { _cameraCoordinate = x })
 cameraPinned     = lens _cameraPinned     (\s x -> s { _cameraPinned     = x })
 cameraViewport   = lens _cameraViewport   (\s x -> s { _cameraViewport   = x })
-cameraZoomLevel  = lens _cameraZoomLevel  (\s x -> s { _cameraZoomLevel  = x })
 
 -- | Move the camera in a specified Direction
 cameraMove :: Direction -> Camera -> Camera
@@ -72,11 +68,6 @@ cameraBound coord c = let (P (V2 x y)) = getCoordinate coord in c &~ do
         minCameraY = c ^. cameraCoordinate . coordinateY
         maxCameraX = toInteger $ c ^. cameraViewport . _x
         maxCameraY = toInteger $ c ^. cameraViewport . _y
-        zoomLevel  = c ^. cameraZoomLevel
-
--- | Zoom out the camera; the higher the zoom level, the further, to a maximum of 4 levels.
-cameraZoom :: (Int -> Int) -> Camera -> Camera
-cameraZoom f = cameraZoomLevel %~ (\n -> if n < 0 then 0 else (if n > 4 then 4 else n)) . f
 
 -- TODO: needs a refactoring
 cameraCenter :: Coordinate -> Camera -> Camera

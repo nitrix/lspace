@@ -4,18 +4,24 @@ module Demo
     ( demoShips
     ) where
 
-import qualified Ship as H
--- import qualified Data.Map as M
-import qualified Data.Set as S
-import Object.Box
-import Object.Player
+import qualified Data.Map as M
+import qualified Grid as G
+-- import Object.Box
+-- import Object.Player
+import Ship
 import Types.Coordinate
-import Types.Object
 import Types.World
 
 demoShips :: WorldShips
-demoShips = S.singleton $ H.fromList $
-    [ (coordinate 0 0, boxObject defaultObject defaultBox)
-    , (coordinate 1 1, boxObject defaultObject defaultBox)
-    , (coordinate 2 2, playerObject defaultObject defaultPlayer)
-    ] -- ++ [(coordinate x y,0) | x <- [10..200], y <- [10..200]]
+demoShips = M.singleton (coordinate 0 0) demoAtlantis
+
+demoAtlantis :: Ship
+demoAtlantis = MkShip
+    { _shipGrid = G.fromList $
+        [ (coordinate 0 0, 0)
+        , (coordinate 1 1, 1)
+        , (coordinate 2 2, 2)
+        ] -- ++ [(coordinate x y,0) | x <- [10..200], y <- [10..200]]
+    , _shipVelocity = 0
+    , _shipMass = 3
+    }
