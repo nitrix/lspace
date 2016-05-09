@@ -13,7 +13,7 @@ import qualified Ship as H
 import Types.Coordinate
 import Types.Object
 
-type WorldShips   = M.Map Coordinate H.Ship
+type WorldShips   = [(Coordinate, H.Ship)]
 type WorldObjects = M.Map ObjectId Object
 
 data World = MkWorld
@@ -29,6 +29,6 @@ worldShips   = lens _worldShips (\s x -> s { _worldShips = x })
 
 defaultWorld :: World
 defaultWorld = MkWorld
-    { _worldShips   = M.empty
+    { _worldShips   = []
     , _worldObjects = M.empty
     }

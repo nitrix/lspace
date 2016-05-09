@@ -15,7 +15,7 @@ import Types.Object
 import Types.World
 
 demoShips :: WorldShips
-demoShips = M.singleton (coordinate 0 0) demoAtlantis
+demoShips = [(coordinate 0 0, demoAtlantis)]
 
 demoAtlantis :: Ship
 demoAtlantis = MkShip
