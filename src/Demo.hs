@@ -1,7 +1,8 @@
 {-# LANGUAGE TupleSections #-}
 
 module Demo
-    ( demoShips
+    ( demoObjects
+    , demoShips
     ) where
 
 import qualified Data.Map as M
@@ -10,6 +11,7 @@ import qualified Grid as G
 -- import Object.Player
 import Ship
 import Types.Coordinate
+import Types.Object
 import Types.World
 
 demoShips :: WorldShips
@@ -25,3 +27,10 @@ demoAtlantis = MkShip
     , _shipVelocity = 0
     , _shipMass = 3
     }
+
+demoObjects :: WorldObjects
+demoObjects = M.fromList $
+    [ (0, defaultObject)
+    , (1, defaultObject)
+    , (2, defaultObject)
+    ]

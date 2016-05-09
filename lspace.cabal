@@ -29,7 +29,7 @@ executable lspace
   hs-source-dirs:      src
   default-language:    Haskell2010
   extra-libraries:     SDL2_image
-  ghc-options:         -threaded -with-rtsopts=-T
+  ghc-options:         -threaded -with-rtsopts=-T -O1
   other-modules:       Camera
                      , Demo
                      , Engine

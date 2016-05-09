@@ -14,7 +14,7 @@ import Data.List
 -- import Data.Maybe
 import qualified Data.Vector as V
 import qualified Data.Vector.Storable as VS
-import Linear (V2(V2), V4(V4))
+import Linear (V2(V2), V4(V4), _y)
 import Linear.Affine (Point(P))
 import SDL
 -- import qualified Ship as H
@@ -27,6 +27,7 @@ import Types.Object
 import Types.Ui
 import Types.World
 import Ui.Menu
+import Foreign.C.Types
 
 -- TODO: to refactor most of this, please
 renderGame :: Game -> EnvironmentT IO ()
