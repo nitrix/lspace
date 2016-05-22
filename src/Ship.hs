@@ -6,7 +6,7 @@ import Types.Object
 import Linear (V2)
 
 data Ship = MkShip
-    { _shipGrid      :: Grid Coordinate Integer ObjectId
+    { _shipGrid      :: Grid Coordinate ObjectId
     , _shipVelocityX :: Int
     , _shipVelocityY :: Int
     , _shipMass      :: Integer
