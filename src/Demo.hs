@@ -7,6 +7,7 @@ module Demo
 
 import qualified Data.Map as M
 import qualified Grid as G
+import Linear (V2(V2))
 -- import Object.Box
 -- import Object.Player
 import Ship
@@ -24,8 +25,10 @@ demoAtlantis = MkShip
         , (coordinate 1 1, 1)
         , (coordinate 2 2, 2)
         ] -- ++ [(coordinate x y,0) | x <- [10..200], y <- [10..200]]
-    , _shipVelocity = 0
     , _shipMass = 3
+    , _shipVelocityX = 0
+    , _shipVelocityY = 0
+    , _shipDimension = V2 0 0
     }
 
 demoObjects :: WorldObjects

@@ -11,17 +11,19 @@ import Types.Sprite
 type ObjectId = Integer
 
 data Object = MkObject
-    { objSolid  :: Bool
-    , objFacing :: Direction
+    { objFacing :: Direction
+    , objSolid  :: Bool
     , objSprite :: Sprite
+    , objMass   :: Integer
     , objMsg    :: Message -> ([Message], Object)
     } 
 
 defaultObject :: Object
 defaultObject = MkObject
-    { objSolid  = True
-    , objFacing = South
+    { objFacing = South
+    , objSolid  = True
     , objSprite = defaultSprite
+    , objMass   = 0
     , objMsg    = const ([], defaultObject)
     }
 

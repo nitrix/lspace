@@ -3,11 +3,12 @@ module Ship where
 import Grid
 import Types.Coordinate
 import Types.Object
-import Linear (V2(V2))
+import Linear (V2)
 
 data Ship = MkShip
-    { _shipGrid      :: Grid Coordinate ObjectId
-    , _shipVelocity  :: Integer
+    { _shipGrid      :: Grid Coordinate Integer ObjectId
+    , _shipVelocityX :: Int
+    , _shipVelocityY :: Int
     , _shipMass      :: Integer
     , _shipDimension :: V2 Integer
     }

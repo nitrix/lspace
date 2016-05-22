@@ -11,6 +11,7 @@ module Types.Coordinate
     ) where
 
 import Control.Lens
+import Grid
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 import Prelude hiding (Left, Right)
@@ -22,6 +23,10 @@ data Direction = North
                deriving (Show, Bounded, Enum)
 
 newtype Coordinate = Coordinate { getCoordinate :: Point V2 Integer } deriving (Eq, Ord, Show)
+
+instance Gridable Coordinate Integer where
+    extractX = view coordinateX
+    extractY = view coordinateY
 
 -- Lenses
 coordinateX :: Lens' Coordinate Integer

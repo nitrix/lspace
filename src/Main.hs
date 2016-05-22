@@ -62,9 +62,6 @@ mainLoop game = do
     events <- (:) <$> waitEvent <*> pollEvents
 
     -- As an optimisation, prevent chocking by processing all the queued up events at once
-    -- Previously was:
-    --     let (halt, newGame) = runState (gameHandleEvent event) game
-    -- (shouldHalts, newGame) <- runState (traverse engineHandleEvent events) =<< liftIO engineIO game
     (shouldHalts, newGame) <- runState (traverse engineHandleEvent events) <$> enginePokeIO game
 
     -- Then render the new game state
