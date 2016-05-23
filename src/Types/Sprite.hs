@@ -17,10 +17,10 @@ data ZIndex = ZGround
             | ZInAir
             deriving (Eq, Ord)
 
-sprite :: Integer -> Integer -> ZIndex -> Sprite
+sprite :: Int -> Int -> ZIndex -> Sprite
 sprite x y z = [spritePart 0 0 x y z]
 
-spritePart :: Integer -> Integer -> Integer -> Integer -> ZIndex -> SpritePart
+spritePart :: Int -> Int -> Int -> Int -> ZIndex -> SpritePart
 spritePart relX relY spriteX spriteY indexZ = (coordinate relX relY, coordinate spriteX spriteY, indexZ)
 
 defaultSprite :: Sprite

@@ -11,7 +11,6 @@ module Types.Coordinate
     ) where
 
 import Control.Lens
-import Grid
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 import Prelude hiding (Left, Right)
@@ -22,20 +21,16 @@ data Direction = North
                | West
                deriving (Show, Bounded, Enum)
 
-newtype Coordinate = Coordinate { getCoordinate :: Point V2 Integer } deriving (Eq, Ord, Show)
-
-instance Gridable Coordinate Integer where
-    extractX = view coordinateX
-    extractY = view coordinateY
+newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show)
 
 -- Lenses
-coordinateX :: Lens' Coordinate Integer
-coordinateY :: Lens' Coordinate Integer
+coordinateX :: Lens' Coordinate Int
+coordinateY :: Lens' Coordinate Int
 coordinateX = lens (view _x . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _x .~ z)
 coordinateY = lens (view _y . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _y .~ z)
 
 -- | Simplified Coordinate constructor
-coordinate :: Integer -> Integer -> Coordinate
+coordinate :: Int -> Int -> Coordinate
 coordinate x y = Coordinate $ P $ V2 x y
 
 -- | Compute a new coordinate relative to an existing coordinate in a given direction

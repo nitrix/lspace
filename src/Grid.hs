@@ -1,68 +1,85 @@
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 module Grid where
 
-import Prelude hiding (lookup)
-import Data.Foldable (foldl')
-import qualified Data.Set as S
+import Data.Function
 
-class Gridable c k | c -> k where
-    extractX :: (Eq c, Ord k) => c -> k
-    extractY :: (Eq c, Ord k) => c -> k
+type Region k = (k, k, k, k)
 
-data GridAxis = AxisX | AxisY deriving (Eq, Ord, Show)
+data Point k v = MkPoint k k [v] deriving (Show)
 
--- | Grid c v is a spatial partitioning data structure that maps a coordinate type @c to a set of values of type @v.
-data Grid c v = MkGrid
-    { gLeft   :: Grid c v
-    , gCenter :: (c, S.Set v)
-    , gRight  :: Grid c v
-    , gAxis   :: GridAxis
-    } | GridEmpty GridAxis
-    deriving (Eq, Ord, Show)
+data Quad k v = MkQuad
+    { qTopLeft     :: Grid k v
+    , qTopRight    :: Grid k v
+    , qBottomLeft  :: Grid k v
+    , qBottomRight :: Grid k v
+    } deriving (Show)
 
-empty :: Grid c v
-empty = GridEmpty AxisX
+data Leaf k v = MkLeaf (Region k)
+                       {-# UNPACK #-} !(Point k v)
+                deriving (Show)
 
-fromList :: (Gridable c k, Eq c, Ord k, Ord v) => [(c, v)] -> Grid c v
-fromList xs = foldl' (flip $ uncurry insert) empty xs
+data Node k v = MkNode (Region k)
+                       {-# UNPACK #-} !(Quad k v)
+                deriving (Show)
 
--- Tested
-insert :: (Gridable c k, Eq c, Ord k, Ord v) => c -> v -> Grid c v -> Grid c v
-insert coord value (GridEmpty axis) = MkGrid
-    { gLeft   = GridEmpty $ oppAxis axis
-    , gCenter = (coord, S.singleton value)
-    , gRight  = GridEmpty $ oppAxis axis
-    , gAxis   = axis
+data Grid k v = GridLeaf {-# UNPACK #-} !(Leaf k v)
+              | GridNode {-# UNPACK #-} !(Node k v)
+              | GridLeafEmpty (Region k)
+              | GridEmpty
+              deriving (Show)
+
+empty :: Grid k v
+empty = GridEmpty
+
+emptyQuad :: (Integral k, Num k) => Region k -> Quad k v
+emptyQuad r@(lx, ly, hx, hy) = MkQuad
+    { qTopLeft     = GridLeafEmpty (lx, ly, cx, cy)
+    , qTopRight    = GridLeafEmpty (cx, ly, hx, cy)
+    , qBottomLeft  = GridLeafEmpty (lx, cy, cx, hy)
+    , qBottomRight = GridLeafEmpty (cx, cy, hx, hy)
     }
     where
-        oppAxis a = if a == AxisX then AxisY else AxisX
-insert coord value grid = case (extractor coord) `compare` (extractor pivot) of
-    LT -> grid { gLeft = insert coord value $ gLeft grid }
-    EQ -> if coord == pivot
-          then grid { gCenter = S.insert value <$> gCenter grid }
-          else grid { gLeft = insert coord value $ gLeft grid }
-    GT -> grid { gRight = insert coord value $ gRight grid }
+        (cx, cy) = centerRegion r
+
+promoteLeafToNode :: (Integral k, Ord k) => Leaf k v -> Node k v
+promoteLeafToNode (MkLeaf r@(lx, ly, hx, hy) p@(MkPoint x y _))
+    | x <= cx && y <= cy = MkNode r $ (emptyQuad r) { qTopLeft     = newGridLeaf (lx, ly, cx, cy) }
+    | x >  cx && y <= cy = MkNode r $ (emptyQuad r) { qTopRight    = newGridLeaf (cx, ly, hx, cy) }
+    | x <= cx && y >  cy = MkNode r $ (emptyQuad r) { qBottomLeft  = newGridLeaf (lx, cy, cx, hy) }
+    | x >  cx && y >  cy = MkNode r $ (emptyQuad r) { qBottomRight = newGridLeaf (cx, cy, hx, hy) }
     where
-        pivot     = fst . gCenter $ grid
-        extractor = if gAxis grid == AxisX then extractX else extractY
+        newGridLeaf r = (GridLeaf $ MkLeaf r p)
+        (cx, cy) = centerRegion r
 
--- Tested
-lookup :: (Gridable c k, Eq c, Ord k) => c -> Grid c v -> S.Set v
-lookup _ (GridEmpty _) = S.empty
-lookup coord grid = case (extractor coord) `compare` (extractor pivot) of
-    LT -> lookup coord $ gLeft grid
-    EQ -> if coord == pivot
-          then snd . gCenter $ grid
-          else lookup coord $ gLeft grid
-    GT -> lookup coord $ gRight grid
+insert :: (Integral k, Num k, Ord k) => k -> k -> v -> Grid k v -> Grid k v
+insert x y v GridEmpty = GridLeaf $ MkLeaf (negate npof, negate npof, npof, npof) (MkPoint x y [v])
     where
-        pivot = fst . gCenter $ grid
-        extractor = if gAxis grid == AxisX then extractX else extractY
+        npof = nearestPowerOfFour (max (abs x) (abs y))
+insert x y v (GridLeaf leaf) = GridNode (promoteLeafToNode leaf) & insert x y v
+insert x y v (GridLeafEmpty size) = GridLeaf $ MkLeaf size (MkPoint x y [v])
+insert x y v (GridNode (MkNode r@(lx, ly, hx, hy) quad))
+    | x >  hx || y >  hy = insert x y v $ GridNode $ MkNode (lx*2, ly*2, hx*2, hy*2) $ MkQuad
+        { qTopLeft     = GridNode $ MkNode (lx*2, ly*2, cx,     cy) $ (emptyQuad (lx*2, ly*2, cx,     cy)) { qBottomRight = qTopLeft     quad }
+        , qTopRight    = GridNode $ MkNode (cx,   ly*2, hx*2,   cy) $ (emptyQuad (cx,   ly*2, hx*2,   cy)) { qBottomLeft  = qTopRight    quad }
+        , qBottomLeft  = GridNode $ MkNode (lx*2,   cy, cx,   hy*2) $ (emptyQuad (lx*2,   cy, cx,   hy*2)) { qTopRight    = qBottomLeft  quad }
+        , qBottomRight = GridNode $ MkNode (cx,     cy, hx*2, hy*2) $ (emptyQuad (cx,     cy, hx*2, hy*2)) { qTopLeft     = qBottomRight quad }
 
-remove :: c -> v -> Grid c v -> Grid c v
-remove coord value grid = grid -- TODO
+        }
+    | x <= cx && y <= cy = GridNode $ MkNode r $ quad { qTopLeft     = insert x y v $ qTopLeft     quad }
+    | x >  cx && y <= cy = GridNode $ MkNode r $ quad { qTopRight    = insert x y v $ qTopRight    quad }
+    | x <= cx && y >  cy = GridNode $ MkNode r $ quad { qBottomLeft  = insert x y v $ qBottomLeft  quad }
+    | x >  cx && y >  cy = GridNode $ MkNode r $ quad { qBottomRight = insert x y v $ qBottomRight quad }
+    where
+        (cx, cy) = centerRegion r
 
-range :: c -> c -> Grid c v -> S.Set v 
-range low high grid = S.empty -- TODO: set unions
+centerRegion :: (Integral k, Num k) => Region k -> (k, k)
+centerRegion (lx, ly, hx, hy) = (cx, cy)
+    where
+        dx = hx - lx
+        dy = hy - ly
+        cx = lx + dx `div` 2
+        cy = ly + dy `div` 2
+
+nearestPowerOfFour :: (Num k, Ord k) => k -> k
+nearestPowerOfFour n = head $ dropWhile (<n) powers 
+    where
+        powers = map (4^) [0..]

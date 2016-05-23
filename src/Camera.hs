@@ -66,8 +66,8 @@ cameraBound coord c = let (P (V2 x y)) = getCoordinate coord in c &~ do
         padding    = min (maxCameraX `div` 4) (maxCameraY `div` 4)
         minCameraX = c ^. cameraCoordinate . coordinateX
         minCameraY = c ^. cameraCoordinate . coordinateY
-        maxCameraX = toInteger $ c ^. cameraViewport . _x
-        maxCameraY = toInteger $ c ^. cameraViewport . _y
+        maxCameraX = fromIntegral $ c ^. cameraViewport . _x
+        maxCameraY = fromIntegral $ c ^. cameraViewport . _y
 
 -- TODO: needs a refactoring
 cameraCenter :: Coordinate -> Camera -> Camera
