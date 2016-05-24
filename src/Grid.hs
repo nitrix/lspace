@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Grid where
 
 import Data.Function
@@ -84,7 +86,8 @@ centerRegion (lx, ly, hx, hy) = (cx, cy)
         cx = lx + dx `div` 2
         cy = ly + dy `div` 2
 
-nearestPowerOfFour :: (Integral k, Num k, Ord k) => k -> k
+nearestPowerOfFour :: forall k. (Integral k, Num k, Ord k) => k -> k
 nearestPowerOfFour n = head $ dropWhile (<n) powers 
     where
-        powers = map (4^) [0..]
+        powers :: [k]
+        powers = iterate (4*) 1
