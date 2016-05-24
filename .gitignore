@@ -1,3 +1,4 @@
-.stack-work/
-lspace.prof
-lspace.prof.html
+/.stack-work/
+/lspace.prof
+/lspace.prof.html
+*.dump-simpl

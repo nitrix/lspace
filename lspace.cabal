@@ -30,6 +30,7 @@ executable lspace
   default-language:    Haskell2010
   extra-libraries:     SDL2_image
   ghc-options:         -threaded -with-rtsopts=-T -O1
+  -- ghc-options:         -threaded -with-rtsopts=-T -O -ddump-simpl -ddump-to-file -dsuppress-all
   other-modules:       Camera
                      , Demo
                      , Engine

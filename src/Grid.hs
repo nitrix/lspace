@@ -46,15 +46,19 @@ promoteLeafToNode (MkLeaf r@(lx, ly, hx, hy) p@(MkPoint x y _))
     | x >  cx && y <= cy = MkNode r $ (emptyQuad r) { qTopRight    = newGridLeaf (cx, ly, hx, cy) }
     | x <= cx && y >  cy = MkNode r $ (emptyQuad r) { qBottomLeft  = newGridLeaf (lx, cy, cx, hy) }
     | x >  cx && y >  cy = MkNode r $ (emptyQuad r) { qBottomRight = newGridLeaf (cx, cy, hx, hy) }
+    | otherwise = undefined
     where
-        newGridLeaf r = (GridLeaf $ MkLeaf r p)
+        newGridLeaf nr = (GridLeaf $ MkLeaf nr p)
         (cx, cy) = centerRegion r
 
 insert :: (Integral k, Num k, Ord k) => k -> k -> v -> Grid k v -> Grid k v
 insert x y v GridEmpty = GridLeaf $ MkLeaf (negate npof, negate npof, npof, npof) (MkPoint x y [v])
     where
         npof = nearestPowerOfFour (max (abs x) (abs y))
-insert x y v (GridLeaf leaf) = GridNode (promoteLeafToNode leaf) & insert x y v
+insert x y v (GridLeaf leaf@(MkLeaf r (MkPoint px py pvs))) =
+    if x == px && y == py
+    then GridLeaf $ MkLeaf r $ MkPoint px py (v:pvs)
+    else GridNode (promoteLeafToNode leaf) & insert x y v
 insert x y v (GridLeafEmpty size) = GridLeaf $ MkLeaf size (MkPoint x y [v])
 insert x y v (GridNode (MkNode r@(lx, ly, hx, hy) quad))
     | x >  hx || y >  hy = insert x y v $ GridNode $ MkNode (lx*2, ly*2, hx*2, hy*2) $ MkQuad
@@ -68,6 +72,7 @@ insert x y v (GridNode (MkNode r@(lx, ly, hx, hy) quad))
     | x >  cx && y <= cy = GridNode $ MkNode r $ quad { qTopRight    = insert x y v $ qTopRight    quad }
     | x <= cx && y >  cy = GridNode $ MkNode r $ quad { qBottomLeft  = insert x y v $ qBottomLeft  quad }
     | x >  cx && y >  cy = GridNode $ MkNode r $ quad { qBottomRight = insert x y v $ qBottomRight quad }
+    | otherwise = undefined
     where
         (cx, cy) = centerRegion r
 
@@ -79,7 +84,7 @@ centerRegion (lx, ly, hx, hy) = (cx, cy)
         cx = lx + dx `div` 2
         cy = ly + dy `div` 2
 
-nearestPowerOfFour :: (Num k, Ord k) => k -> k
+nearestPowerOfFour :: (Integral k, Num k, Ord k) => k -> k
 nearestPowerOfFour n = head $ dropWhile (<n) powers 
     where
         powers = map (4^) [0..]
