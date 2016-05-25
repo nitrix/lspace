@@ -1,5 +1,6 @@
 module Grid where
 
+import qualified Data.List as L
 import Data.Function
 
 type Region k = (k, k, k, k)
@@ -30,7 +31,7 @@ data Grid k v = GridLeaf {-# UNPACK #-} !(Leaf k v)
 empty :: Grid k v
 empty = GridEmpty
 
-emptyQuad :: (Integral k, Num k) => Region k -> Quad k v
+emptyQuad :: Integral k => Region k -> Quad k v
 emptyQuad r@(lx, ly, hx, hy) = MkQuad
     { qTopLeft     = GridLeafEmpty (lx, ly, cx, cy)
     , qTopRight    = GridLeafEmpty (cx, ly, hx, cy)
@@ -40,7 +41,7 @@ emptyQuad r@(lx, ly, hx, hy) = MkQuad
     where
         (cx, cy) = centerRegion r
 
-promoteLeafToNode :: (Integral k, Ord k) => Leaf k v -> Node k v
+promoteLeafToNode :: Integral k => Leaf k v -> Node k v
 promoteLeafToNode (MkLeaf r@(lx, ly, hx, hy) p@(MkPoint x y _))
     | x <= cx && y <= cy = MkNode r $ (emptyQuad r) { qTopLeft     = newGridLeaf (lx, ly, cx, cy) }
     | x >  cx && y <= cy = MkNode r $ (emptyQuad r) { qTopRight    = newGridLeaf (cx, ly, hx, cy) }
@@ -51,7 +52,7 @@ promoteLeafToNode (MkLeaf r@(lx, ly, hx, hy) p@(MkPoint x y _))
         newGridLeaf nr = (GridLeaf $ MkLeaf nr p)
         (cx, cy) = centerRegion r
 
-insert :: (Integral k, Num k, Ord k) => k -> k -> v -> Grid k v -> Grid k v
+insert :: Integral k => k -> k -> v -> Grid k v -> Grid k v
 insert x y v GridEmpty = GridLeaf $ MkLeaf (negate npof, negate npof, npof, npof) (MkPoint x y [v])
     where
         npof = nearestPowerOfFour (max (abs x) (abs y))
@@ -75,8 +76,37 @@ insert x y v (GridNode (MkNode r@(lx, ly, hx, hy) quad))
     | otherwise = undefined
     where
         (cx, cy) = centerRegion r
+        
+delete :: (Integral k, Eq v) => k -> k -> v -> Grid k v -> Grid k v
+delete x y v g@(GridEmpty) = g
+delete x y v g@(GridLeafEmpty _) = g
+delete x y v g@(GridLeaf (MkLeaf r (MkPoint px py pvs)))
+    | x == px && y == py = if null newValues then GridLeafEmpty r else GridLeaf $ MkLeaf r $ MkPoint px py newValues
+    | otherwise = g
+    where
+        newValues = L.delete v pvs
+delete x y v g@(GridNode (MkNode r quad))
+    | x <= cx && y <= cy = cleanupGrid $ GridNode $ MkNode r $ quad { qTopLeft     = cleanupGrid $ delete x y v $ qTopLeft     quad }
+    | x >  cx && y <= cy = cleanupGrid $ GridNode $ MkNode r $ quad { qTopRight    = cleanupGrid $ delete x y v $ qTopRight    quad }
+    | x <= cx && y >  cy = cleanupGrid $ GridNode $ MkNode r $ quad { qBottomLeft  = cleanupGrid $ delete x y v $ qBottomLeft  quad }
+    | x >  cx && y >  cy = cleanupGrid $ GridNode $ MkNode r $ quad { qBottomRight = cleanupGrid $ delete x y v $ qBottomRight quad }
+    | otherwise = g
+    where
+        (cx, cy) = centerRegion r
+        cleanupGrid :: Grid k v -> Grid k v
+        cleanupGrid g@(GridNode (MkNode r quad)) =
+            case (qTopLeft quad) of
+                (GridLeafEmpty _) -> case (qTopRight quad) of
+                    (GridLeafEmpty _) -> case (qBottomLeft quad) of
+                        (GridLeafEmpty _) -> case (qBottomRight quad) of
+                            (GridLeafEmpty _) -> GridLeafEmpty r
+                            _ -> g
+                        _ -> g
+                    _ -> g
+                _ -> g
+        cleanupGrid g = g
 
-centerRegion :: (Integral k, Num k) => Region k -> (k, k)
+centerRegion :: Integral k => Region k -> (k, k)
 centerRegion (lx, ly, hx, hy) = (cx, cy)
     where
         dx = hx - lx
@@ -84,5 +114,5 @@ centerRegion (lx, ly, hx, hy) = (cx, cy)
         cx = lx + dx `div` 2
         cy = ly + dy `div` 2
 
-nearestPowerOfFour :: (Integral k, Num k, Ord k) => k -> k
+nearestPowerOfFour :: Integral k => k -> k
 nearestPowerOfFour n = head $ dropWhile (<n) $ iterate (4*) 1
