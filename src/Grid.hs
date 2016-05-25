@@ -47,7 +47,7 @@ promoteLeafToNode (MkLeaf r@(lx, ly, hx, hy) p@(MkPoint x y _))
     | x >  cx && y <= cy = MkNode r $ (emptyQuad r) { qTopRight    = newGridLeaf (cx, ly, hx, cy) }
     | x <= cx && y >  cy = MkNode r $ (emptyQuad r) { qBottomLeft  = newGridLeaf (lx, cy, cx, hy) }
     | x >  cx && y >  cy = MkNode r $ (emptyQuad r) { qBottomRight = newGridLeaf (cx, cy, hx, hy) }
-    | otherwise = undefined
+    | otherwise = error "Grid: This point should not have been inside of this leaf in the first place"
     where
         newGridLeaf nr = (GridLeaf $ MkLeaf nr p)
         (cx, cy) = centerRegion r
@@ -73,7 +73,7 @@ insert x y v (GridNode (MkNode r@(lx, ly, hx, hy) quad))
     | x >  cx && y <= cy = GridNode $ MkNode r $ quad { qTopRight    = insert x y v $ qTopRight    quad }
     | x <= cx && y >  cy = GridNode $ MkNode r $ quad { qBottomLeft  = insert x y v $ qBottomLeft  quad }
     | x >  cx && y >  cy = GridNode $ MkNode r $ quad { qBottomRight = insert x y v $ qBottomRight quad }
-    | otherwise = undefined
+    | otherwise = error "Grid: The data structure implementation isn't partitioning space properly"
     where
         (cx, cy) = centerRegion r
         
@@ -86,25 +86,25 @@ delete x y v g@(GridLeaf (MkLeaf r (MkPoint px py pvs)))
     where
         newValues = L.delete v pvs
 delete x y v g@(GridNode (MkNode r quad))
-    | x <= cx && y <= cy = cleanupGrid $ GridNode $ MkNode r $ quad { qTopLeft     = cleanupGrid $ delete x y v $ qTopLeft     quad }
-    | x >  cx && y <= cy = cleanupGrid $ GridNode $ MkNode r $ quad { qTopRight    = cleanupGrid $ delete x y v $ qTopRight    quad }
-    | x <= cx && y >  cy = cleanupGrid $ GridNode $ MkNode r $ quad { qBottomLeft  = cleanupGrid $ delete x y v $ qBottomLeft  quad }
-    | x >  cx && y >  cy = cleanupGrid $ GridNode $ MkNode r $ quad { qBottomRight = cleanupGrid $ delete x y v $ qBottomRight quad }
+    | x <= cx && y <= cy = GridNode $ MkNode r $ quad { qTopLeft     = cleanupGrid $ delete x y v $ qTopLeft     quad }
+    | x >  cx && y <= cy = GridNode $ MkNode r $ quad { qTopRight    = cleanupGrid $ delete x y v $ qTopRight    quad }
+    | x <= cx && y >  cy = GridNode $ MkNode r $ quad { qBottomLeft  = cleanupGrid $ delete x y v $ qBottomLeft  quad }
+    | x >  cx && y >  cy = GridNode $ MkNode r $ quad { qBottomRight = cleanupGrid $ delete x y v $ qBottomRight quad }
     | otherwise = g
     where
         (cx, cy) = centerRegion r
         cleanupGrid :: Grid k v -> Grid k v
-        cleanupGrid g@(GridNode (MkNode r quad)) =
-            case (qTopLeft quad) of
-                (GridLeafEmpty _) -> case (qTopRight quad) of
-                    (GridLeafEmpty _) -> case (qBottomLeft quad) of
-                        (GridLeafEmpty _) -> case (qBottomRight quad) of
-                            (GridLeafEmpty _) -> GridLeafEmpty r
-                            _ -> g
-                        _ -> g
-                    _ -> g
-                _ -> g
-        cleanupGrid g = g
+        cleanupGrid g@(GridEmpty) = g
+        cleanupGrid g@(GridLeafEmpty _) = g
+        cleanupGrid g@(GridNode (MkNode r quad))
+            | isEmpty g = GridLeafEmpty r
+            | otherwise = g
+
+isEmpty :: Grid k v -> Bool
+isEmpty GridEmpty = True
+isEmpty (GridLeafEmpty _) = True
+isEmpty (GridLeaf _) = False
+isEmpty (GridNode (MkNode r quad)) = isEmpty (qTopLeft quad) && isEmpty (qTopRight quad) && isEmpty (qBottomLeft quad) && isEmpty (qBottomRight quad)
 
 centerRegion :: Integral k => Region k -> (k, k)
 centerRegion (lx, ly, hx, hy) = (cx, cy)
