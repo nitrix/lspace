@@ -98,6 +98,7 @@ delete x y v g@(GridNode (MkNode r quad))
     where
         (cx, cy) = centerRegion r
         cleanupGrid :: Grid k v -> Grid k v
+        cleanupGrid g@(GridLeaf _) = g
         cleanupGrid g@(GridEmpty) = g
         cleanupGrid g@(GridLeafEmpty _) = g
         cleanupGrid g@(GridNode (MkNode r quad))
