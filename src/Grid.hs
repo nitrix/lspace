@@ -136,7 +136,7 @@ range tr (GridNode (MkNode r quad)) =
         gridRegion (GridNode (MkNode sr _)) = sr
         gridRegion (GridLeaf (MkLeaf sr _)) = sr
         gridRegion _ = tr
-        overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = alx <= bhx && ahx >= blx && aly <= bhy && ahy >= aly
+        overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = alx < bhx && ahx > blx && aly < bhy && ahy > aly
 
 -- Doesn't check recursively, internal function only
 isEmpty (GridNode (MkNode r quad)) = check (qTopLeft quad) && check (qTopRight quad) && check (qBottomLeft quad) && check (qBottomRight quad)
