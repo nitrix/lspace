@@ -136,12 +136,14 @@ range tr (GridNode (MkNode r quad)) =
         gridRegion (GridNode (MkNode qr _)) = qr
         gridRegion _ = (0, 0, 0, 0)
         overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = alx < bhx && ahx > blx && aly < bhy && ahy > aly
-    
-isEmpty :: Grid k v -> Bool
-isEmpty GridEmpty = True
-isEmpty (GridLeafEmpty _) = True
-isEmpty (GridLeaf _) = False
-isEmpty (GridNode (MkNode r quad)) = isEmpty (qTopLeft quad) && isEmpty (qTopRight quad) && isEmpty (qBottomLeft quad) && isEmpty (qBottomRight quad)
+
+-- Doesn't check recursively, internal function only
+isEmpty (GridNode (MkNode r quad)) = check (qTopLeft quad) && check (qTopRight quad) && check (qBottomLeft quad) && check (qBottomRight quad)
+    where
+        check GridEmpty = True
+        check (GridLeaf _) = False
+        check (GridLeafEmpty _) = True
+        check (GridNode _) = False
 
 centerRegion :: Integral k => Region k -> (k, k)
 centerRegion (lx, ly, hx, hy) = (cx, cy)
