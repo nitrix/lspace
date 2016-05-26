@@ -133,7 +133,8 @@ range tr (GridNode (MkNode r quad)) =
     if overlap tr (gridRegion $ qBottomLeft  quad) then range tr (qBottomLeft  quad) else [] ++
     if overlap tr (gridRegion $ qBottomRight quad) then range tr (qBottomRight quad) else []
     where
-        gridRegion (GridNode (MkNode qr _)) = qr
+        gridRegion (GridNode (MkNode sr _)) = sr
+        gridRegion (GridLeaf (MkLeaf sr _)) = sr
         gridRegion _ = (0, 0, 0, 0)
         overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = alx < bhx && ahx > blx && aly < bhy && ahy > aly
 
