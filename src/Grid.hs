@@ -131,7 +131,7 @@ range tr (GridNode (MkNode r quad)) =
     if overlap tr r
     then range tr (qTopLeft quad) ++ range tr (qTopRight quad) ++ range tr (qBottomLeft quad) ++ range tr (qBottomRight quad)
     where
-        overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = alx < bhx && ahx > blx && aly < bhy && ahy > aly
+        overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = blx < ahx && alx < bhx && bly < ahy && aly < bhy
 
 -- Doesn't check recursively, internal function only
 isEmpty (GridNode (MkNode r quad)) = check (qTopLeft quad) && check (qTopRight quad) && check (qBottomLeft quad) && check (qBottomRight quad)
