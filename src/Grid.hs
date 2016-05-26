@@ -62,7 +62,7 @@ insert x y v (GridLeaf leaf@(MkLeaf r (MkPoint px py pvs))) =
     else GridNode (promoteLeafToNode leaf) & insert x y v
 insert x y v (GridLeafEmpty r@(lx, ly, hx, hy))
     | x >= lx && x <= hx && y >= ly && y <= hy = GridLeaf newLeaf
-    | otherwise = insert x y v $ GridNode $ MkNode r $ emptyQuad r
+    | otherwise = insert x y v $ GridEmpty
     where
         newLeaf = MkLeaf r $ MkPoint x y [v]
 insert x y v (GridNode (MkNode r@(lx, ly, hx, hy) quad))
