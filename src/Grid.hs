@@ -128,14 +128,9 @@ range tr@(lx, ly, hx, hy) (GridLeaf (MkLeaf r (MkPoint px py pvs)))
     | px >= lx && py >= ly && px <= hx && py <= hy = pvs
     | otherwise = []
 range tr (GridNode (MkNode r quad)) =
-    if overlap tr (gridRegion $ qTopLeft     quad) then range tr (qTopLeft     quad) else [] ++
-    if overlap tr (gridRegion $ qTopRight    quad) then range tr (qTopRight    quad) else [] ++
-    if overlap tr (gridRegion $ qBottomLeft  quad) then range tr (qBottomLeft  quad) else [] ++
-    if overlap tr (gridRegion $ qBottomRight quad) then range tr (qBottomRight quad) else []
+    if overlap tr r
+    then range tr (qTopLeft quad) ++ range tr (qTopRight quad) ++ range tr (qBottomLeft quad) ++ range tr (qBottomRight quad)
     where
-        gridRegion (GridNode (MkNode sr _)) = sr
-        gridRegion (GridLeaf (MkLeaf sr _)) = sr
-        gridRegion _ = tr
         overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = alx < bhx && ahx > blx && aly < bhy && ahy > aly
 
 -- Doesn't check recursively, internal function only
