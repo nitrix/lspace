@@ -1,5 +1,6 @@
 module Grid where
 
+import Prelude hiding (lookup)
 import qualified Data.List as L
 import Data.Function
 
@@ -105,6 +106,37 @@ delete x y v g@(GridNode (MkNode r quad))
             | isEmpty g = GridLeafEmpty r
             | otherwise = g
 
+lookup :: Integral k => k -> k -> Grid k v -> [v]            
+lookup x y GridEmpty = []
+lookup x y (GridLeafEmpty _) = []
+lookup x y (GridLeaf (MkLeaf r (MkPoint px py pvs)))
+    | x == px && y == py = pvs
+    | otherwise = []
+lookup x y (GridNode (MkNode r quad))
+    | x <= cx && y <= cy = lookup x y $ qTopLeft     quad
+    | x >  cx && y <= cy = lookup x y $ qTopRight    quad
+    | x <= cx && y >  cy = lookup x y $ qBottomLeft  quad
+    | x >  cx && y >  cy = lookup x y $ qBottomRight quad
+    | otherwise = []
+    where
+        (cx, cy) = centerRegion r
+
+range :: Integral k => Region k -> Grid k v -> [v]
+range tr GridEmpty = []
+range tr (GridLeafEmpty _) = []
+range tr@(lx, ly, hx, hy) (GridLeaf (MkLeaf r (MkPoint px py pvs)))
+    | px >= lx && py >= ly && px <= hx && py <= hy = pvs
+    | otherwise = []
+range tr (GridNode (MkNode r quad)) =
+    if overlap tr (gridRegion $ qTopLeft     quad) then range tr (qTopLeft     quad) else [] ++
+    if overlap tr (gridRegion $ qTopRight    quad) then range tr (qTopRight    quad) else [] ++
+    if overlap tr (gridRegion $ qBottomLeft  quad) then range tr (qBottomLeft  quad) else [] ++
+    if overlap tr (gridRegion $ qBottomRight quad) then range tr (qBottomRight quad) else []
+    where
+        gridRegion (GridNode (MkNode qr _)) = qr
+        gridRegion _ = (0, 0, 0, 0)
+        overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = alx < bhx && ahx > blx && aly < bhy && ahy > aly
+    
 isEmpty :: Grid k v -> Bool
 isEmpty GridEmpty = True
 isEmpty (GridLeafEmpty _) = True
