@@ -60,7 +60,11 @@ insert x y v (GridLeaf leaf@(MkLeaf r (MkPoint px py pvs))) =
     if x == px && y == py
     then GridLeaf $ MkLeaf r $ MkPoint px py (v:pvs)
     else GridNode (promoteLeafToNode leaf) & insert x y v
-insert x y v (GridLeafEmpty size) = GridLeaf $ MkLeaf size (MkPoint x y [v])
+insert x y v (GridLeafEmpty r@(lx, ly, hx, hy))
+    | x >= lx && x <= hx && y >= ly && y <= hy = GridLeaf newLeaf
+    | otherwise = insert x y v $ GridNode $ MkNode r $ emptyQuad r
+    where
+        newLeaf = MkLeaf r $ MkPoint x y [v]
 insert x y v (GridNode (MkNode r@(lx, ly, hx, hy) quad))
     | x >  hx || y >  hy = insert x y v $ GridNode $ MkNode (lx*2, ly*2, hx*2, hy*2) $ MkQuad
         { qTopLeft     = GridNode $ MkNode (lx*2, ly*2, cx,     cy) $ (emptyQuad (lx*2, ly*2, cx,     cy)) { qBottomRight = qTopLeft     quad }
@@ -86,10 +90,10 @@ delete x y v g@(GridLeaf (MkLeaf r (MkPoint px py pvs)))
     where
         newValues = L.delete v pvs
 delete x y v g@(GridNode (MkNode r quad))
-    | x <= cx && y <= cy = GridNode $ MkNode r $ quad { qTopLeft     = cleanupGrid $ delete x y v $ qTopLeft     quad }
-    | x >  cx && y <= cy = GridNode $ MkNode r $ quad { qTopRight    = cleanupGrid $ delete x y v $ qTopRight    quad }
-    | x <= cx && y >  cy = GridNode $ MkNode r $ quad { qBottomLeft  = cleanupGrid $ delete x y v $ qBottomLeft  quad }
-    | x >  cx && y >  cy = GridNode $ MkNode r $ quad { qBottomRight = cleanupGrid $ delete x y v $ qBottomRight quad }
+    | x <= cx && y <= cy = cleanupGrid $ GridNode $ MkNode r $ quad { qTopLeft     = cleanupGrid $ delete x y v $ qTopLeft     quad }
+    | x >  cx && y <= cy = cleanupGrid $ GridNode $ MkNode r $ quad { qTopRight    = cleanupGrid $ delete x y v $ qTopRight    quad }
+    | x <= cx && y >  cy = cleanupGrid $ GridNode $ MkNode r $ quad { qBottomLeft  = cleanupGrid $ delete x y v $ qBottomLeft  quad }
+    | x >  cx && y >  cy = cleanupGrid $ GridNode $ MkNode r $ quad { qBottomRight = cleanupGrid $ delete x y v $ qBottomRight quad }
     | otherwise = g
     where
         (cx, cy) = centerRegion r
