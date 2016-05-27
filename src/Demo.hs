@@ -21,7 +21,11 @@ demoShips = [(coordinate 0 0, demoAtlantis)]
 
 demoAtlantis :: Ship
 demoAtlantis = MkShip
-    { _shipGrid = G.empty
+    { _shipGrid = G.fromList $
+        [ (0, 0, 0)
+        , (1, 1, 1)
+        , (2, 2, 2)
+        ]
     , _shipMass = 0
     , _shipVelocityX = 0
     , _shipVelocityY = 0

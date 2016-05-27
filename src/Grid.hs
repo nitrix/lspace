@@ -1,8 +1,11 @@
+{-# LANGUAGE TupleSections #-}
+
 module Grid where
 
 import Prelude hiding (lookup)
 import qualified Data.List as L
 import Data.Function
+import Data.Foldable (foldl')
 
 type Region k = (k, k, k, k)
 
@@ -31,6 +34,9 @@ data Grid k v = GridLeaf {-# UNPACK #-} !(Leaf k v)
 
 empty :: Grid k v
 empty = GridEmpty
+
+fromList :: Integral k => [(k, k, v)] -> Grid k v
+fromList xs = foldl' (\g (x, y, v) -> insert x y v g) empty xs
 
 emptyQuad :: Integral k => Region k -> Quad k v
 emptyQuad r@(lx, ly, hx, hy) = MkQuad
@@ -81,10 +87,10 @@ insert x y v (GridNode (MkNode r@(lx, ly, hx, hy) quad))
     | otherwise = error "Grid: The data structure implementation isn't partitioning space properly"
     where
         (cx, cy) = centerRegion r
-        
+
 delete :: (Integral k, Eq v) => k -> k -> v -> Grid k v -> Grid k v
-delete x y v g@(GridEmpty) = g
-delete x y v g@(GridLeafEmpty _) = g
+delete _ _ _ g@(GridEmpty) = g
+delete _ _ _ g@(GridLeafEmpty _) = g
 delete x y v g@(GridLeaf (MkLeaf r (MkPoint px py pvs)))
     | x == px && y == py = if null newValues then GridLeafEmpty r else GridLeaf $ MkLeaf r $ MkPoint px py newValues
     | otherwise = g
@@ -99,17 +105,28 @@ delete x y v g@(GridNode (MkNode r quad))
     where
         (cx, cy) = centerRegion r
         cleanupGrid :: Grid k v -> Grid k v
-        cleanupGrid g@(GridLeaf _) = g
-        cleanupGrid g@(GridEmpty) = g
-        cleanupGrid g@(GridLeafEmpty _) = g
-        cleanupGrid g@(GridNode (MkNode r quad))
-            | isEmpty g = GridLeafEmpty r
-            | otherwise = g
+        cleanupGrid cg@(GridLeaf _) = cg
+        cleanupGrid cg@(GridEmpty) = cg
+        cleanupGrid cg@(GridLeafEmpty _) = cg
+        cleanupGrid cg@(GridNode (MkNode cr _))
+            | isEmpty cg = GridLeafEmpty cr
+            | otherwise = cg
+            where
+            isEmpty (GridNode (MkNode _ equad)) = check (qTopLeft     equad) &&
+                                                  check (qTopRight    equad) &&
+                                                  check (qBottomLeft  equad) &&
+                                                  check (qBottomRight equad)
+                where
+                    check GridEmpty = True
+                    check (GridLeaf _) = False
+                    check (GridLeafEmpty _) = True
+                    check (GridNode _) = False
+            isEmpty _ = False
 
 lookup :: Integral k => k -> k -> Grid k v -> [v]            
-lookup x y GridEmpty = []
-lookup x y (GridLeafEmpty _) = []
-lookup x y (GridLeaf (MkLeaf r (MkPoint px py pvs)))
+lookup _ _ GridEmpty = []
+lookup _ _ (GridLeafEmpty _) = []
+lookup x y (GridLeaf (MkLeaf _ (MkPoint px py pvs)))
     | x == px && y == py = pvs
     | otherwise = []
 lookup x y (GridNode (MkNode r quad))
@@ -121,28 +138,19 @@ lookup x y (GridNode (MkNode r quad))
     where
         (cx, cy) = centerRegion r
 
-range :: Integral k => Region k -> Grid k v -> [v]
-range tr GridEmpty = []
-range tr (GridLeafEmpty _) = []
-range tr@(lx, ly, hx, hy) (GridLeaf (MkLeaf r (MkPoint px py pvs)))
-    | px >= lx && py >= ly && px <= hx && py <= hy = pvs
+range :: Integral k => Region k -> Grid k v -> [(k, k, v)]
+range _ GridEmpty = []
+range _ (GridLeafEmpty _) = []
+range (lx, ly, hx, hy) (GridLeaf (MkLeaf _ (MkPoint px py pvs)))
+    | px >= lx && py >= ly && px <= hx && py <= hy = map (px,py,) pvs
     | otherwise = []
 range tr (GridNode (MkNode r quad)) =
     if overlap tr r
     then range tr (qTopLeft quad) ++ range tr (qTopRight quad) ++ range tr (qBottomLeft quad) ++ range tr (qBottomRight quad)
     else []
     where
-        overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = alx < bhx && ahx > blx && aly < bhy && ahy > aly
+        overlap (alx, aly, ahx, ahy) (blx, _, bhx, bhy) = alx <= bhx && ahx > blx && aly <= bhy && ahy > aly
         -- overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = blx < ahx && alx < bhx && bly < ahy && aly < bhy
-
--- Doesn't check recursively, internal function only
-isEmpty (GridNode (MkNode r quad)) = check (qTopLeft quad) && check (qTopRight quad) && check (qBottomLeft quad) && check (qBottomRight quad)
-    where
-        check GridEmpty = True
-        check (GridLeaf _) = False
-        check (GridLeafEmpty _) = True
-        check (GridNode _) = False
-isEmpty _ = False
 
 centerRegion :: Integral k => Region k -> (k, k)
 centerRegion (lx, ly, hx, hy) = (cx, cy)

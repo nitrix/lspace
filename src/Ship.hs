@@ -1,5 +1,6 @@
 module Ship where
 
+import Control.Lens
 import qualified Grid as G
 import Types.Object
 import Linear (V2(V2))
@@ -21,3 +22,5 @@ defaultShip = MkShip
     , _shipDimension = V2 0 0
     }
 
+shipGrid :: Lens' Ship (G.Grid Int ObjectId)
+shipGrid = lens _shipGrid (\s x -> s { _shipGrid = x })
