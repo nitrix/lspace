@@ -4,6 +4,8 @@ module Renderer
     ( renderGame
     ) where
 
+import Debug.Trace
+
 import Camera
 import Control.Lens
 import Control.Monad.Reader
@@ -75,17 +77,26 @@ subRenderWorld game = do
     V2 width height <- SDL.get $ windowSize window
     
     let cameraCoordMaxX = (cameraX + (fromIntegral $ width `div` tileSize) + 1)
-    let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` tileSize) + 1)           
+    let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` tileSize) + 1)
 
-    let cameraRegion = (cameraX, cameraY, cameraCoordMaxX, cameraCoordMaxY)
-    
     let things = concat $
                  map (\(sc, s) ->
                     map (\(x, y, o) ->
                         (coordinate (view coordinateX sc + x) (view coordinateY sc + y), o)
                     ) $
                     catMaybes $
-                    (\(x, y, oid) -> fmap (x,y,) (M.lookup oid objects)) <$> G.range cameraRegion (view H.shipGrid s)
+                    (\(x, y, oid) -> fmap (x,y,) (M.lookup oid objects)) <$> G.range (
+                        trace (
+                            "rlx: " ++ show (cameraX - view coordinateX sc) ++
+                            "rly: " ++ show (cameraY - view coordinateY sc) ++
+                            "rhx: " ++ show (cameraX - view coordinateX sc + cameraCoordMaxX - cameraX)  ++
+                            "rhy: " ++ show (cameraY - view coordinateY sc + cameraCoordMaxY - cameraY)
+                        ) $
+                        cameraX - view coordinateX sc,
+                        cameraY - view coordinateY sc,
+                        (cameraX - view coordinateX sc) + (cameraCoordMaxX - cameraX),
+                        (cameraY - view coordinateY sc) + (cameraCoordMaxY - cameraY)
+                    ) (view H.shipGrid s)
                  ) ships :: [(Coordinate, Object)]
 
     -- Collect renderables, because of zIndex

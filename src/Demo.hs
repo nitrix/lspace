@@ -17,15 +17,12 @@ import Types.World
 import qualified Grid as G
 
 demoShips :: WorldShips
-demoShips = [(coordinate 0 0, demoAtlantis)]
+demoShips = [(coordinate 2 2, demoAtlantis)]
 
 demoAtlantis :: Ship
 demoAtlantis = MkShip
     { _shipGrid = G.fromList $
-        [ (0, 0, 0)
-        , (1, 1, 1)
-        , (2, 2, 2)
-        ]
+        [ (x, y, 0) | x <- [1..1000], y <- [0..1000]]
     , _shipMass = 0
     , _shipVelocityX = 0
     , _shipVelocityY = 0
