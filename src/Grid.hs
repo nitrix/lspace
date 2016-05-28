@@ -1,164 +1,77 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Grid where
 
+import Data.Foldable (foldl')
+import Data.Maybe
+import qualified Data.Map as M
+import qualified Data.Vector as V
+import qualified Data.Vector.Mutable as VM
 import Prelude hiding (lookup)
 import qualified Data.List as L
-import Data.Function
-import Data.Foldable (foldl')
+
+import Debug.Trace
 
 type Region k = (k, k, k, k)
-
-data Point k v = MkPoint k k [v] deriving (Show)
-
-data Quad k v = MkQuad
-    { qTopLeft     :: Grid k v
-    , qTopRight    :: Grid k v
-    , qBottomLeft  :: Grid k v
-    , qBottomRight :: Grid k v
-    } deriving (Show)
-
-data Leaf k v = MkLeaf (Region k)
-                       {-# UNPACK #-} !(Point k v)
-                deriving (Show)
-
-data Node k v = MkNode (Region k)
-                       {-# UNPACK #-} !(Quad k v)
-                deriving (Show)
-
-data Grid k v = GridLeaf {-# UNPACK #-} !(Leaf k v)
-              | GridNode {-# UNPACK #-} !(Node k v)
-              | GridLeafEmpty (Region k)
-              | GridEmpty
-              deriving (Show)
+type ChunkCoord k = (k, k)
+type Chunk v = V.Vector [v]
+type Grid k v = M.Map (ChunkCoord k) (Chunk v)
 
 empty :: Grid k v
-empty = GridEmpty
+empty = M.empty
+
+emptyChunk :: Chunk v
+emptyChunk = V.replicate (chunkSize * chunkSize) []
+
+chunkSize :: Integral k => k
+chunkSize = 25
 
 fromList :: Integral k => [(k, k, v)] -> Grid k v
 fromList xs = foldl' (\g (x, y, v) -> insert x y v g) empty xs
 
-emptyQuad :: Integral k => Region k -> Quad k v
-emptyQuad r@(lx, ly, hx, hy) = MkQuad
-    { qTopLeft     = GridLeafEmpty (lx, ly, cx, cy)
-    , qTopRight    = GridLeafEmpty (cx, ly, hx, cy)
-    , qBottomLeft  = GridLeafEmpty (lx, cy, cx, hy)
-    , qBottomRight = GridLeafEmpty (cx, cy, hx, hy)
-    }
-    where
-        (cx, cy) = centerRegion r
+coord :: Integral k => k -> k -> ChunkCoord k
+coord x y = (x `div` chunkSize, y `div` chunkSize)
 
-promoteLeafToNode :: Integral k => Leaf k v -> Node k v
-promoteLeafToNode (MkLeaf r@(lx, ly, hx, hy) p@(MkPoint x y _))
-    | x <= cx && y <= cy = MkNode r $ (emptyQuad r) { qTopLeft     = newGridLeaf (lx, ly, cx, cy) }
-    | x >  cx && y <= cy = MkNode r $ (emptyQuad r) { qTopRight    = newGridLeaf (cx, ly, hx, cy) }
-    | x <= cx && y >  cy = MkNode r $ (emptyQuad r) { qBottomLeft  = newGridLeaf (lx, cy, cx, hy) }
-    | x >  cx && y >  cy = MkNode r $ (emptyQuad r) { qBottomRight = newGridLeaf (cx, cy, hx, hy) }
-    | otherwise = error "Grid: This point should not have been inside of this leaf in the first place"
+idx :: Integral k => k -> k -> Int
+idx x y = fromIntegral $ iy * chunkSize + ix
     where
-        newGridLeaf nr = (GridLeaf $ MkLeaf nr p)
-        (cx, cy) = centerRegion r
+        ix = x `mod` chunkSize
+        iy = y `mod` chunkSize
 
 insert :: Integral k => k -> k -> v -> Grid k v -> Grid k v
-insert x y v GridEmpty = GridLeaf $ MkLeaf (negate npof, negate npof, npof, npof) (MkPoint x y [v])
+insert x y v g = M.insertWith (const insertedTo) (coord x y) (insertedTo emptyChunk) g
     where
-        npof = nearestPowerOfFour (max (abs x) (abs y))
-insert x y v (GridLeaf leaf@(MkLeaf r (MkPoint px py pvs))) =
-    if x == px && y == py
-    then GridLeaf $ MkLeaf r $ MkPoint px py (v:pvs)
-    else GridNode (promoteLeafToNode leaf) & insert x y v
-insert x y v (GridLeafEmpty r@(lx, ly, hx, hy))
-    | x >= lx && x <= hx && y >= ly && y <= hy = GridLeaf newLeaf
-    | otherwise = insert x y v $ GridEmpty
-    where
-        newLeaf = MkLeaf r $ MkPoint x y [v]
-insert x y v (GridNode (MkNode r@(lx, ly, hx, hy) quad))
-    | x >  hx || y >  hy = insert x y v $ GridNode $ MkNode (lx*2, ly*2, hx*2, hy*2) $ MkQuad
-        { qTopLeft     = GridNode $ MkNode (lx*2, ly*2, cx,     cy) $ (emptyQuad (lx*2, ly*2, cx,     cy)) { qBottomRight = qTopLeft     quad }
-        , qTopRight    = GridNode $ MkNode (cx,   ly*2, hx*2,   cy) $ (emptyQuad (cx,   ly*2, hx*2,   cy)) { qBottomLeft  = qTopRight    quad }
-        , qBottomLeft  = GridNode $ MkNode (lx*2,   cy, cx,   hy*2) $ (emptyQuad (lx*2,   cy, cx,   hy*2)) { qTopRight    = qBottomLeft  quad }
-        , qBottomRight = GridNode $ MkNode (cx,     cy, hx*2, hy*2) $ (emptyQuad (cx,     cy, hx*2, hy*2)) { qTopLeft     = qBottomRight quad }
-
-        }
-    | x <= cx && y <= cy = GridNode $ MkNode r $ quad { qTopLeft     = insert x y v $ qTopLeft     quad }
-    | x >  cx && y <= cy = GridNode $ MkNode r $ quad { qTopRight    = insert x y v $ qTopRight    quad }
-    | x <= cx && y >  cy = GridNode $ MkNode r $ quad { qBottomLeft  = insert x y v $ qBottomLeft  quad }
-    | x >  cx && y >  cy = GridNode $ MkNode r $ quad { qBottomRight = insert x y v $ qBottomRight quad }
-    | otherwise = error "Grid: The data structure implementation isn't partitioning space properly"
-    where
-        (cx, cy) = centerRegion r
+        insertedTo o = V.unsafeUpd o [(idx x y, [v])]
 
 delete :: (Integral k, Eq v) => k -> k -> v -> Grid k v -> Grid k v
-delete _ _ _ g@(GridEmpty) = g
-delete _ _ _ g@(GridLeafEmpty _) = g
-delete x y v g@(GridLeaf (MkLeaf r (MkPoint px py pvs)))
-    | x == px && y == py = if null newValues then GridLeafEmpty r else GridLeaf $ MkLeaf r $ MkPoint px py newValues
-    | otherwise = g
+delete x y v = M.update (\chunk -> Just $ V.modify go chunk) (coord x y)
     where
-        newValues = L.delete v pvs
-delete x y v g@(GridNode (MkNode r quad))
-    | x <= cx && y <= cy = cleanupGrid $ GridNode $ MkNode r $ quad { qTopLeft     = cleanupGrid $ delete x y v $ qTopLeft     quad }
-    | x >  cx && y <= cy = cleanupGrid $ GridNode $ MkNode r $ quad { qTopRight    = cleanupGrid $ delete x y v $ qTopRight    quad }
-    | x <= cx && y >  cy = cleanupGrid $ GridNode $ MkNode r $ quad { qBottomLeft  = cleanupGrid $ delete x y v $ qBottomLeft  quad }
-    | x >  cx && y >  cy = cleanupGrid $ GridNode $ MkNode r $ quad { qBottomRight = cleanupGrid $ delete x y v $ qBottomRight quad }
-    | otherwise = g
+        go vec = VM.modify vec (L.delete v) (idx x y)
+
+lookup :: Integral k => k -> k -> Grid k v -> [v]
+lookup x y g = fromMaybe [] $ (\chunk -> chunk V.! idx x y) <$> M.lookup (coord x y) g
+
+range :: forall k v. (Show k, Integral k) => Region k -> Grid k v -> [(k, k, v)]
+range (lx, ly, hx, hy) g =
+    foldl
+    (\acc c -> fromMaybe [] (triage . processChunk c <$> M.lookup c g) ++ acc)
+    []
+    (traceShow chunkCoords chunkCoords)
     where
-        (cx, cy) = centerRegion r
-        cleanupGrid :: Grid k v -> Grid k v
-        cleanupGrid cg@(GridLeaf _) = cg
-        cleanupGrid cg@(GridEmpty) = cg
-        cleanupGrid cg@(GridLeafEmpty _) = cg
-        cleanupGrid cg@(GridNode (MkNode cr _))
-            | isEmpty cg = GridLeafEmpty cr
-            | otherwise = cg
+        lowChunkCoord   = coord lx ly
+        lowChunkCoordX  = fst lowChunkCoord
+        lowChunkCoordY  = snd lowChunkCoord
+        highChunkCoord  = coord hx hy
+        highChunkCoordX = fst highChunkCoord
+        highChunkCoordY = snd highChunkCoord
+        chunkCoords     = [(x, y) | x <- [lowChunkCoordX..highChunkCoordX], y <- [lowChunkCoordY..highChunkCoordY]]
+        triage :: [(k, k, v)] -> [(k, k, v)]
+        triage = filter (\(x,y,_) -> x >= lx && x <= hx && y >= ly && y <= hy)
+        processChunk :: ChunkCoord k -> Chunk v -> [(k, k, v)]
+        processChunk c chunk = concat $ V.toList $ V.imap (\i v -> xy c i v) chunk
+        xy :: ChunkCoord k -> Int -> [v] -> [(k, k, v)]
+        xy (cx, cy) i vs = foldl' (\acc v -> (cx * chunkSize + ix, cy * chunkSize + iy, v) : acc) [] vs
             where
-            isEmpty (GridNode (MkNode _ equad)) = check (qTopLeft     equad) &&
-                                                  check (qTopRight    equad) &&
-                                                  check (qBottomLeft  equad) &&
-                                                  check (qBottomRight equad)
-                where
-                    check GridEmpty = True
-                    check (GridLeaf _) = False
-                    check (GridLeafEmpty _) = True
-                    check (GridNode _) = False
-            isEmpty _ = False
-
-lookup :: Integral k => k -> k -> Grid k v -> [v]            
-lookup _ _ GridEmpty = []
-lookup _ _ (GridLeafEmpty _) = []
-lookup x y (GridLeaf (MkLeaf _ (MkPoint px py pvs)))
-    | x == px && y == py = pvs
-    | otherwise = []
-lookup x y (GridNode (MkNode r quad))
-    | x <= cx && y <= cy = lookup x y $ qTopLeft     quad
-    | x >  cx && y <= cy = lookup x y $ qTopRight    quad
-    | x <= cx && y >  cy = lookup x y $ qBottomLeft  quad
-    | x >  cx && y >  cy = lookup x y $ qBottomRight quad
-    | otherwise = []
-    where
-        (cx, cy) = centerRegion r
-
-range :: Integral k => Region k -> Grid k v -> [(k, k, v)]
-range _ GridEmpty = []
-range _ (GridLeafEmpty _) = []
-range (lx, ly, hx, hy) (GridLeaf (MkLeaf _ (MkPoint px py pvs)))
-    | px >= lx && py >= ly && px <= hx && py <= hy = map (px,py,) pvs
-    | otherwise = []
-range tr (GridNode (MkNode r quad)) =
-    if overlap tr r
-    then range tr (qTopLeft quad) ++ range tr (qTopRight quad) ++ range tr (qBottomLeft quad) ++ range tr (qBottomRight quad)
-    else []
-    where
-        overlap (alx, aly, ahx, ahy) (blx, _, bhx, bhy) = alx <= bhx && ahx > blx && aly <= bhy && ahy > aly
-        -- overlap (alx, aly, ahx, ahy) (blx, bly, bhx, bhy) = blx < ahx && alx < bhx && bly < ahy && aly < bhy
-
-centerRegion :: Integral k => Region k -> (k, k)
-centerRegion (lx, ly, hx, hy) = (cx, cy)
-    where
-        dx = hx - lx
-        dy = hy - ly
-        cx = lx + dx `div` 2
-        cy = ly + dy `div` 2
-
-nearestPowerOfFour :: Integral k => k -> k
-nearestPowerOfFour n = head $ dropWhile (<n) $ iterate (4*) 1
+                ix = fromIntegral i `mod` chunkSize
+                iy = (fromIntegral i - ix) `div` chunkSize

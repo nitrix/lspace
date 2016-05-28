@@ -4,8 +4,6 @@ module Renderer
     ( renderGame
     ) where
 
-import Debug.Trace
-
 import Camera
 import Control.Lens
 import Control.Monad.Reader
@@ -86,18 +84,14 @@ subRenderWorld game = do
                     ) $
                     catMaybes $
                     (\(x, y, oid) -> fmap (x,y,) (M.lookup oid objects)) <$> G.range (
-                        trace (
-                            "rlx: " ++ show (cameraX - view coordinateX sc) ++
-                            "rly: " ++ show (cameraY - view coordinateY sc) ++
-                            "rhx: " ++ show (cameraX - view coordinateX sc + cameraCoordMaxX - cameraX)  ++
-                            "rhy: " ++ show (cameraY - view coordinateY sc + cameraCoordMaxY - cameraY)
-                        ) $
                         cameraX - view coordinateX sc,
                         cameraY - view coordinateY sc,
                         (cameraX - view coordinateX sc) + (cameraCoordMaxX - cameraX),
                         (cameraY - view coordinateY sc) + (cameraCoordMaxY - cameraY)
                     ) (view H.shipGrid s)
                  ) ships :: [(Coordinate, Object)]
+
+    lift . print $ length things
 
     -- Collect renderables, because of zIndex
     renderables <- concat <$> (forM things $ \(coord, obj) -> do
@@ -115,6 +109,8 @@ subRenderWorld game = do
             let dst = Rectangle (P $ V2 (CInt (dstTileRelX + dstRelX)) (dstTileRelY + dstRelY) * (fromIntegral tileSize)) (fromIntegral tileSize)
             return (Just src, Just dst, zIndex)
         )
+
+    -- let renderables = [(Just (Rectangle (P $ V2 0 0) 32), (Just (Rectangle (P $ V2 0 0) 32)), 0)]
 
     -- Render!
     forM_ (sortOn (\(_,_,a) -> a) renderables) $ \(src, dst, _) -> do
