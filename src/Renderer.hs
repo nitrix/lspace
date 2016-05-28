@@ -90,8 +90,6 @@ subRenderWorld game = do
                     ) (view H.shipGrid s)
                  ) $ M.elems ships :: [(Coordinate, Object)]
 
-    lift . print $ length things
-
     -- Collect renderables, because of zIndex
     renderables <- concat <$> (forM things $ \(coord, obj) -> do
         forM (objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do

@@ -11,8 +11,6 @@ import qualified Data.Vector.Mutable as VM
 import Prelude hiding (lookup)
 import qualified Data.List as L
 
-import Debug.Trace
-
 type Region k = (k, k, k, k)
 type ChunkCoord k = (k, k)
 type Chunk v = V.Vector [v]
@@ -57,7 +55,7 @@ range (lx, ly, hx, hy) g =
     foldl
     (\acc c -> fromMaybe [] (triage . processChunk c <$> M.lookup c g) ++ acc)
     []
-    (traceShow chunkCoords chunkCoords)
+    chunkCoords
     where
         lowChunkCoord   = coord lx ly
         lowChunkCoordX  = fst lowChunkCoord
