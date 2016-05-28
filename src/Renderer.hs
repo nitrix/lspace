@@ -10,20 +10,19 @@ import Control.Monad.Reader
 import Data.Hash (hashInt, asWord64)
 import Data.List
 import qualified Data.Map as M
--- import qualified Data.Set as S
 import Data.Maybe
 import qualified Data.Vector.Storable as VS
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
 import qualified Grid as G
 import SDL
-import qualified Ship as H
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import Types.Coordinate
 import Types.Environment
 import Types.Game
 import Types.Object
+import qualified Types.Ship as H
 import Types.Ui
 import Types.World
 import Ui.Menu
@@ -78,7 +77,7 @@ subRenderWorld game = do
     let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` tileSize) + 1)
 
     let things = concat $
-                 map (\(sc, s) ->
+                 map (\s -> let sc = view H.shipCoordinate s in
                     map (\(x, y, o) ->
                         (coordinate (view coordinateX sc + x) (view coordinateY sc + y), o)
                     ) $
@@ -89,7 +88,7 @@ subRenderWorld game = do
                         (cameraX - view coordinateX sc) + (cameraCoordMaxX - cameraX),
                         (cameraY - view coordinateY sc) + (cameraCoordMaxY - cameraY)
                     ) (view H.shipGrid s)
-                 ) ships :: [(Coordinate, Object)]
+                 ) $ M.elems ships :: [(Coordinate, Object)]
 
     lift . print $ length things
 
