@@ -5,6 +5,7 @@ module Types.Cache
 
 import qualified Data.Map as M
 import qualified SDL as SDL
+
 import Types.Coordinate
 
 data Cache = MkCache

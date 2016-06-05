@@ -13,7 +13,7 @@ module Types.Coordinate
 import Control.Lens
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
-import Prelude hiding (Left, Right)
+import Prelude
 
 data Direction = North
                | East

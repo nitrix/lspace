@@ -6,6 +6,7 @@ module Object.Wall
 where
 
 import Control.Monad.State
+
 import Types.Message
 import Types.Object
 import Types.Sprite

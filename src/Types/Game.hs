@@ -9,6 +9,7 @@ module Types.Game
     ) where
 
 import Control.Lens
+
 import Camera
 import Types.Object
 -- import Types.Renderer

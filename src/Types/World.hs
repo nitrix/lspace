@@ -9,6 +9,7 @@ module Types.World
 
 import Control.Lens
 import qualified Data.Map as M
+
 import qualified Types.Ship as H
 import Types.Object
 

@@ -1,10 +1,11 @@
 module Types.Ship where
 
 import Control.Lens
+import Linear (V2(V2))
+
 import qualified Grid as G
 import Types.Coordinate
 import Types.Id
-import Linear (V2(V2))
 
 data Ship = MkShip
     { _shipCoordinate :: Coordinate

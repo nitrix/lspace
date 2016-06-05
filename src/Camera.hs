@@ -16,6 +16,7 @@ import Control.Lens
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 import Foreign.C.Types
+
 import Types.Coordinate
 
 -- | Top view camera onto the world (2 axis).

@@ -4,7 +4,6 @@ module Renderer
     ( renderGame
     ) where
 
-import Camera
 import Control.Lens
 import Control.Monad.Reader
 import Data.Hash (hashInt, asWord64)
@@ -12,12 +11,15 @@ import Data.List
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Vector.Storable as VS
+import Foreign.C.Types
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
-import qualified Grid as G
 import SDL
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
+
+import Camera
+import qualified Grid as G
 import Types.Coordinate
 import Types.Environment
 import Types.Game
@@ -26,8 +28,6 @@ import qualified Types.Ship as H
 import Types.Ui
 import Types.World
 import Ui.Menu
-
-import Foreign.C.Types
 
 -- TODO: to refactor most of this, please
 renderGame :: Game -> EnvironmentT IO ()

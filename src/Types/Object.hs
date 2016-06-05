@@ -13,7 +13,7 @@ data Object = MkObject
     { objFacing :: Direction
     , objSolid  :: Bool
     , objSprite :: Sprite
-    , objShipId :: ShipId
+    , objId     :: ObjectId
     , objMass   :: Integer
     , objMsg    :: Message -> ([Message], Object)
     } 
@@ -22,11 +22,11 @@ defaultObject :: Object
 defaultObject = MkObject
     { objFacing = South
     , objSolid  = True
-    , objShipId = 0
+    , objId     = 0
     , objSprite = defaultSprite
     , objMass   = 0
     , objMsg    = const ([], defaultObject)
     }
 
 instance Show Object where
-    show = const "{Object}"
+    show o = "{Object #" ++ show (objId o) ++ "}"

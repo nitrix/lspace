@@ -4,21 +4,22 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
-import Engine (engineHandleEvent, enginePokeIO, engineInit)
-import Renderer (renderGame)
 import SDL
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
-import System.Remote.Monitoring
-import Types.Environment
-import Types.Game (Game, defaultGame)
+-- import System.Remote.Monitoring
+
+import Engine            (engineHandleEvent, enginePokeIO, engineInit)
+import Renderer          (renderGame)
+import Types.Environment (Environment(..), EnvironmentT)
+import Types.Game        (Game, defaultGame)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
     -- Initialize SDL an SDL_image
     initializeAll
     Img.initialize [Img.InitPNG]
-    ekg <- forkServer "localhost" 8080
+    -- ekg <- forkServer "localhost" 8080
 
     -- Fullscreen window with the default renderer
     window <- createWindow "LoneSome Space" defaultWindow { windowMode = FullscreenDesktop }
@@ -48,7 +49,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
         }
     
     -- Cleanup
-    killThread $ serverThreadId ekg
+    -- killThread $ serverThreadId ekg
     Ttf.closeFont font
     destroyTexture tileset
     destroyRenderer renderer

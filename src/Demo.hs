@@ -7,14 +7,14 @@ module Demo
 
 import qualified Data.Map as M
 import Linear (V2(V2))
+
+import qualified Grid as G
 -- import Object.Box
 import Object.Player
 import Types.Coordinate
 import Types.Object
 import Types.Ship
 import Types.World
-
-import qualified Grid as G
 
 demoShips :: WorldShips
 demoShips = M.fromList $ [(0, demoAtlantis)]

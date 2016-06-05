@@ -2,6 +2,7 @@ module Object.Player where
 
 import Control.Lens
 import Control.Monad.State
+
 import Types.Coordinate
 import Types.Message
 import Types.Object
