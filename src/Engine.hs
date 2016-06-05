@@ -41,10 +41,11 @@ enginePokeIO game = do
                                                       (height `div` fromIntegral tileSize)
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
-engineHandleEvent :: Event -> State Game Bool
-engineHandleEvent event =
+engineHandleEvent :: Event -> StateT Game IO Bool
+engineHandleEvent event = do
+    game <- S.get
     case eventPayload event of
-        KeyboardEvent ked -> engineHandleKeyboardEvent ked
+        KeyboardEvent ked -> return $ evalState (engineHandleKeyboardEvent ked) game
         QuitEvent         -> return True
         _                 -> return False
 
