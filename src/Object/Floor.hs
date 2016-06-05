@@ -17,7 +17,7 @@ floorObject :: Object -> Floor -> Object
 floorObject obj f = obj
     { objSolid  = False
     , objSprite = floorSprite f
-    , objMsg    = \msg -> floorObject obj <$> runState (floorMsg msg) f
+    , objMsg    = fantasticObjMsg floorMsg floorObject f
     }
 
 defaultFloor :: Floor

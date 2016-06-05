@@ -1,6 +1,5 @@
 module Object.Player where
 
-import Control.Lens
 import Control.Monad.State
 
 import Types.Coordinate
@@ -9,30 +8,27 @@ import Types.Object
 import Types.Sprite
 
 data Player = MkPlayer
-    { _playerHealth    :: Int
-    , _playerDirection :: Direction
+    { _playerHealth :: Int
+    , _playerFacing :: Direction
     }
 
--- Lenses
-playerDirection :: Lens' Player Direction
-playerDirection = lens _playerDirection (\s x -> s { _playerDirection = x })
-
+-- This only initializes the original object; it is NOT a permanent binding that everytime
+-- objSprite is called playerSprite would be called. They act independently.
 playerObject :: Object -> Player -> Object
 playerObject obj p = obj
     { objSolid  = False
-    , objSprite = playerSprite p
-    , objFacing = view playerDirection p
-    , objMsg    = \msg -> playerObject obj <$> runState (playerMsg msg) p
+    , objSprite = playerSprite obj
+    , objMsg    = fantasticObjMsg playerMsg playerObject p
     }
 
 defaultPlayer :: Player
 defaultPlayer = MkPlayer 
-    { _playerHealth     = 100
-    , _playerDirection  = South
+    { _playerHealth = 100
+    , _playerFacing = South
     }
 
-playerSprite :: Player -> Sprite
-playerSprite p = case _playerDirection p of
+playerSprite :: Object -> Sprite
+playerSprite o = case objFacing o of
     North -> sprite 1 0 ZOnTop
     South -> sprite 1 2 ZOnTop
     West  -> sprite 1 1 ZOnTop
@@ -41,6 +37,4 @@ playerSprite p = case _playerDirection p of
 playerMsg :: Message -> State Player [Message]
 playerMsg m = do
     case m of
-        MovedMsg direction -> [] <$ (modify $ playerDirection .~ direction)
-        RotateMsg          -> [] <$ (modify $ playerDirection %~ (\d -> (enumFrom d ++ [minBound..maxBound]) !! 1))
-        _                  -> return []
+        _ -> return []

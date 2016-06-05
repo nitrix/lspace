@@ -32,7 +32,7 @@ wallObject :: Object -> Wall -> Object
 wallObject obj f = obj
     { objSolid  = True
     , objSprite = wallSprite f
-    , objMsg    = \msg -> wallObject obj <$> runState (wallMsg msg) f
+    , objMsg    = fantasticObjMsg wallMsg wallObject f
     }
 
 defaultWall :: Wall

@@ -14,6 +14,7 @@ import SDL
 
 import Camera
 import Demo
+import Game
 import Types.Coordinate
 import Types.Environment
 import Types.Game
@@ -23,7 +24,8 @@ import Ui.Menu
 
 engineInit :: Game -> ReaderT Environment IO Game
 engineInit game = do
-    newGame <- enginePokeIO $ game & gameWorld .~ world
+    newGame <- enginePokeIO $ game & gameWorld  .~ world -- demoWorld?
+                                   & gamePlayer .~ 1
     -- let playerCoord = sysWorldCoordObjectId (view gameWorld newGame) (view gamePlayer newGame)
     let playerCoord = Nothing
     return $ fromMaybe newGame ((\coord -> newGame & gameCamera %~ cameraCenter coord) <$> playerCoord)
@@ -66,11 +68,12 @@ engineHandleKeyboardEvent ked = do
 
 engineHandleBareKeycode :: Keycode -> State Game Bool
 engineHandleBareKeycode keycode = do
+    player <- gets $ view gamePlayer
     case keycode of
-        KeycodeW       -> modify $ id -- sysWorldMovePlayer player North
-        KeycodeS       -> modify $ id -- sysWorldMovePlayer player South
-        KeycodeA       -> modify $ id -- sysWorldMovePlayer player West
-        KeycodeD       -> modify $ id -- sysWorldMovePlayer player East
+        KeycodeW       -> gameMove player North
+        KeycodeS       -> gameMove player South
+        KeycodeA       -> gameMove player West
+        KeycodeD       -> gameMove player East
         -- KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
         -- KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
         KeycodeUp      -> modify $ gameCamera %~ cameraMove North

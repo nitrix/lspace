@@ -17,8 +17,7 @@ plantObject :: Object -> Plant -> Object
 plantObject obj f = obj
     { objSolid  = False
     , objSprite = plantSprite f
-    , objMsg    = \msg -> plantObject obj <$> runState (plantMsg msg) f
-
+    , objMsg    = fantasticObjMsg plantMsg plantObject f
     }
 
 defaultPlant :: Plant

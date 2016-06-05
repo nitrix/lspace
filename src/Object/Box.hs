@@ -22,7 +22,7 @@ boxObject :: Object -> Box -> Object
 boxObject obj box = obj
     { objSolid  = True
     , objSprite = boxSprite box
-    , objMsg    = \msg -> boxObject obj <$> runState (boxMsg msg) box
+    , objMsg    = fantasticObjMsg boxMsg boxObject box
     }
 
 defaultBox :: Box

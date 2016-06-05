@@ -5,6 +5,7 @@ module Demo
     , demoShips
     ) where
 
+import Control.Lens
 import qualified Data.Map as M
 import Linear (V2(V2))
 
@@ -35,5 +36,5 @@ demoAtlantis = MkShip
 demoObjects :: WorldObjects
 demoObjects = M.fromList $
     [ (0, defaultObject)
-    , (1, playerObject defaultObject defaultPlayer)
+    , (1, playerObject defaultObject defaultPlayer & \s -> s { objCoordinate = coordinate 1 1 })
     ]

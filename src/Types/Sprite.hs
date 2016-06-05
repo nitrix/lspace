@@ -15,7 +15,7 @@ data ZIndex = ZGround
             | ZOnGround
             | ZOnTop
             | ZInAir
-            deriving (Eq, Ord)
+            deriving (Eq, Ord, Show)
 
 sprite :: Int -> Int -> ZIndex -> Sprite
 sprite x y z = [spritePart 0 0 x y z]

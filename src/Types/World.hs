@@ -10,16 +10,16 @@ module Types.World
 import Control.Lens
 import qualified Data.Map as M
 
-import qualified Types.Ship as H
+import Types.Id
 import Types.Object
+import qualified Types.Ship as H
 
-type ShipId        = Int
-type WorldShips    = M.Map ShipId H.Ship
-type WorldObjects  = M.Map ObjectId Object
+type WorldShips     = M.Map ShipId H.Ship
+type WorldObjects   = M.Map ObjectId Object
 
 data World = MkWorld
-    { _worldShips    :: WorldShips
-    , _worldObjects  :: WorldObjects
+    { _worldShips     :: WorldShips
+    , _worldObjects   :: WorldObjects
     }
 
 -- Lenses

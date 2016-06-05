@@ -34,6 +34,7 @@ executable lspace
   other-modules:       Camera
                      , Demo
                      , Engine
+                     , Game
                      , Grid
                      , Renderer
 
@@ -43,9 +44,6 @@ executable lspace
                      , Object.Plant
                      , Object.Player
                      , Object.Wall
-
-                     -- Systems
-                     , System.Movement
 
                      -- Types
                      , Types.Cache

@@ -5,6 +5,7 @@ module Types.Coordinate
     , Direction(..)
     , coordinate
     , coordinateMove
+    , coordinates
     , coordinateX
     , coordinateY
     , defaultCoordinate
@@ -26,8 +27,11 @@ newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, 
 -- Lenses
 coordinateX :: Lens' Coordinate Int
 coordinateY :: Lens' Coordinate Int
+coordinates :: Lens' Coordinate (Int, Int)
 coordinateX = lens (view _x . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _x .~ z)
 coordinateY = lens (view _y . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _y .~ z)
+coordinates = lens (\c -> (view coordinateX c, view coordinateY c)) (\s c -> s & set coordinateX (fst c)
+                                                                               & set coordinateY (snd c))
 
 -- | Simplified Coordinate constructor
 coordinate :: Int -> Int -> Coordinate
