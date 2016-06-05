@@ -26,15 +26,16 @@ engineInit game = do
     return $ fromMaybe game ((\coord -> game & gameCamera %~ cameraCenter coord) <$> playerCoord)
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
+-- TODO: disgusting environment passed explicitly
 engineHandleEvent :: Environment -> Event -> StateT Game IO Bool
 engineHandleEvent env event = do
-
     case eventPayload event of
         KeyboardEvent d      -> state $ runState (engineHandleKeyboardEvent d)
         WindowResizedEvent d -> engineHandleWindowResizedEvent env d
         QuitEvent            -> return True
         _                    -> return False
 
+-- TODO: disgusting environment passed explicitly
 engineHandleWindowResizedEvent :: Environment -> WindowResizedEventData -> StateT Game IO Bool
 engineHandleWindowResizedEvent env wred = do
     ws <- SDL.get $ windowSize $ envWindow env
