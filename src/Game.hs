@@ -13,7 +13,7 @@ import Types.Object (ObjectId, Object(..))
 import Types.Ship
 import Types.World
 
-import Debug.Trace
+-- import Debug.Trace
 
 gameMsg :: Maybe ObjectId -> Maybe ObjectId -> [Message] -> State Game ()
 gameMsg _ _ [] = return ()
@@ -23,7 +23,7 @@ gameMsg fromOid (Just toOid) (msg:msgs) = do
     case M.lookup toOid objects of
         Nothing    -> return ()
         Just toObj -> do
-            trace ("Sending msg `" ++ show msg ++ "` to object #" ++ show toOid) $ do
+            -- trace ("Sending msg `" ++ show msg ++ "` to object #" ++ show toOid) $ do
             let (responses, newToObj) = runState (objMsg toObj msg) toObj
             modify $ gameWorld . worldObjects %~ M.insert toOid newToObj
             gameMsg (Just toOid) fromOid responses

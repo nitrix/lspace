@@ -22,8 +22,6 @@ import Types.Ui
 import Types.World
 import Ui.Menu
 
-import Debug.Trace
-
 engineInit :: Game -> ReaderT Environment IO Game
 engineInit game = do
     newGame <- enginePokeIO $ game & gameWorld  .~ world -- demoWorld?
@@ -79,7 +77,6 @@ engineHandleKeyboardEvent ked = do
 
 engineHandleBareKeycode :: Keycode -> State Game Bool
 engineHandleBareKeycode keycode = do
-    trace (show keycode) $ do
     player <- gets $ view gamePlayer
     shift  <- gets $ view gameKeyShift
     case keycode of
