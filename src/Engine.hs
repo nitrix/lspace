@@ -9,7 +9,6 @@ import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
 import Data.Maybe
-import Debug.Trace
 import Linear (V2(V2))
 import SDL
 
@@ -51,7 +50,7 @@ engineHandleEvent event = do
 
 -- | This function handles keyboard events in the engine
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
-engineHandleKeyboardEvent ked = trace "Keyboard event" $ do
+engineHandleKeyboardEvent ked = do
     if (keymotion == Pressed) then do
         (newKeycode, shouldHalt) <- uiMenuInterceptKeycode keycode
         if shouldHalt
