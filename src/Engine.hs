@@ -9,6 +9,7 @@ import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
 import Data.Maybe
+import Debug.Trace
 import Linear (V2(V2))
 import SDL
 
@@ -43,15 +44,14 @@ enginePokeIO game = do
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> StateT Game IO Bool
 engineHandleEvent event = do
-    game <- S.get
     case eventPayload event of
-        KeyboardEvent ked -> return $ evalState (engineHandleKeyboardEvent ked) game
+        KeyboardEvent ked -> state $ runState (engineHandleKeyboardEvent ked)
         QuitEvent         -> return True
         _                 -> return False
 
 -- | This function handles keyboard events in the engine
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
-engineHandleKeyboardEvent ked = do
+engineHandleKeyboardEvent ked = trace "Keyboard event" $ do
     if (keymotion == Pressed) then do
         (newKeycode, shouldHalt) <- uiMenuInterceptKeycode keycode
         if shouldHalt
