@@ -4,6 +4,7 @@ module Camera
     , cameraCoordinate
     , cameraPinned
     , cameraViewport
+    , cameraWindowSize
     -- Functions
     , cameraAuto
     , cameraCenter
@@ -13,6 +14,7 @@ module Camera
     ) where
 
 import Control.Lens
+import Foreign.C.Types
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 
@@ -22,25 +24,29 @@ import Types.Coordinate
 -- The user can move this freely or it might temporarily be locked on the player.
 data Camera = MkCamera
     { _cameraCoordinate :: Coordinate
-    , _cameraViewport   :: V2 Int
     , _cameraPinned     :: Bool
+    , _cameraViewport   :: V2 Int
+    , _cameraWindowSize :: V2 CInt
     }
 
 -- | Default camera at the default coordinate position
 defaultCamera :: Camera
 defaultCamera = MkCamera
     { _cameraCoordinate = defaultCoordinate
-    , _cameraViewport   = V2 0 0
     , _cameraPinned     = False
+    , _cameraViewport   = V2 0 0
+    , _cameraWindowSize = V2 (CInt 0) (CInt 0)
     }
 
 -- Lenses
 cameraCoordinate :: Lens' Camera Coordinate
 cameraPinned     :: Lens' Camera Bool
 cameraViewport   :: Lens' Camera (V2 Int)
+cameraWindowSize :: Lens' Camera (V2 CInt)
 cameraCoordinate = lens _cameraCoordinate (\s x -> s { _cameraCoordinate = x })
 cameraPinned     = lens _cameraPinned     (\s x -> s { _cameraPinned     = x })
 cameraViewport   = lens _cameraViewport   (\s x -> s { _cameraViewport   = x })
+cameraWindowSize = lens _cameraWindowSize (\s x -> s { _cameraWindowSize = x })
 
 -- | Move the camera in a specified Direction
 cameraMove :: Direction -> Camera -> Camera

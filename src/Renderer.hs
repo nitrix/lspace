@@ -47,9 +47,7 @@ subRenderUi :: Game -> EnvironmentT IO ()
 subRenderUi game = do
     -- Information needed to render
     renderer    <- asks envRenderer
-    window      <- asks envWindow
     font        <- asks envFont
-    V2 _ height <- SDL.get $ windowSize window
     
     forM_ (game ^. gameUi . uiVisible) $ \modalType -> do
         case modalType of
@@ -63,15 +61,15 @@ subRenderUi game = do
                     copyEx renderer texture Nothing (Just dst) 0 Nothing (V2 False False)
                     destroyTexture texture
             -- _ -> return []
+    where
+        V2 _ height = game ^. gameCamera . cameraWindowSize
 
 subRenderWorld :: Game -> EnvironmentT IO ()
 subRenderWorld game = do
     -- Information needed to render
     renderer        <- asks envRenderer
-    window          <- asks envWindow
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
-    V2 width height <- SDL.get $ windowSize window
     
     let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
 
@@ -122,8 +120,6 @@ subRenderWorld game = do
 subRenderVoid :: Game -> EnvironmentT IO ()
 subRenderVoid game = do
     renderer        <- asks envRenderer
-    window          <- asks envWindow
-    V2 width height <- SDL.get $ windowSize window
 
     let cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
     let cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
@@ -143,3 +139,5 @@ subRenderVoid game = do
     drawPoints renderer points2
     rendererDrawColor renderer $= V4 255 255 255 255 -- white too bright
     drawPoints renderer points3
+    where
+        V2 width height = game ^. gameCamera . cameraWindowSize

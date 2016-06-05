@@ -28,17 +28,26 @@ engineInit game = do
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Environment -> Event -> StateT Game IO Bool
 engineHandleEvent env event = do
-    let tileSize = envTileSize env
 
     case eventPayload event of
-        WindowResizedEvent wred -> do
-            let V2 width height = windowResizedEventSize wred
-            modify $ gameCamera . cameraViewport .~ V2 (fromIntegral width `div` fromIntegral tileSize)
-                                                       (fromIntegral height `div` fromIntegral tileSize)
-            return False
-        KeyboardEvent ked -> state $ runState (engineHandleKeyboardEvent ked)
-        QuitEvent         -> return True
-        _                 -> return False
+        KeyboardEvent d      -> state $ runState (engineHandleKeyboardEvent d)
+        WindowResizedEvent d -> engineHandleWindowResizedEvent env d
+        QuitEvent            -> return True
+        _                    -> return False
+
+engineHandleWindowResizedEvent :: Environment -> WindowResizedEventData -> StateT Game IO Bool
+engineHandleWindowResizedEvent env wred = do
+    ws <- SDL.get $ windowSize $ envWindow env
+
+    let tileSize = envTileSize env
+    let V2 width height = windowResizedEventSize wred
+
+    modify $ gameCamera . cameraWindowSize .~ ws
+    modify $ gameCamera . cameraViewport .~ V2
+        (fromIntegral width `div` fromIntegral tileSize)
+        (fromIntegral height `div` fromIntegral tileSize)
+
+    return False
 
 -- | This function handles keyboard events in the engine
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
