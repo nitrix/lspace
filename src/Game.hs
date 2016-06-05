@@ -24,17 +24,27 @@ gameMsg fromOid (Just toOid) (msg:msgs) = do
         Nothing    -> return ()
         Just toObj -> do
             trace ("Sending msg `" ++ show msg ++ "` to object #" ++ show toOid) $ do
-            trace ("Obj coordinates before: " ++ show (objCoordinate toObj)) $ do
             let (responses, newToObj) = runState (objMsg toObj msg) toObj
-            -- let fixNewToObj = newToObj { objCoordinate = objCoordinate toObj }
-            let fixNewToObj = newToObj
-            trace ("Obj coordinates after: " ++ show (objCoordinate fixNewToObj)) $ do
-            modify $ gameWorld . worldObjects %~ M.insert toOid fixNewToObj
+            modify $ gameWorld . worldObjects %~ M.insert toOid newToObj
             gameMsg (Just toOid) fromOid responses
     gameMsg fromOid (Just toOid) msgs
 
+gameRotate :: ObjectId -> Direction -> State Game ()
+gameRotate oid direction = do
+    objects <- gets (view $ gameWorld . worldObjects)
+    case M.lookup oid objects of
+        Nothing -> return ()
+        Just obj -> do
+            let objRotated = obj { objFacing = direction }
+            modify $ gameWorld . worldObjects %~ M.insert oid objRotated
+            gameMsg Nothing (Just oid) [RotatedMsg direction]
+
 gameMove :: ObjectId -> Direction -> State Game ()
 gameMove oid direction = do
+    -- Rotate the object
+    gameRotate oid direction
+
+    -- Move the object
     objects <- gets (view $ gameWorld . worldObjects)
     ships   <- gets (view $ gameWorld . worldShips)
     case M.lookup oid objects of
@@ -42,19 +52,18 @@ gameMove oid direction = do
         Just obj -> case M.lookup (objShipId obj) ships of
             Nothing -> return ()
             Just ship -> do
+                -- The most important, the previous and new coordinates
                 let (x, y)       = objCoordinate obj ^. coordinates
                 let (newX, newY) = coordinateMove direction (objCoordinate obj) ^. coordinates
+
+                -- Calculate what the new grid and ship would look like
+                let newGrid = G.insert newX newY oid $ G.delete x y oid (ship ^. shipGrid)
+                let newShip = shipGrid .~ newGrid $ ship
+                let newObj  = obj { objCoordinate = coordinate newX newY }
+
+                -- Update the object while also paying attention to collisions
                 let objsAtNewLocation = catMaybes $ flip M.lookup objects <$> G.lookup newX newY (ship ^. shipGrid)
-                if any objSolid objsAtNewLocation
-                then return () -- still turn the object facing in that direction
-                else do
-                    let newGrid = G.insert newX newY oid $ G.delete x y oid (ship ^. shipGrid)
-                    let newShip = shipGrid .~ newGrid $ ship
-                    let newObj  = obj { objCoordinate = coordinate newX newY
-                                      , objFacing     = direction
-                                      }
+                when (not $ any objSolid objsAtNewLocation) $ do
                     modify $ gameWorld . worldShips   %~ M.insert (objShipId newObj) newShip
                     modify $ gameWorld . worldObjects %~ M.insert oid newObj
-                    -- Message the object that it moved and rotated
-                    gameMsg Nothing (Just oid) [MovedMsg direction, RotatedMsg direction]
-                    -- TODO: Messages from `step on` and `proximity`
+                    gameMsg Nothing (Just oid) [MovedMsg direction]

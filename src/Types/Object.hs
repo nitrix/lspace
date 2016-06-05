@@ -1,6 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE KindSignatures #-}
-
 module Types.Object
     ( Object(..)
     , ObjectId

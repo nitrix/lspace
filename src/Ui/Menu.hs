@@ -23,7 +23,7 @@ uiMenuSwitch ty ui = uiMenuClear ui & uiVisible %~ (MkUiTypeMenu ty:)
 uiMenuOptions :: UiTypeMenu -> [String]
 uiMenuOptions ty = case ty of
     UiMenuMain ->
-        [ "[b] Build menu (wip)"
+        [ "[b] Build menu (soon)"
         , "[x] Destroy mode (soon)"
         , "[i] Inventory (soon)"
         , "[q] Quit"
@@ -54,7 +54,7 @@ uiMenuInterceptKeycode keycode = do
                     _        -> ignore
             MkUiTypeMenu UiMenuMain ->
                 case keycode of
-                    KeycodeB -> hook $ gameUi %~ uiMenuSwitch UiMenuBuild
+                    KeycodeB -> ignore -- hook $ gameUi %~ uiMenuSwitch UiMenuBuild
                     KeycodeQ -> hook $ gameUi %~ uiMenuSwitch UiMenuQuitConfirm
                     _        -> ignore
             MkUiTypeMenu UiMenuQuitConfirm ->

@@ -22,6 +22,8 @@ import Types.Ui
 import Types.World
 import Ui.Menu
 
+import Debug.Trace
+
 engineInit :: Game -> ReaderT Environment IO Game
 engineInit game = do
     newGame <- enginePokeIO $ game & gameWorld  .~ world -- demoWorld?
@@ -53,6 +55,15 @@ engineHandleEvent event = do
 -- | This function handles keyboard events in the engine
 engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
 engineHandleKeyboardEvent ked = do
+    -- Modifier keys
+    case keycode of
+        KeycodeLShift -> modify $ gameKeyShift .~ (keymotion == Pressed)    
+        KeycodeRShift -> modify $ gameKeyShift .~ (keymotion == Pressed)    
+        KeycodeLAlt   -> modify $ gameKeyAlt   .~ (keymotion == Pressed)    
+        KeycodeRAlt   -> modify $ gameKeyAlt   .~ (keymotion == Pressed)    
+        _             -> return ()
+
+    -- Bare keys
     if (keymotion == Pressed) then do
         (newKeycode, shouldHalt) <- uiMenuInterceptKeycode keycode
         if shouldHalt
@@ -68,12 +79,14 @@ engineHandleKeyboardEvent ked = do
 
 engineHandleBareKeycode :: Keycode -> State Game Bool
 engineHandleBareKeycode keycode = do
+    trace (show keycode) $ do
     player <- gets $ view gamePlayer
+    shift  <- gets $ view gameKeyShift
     case keycode of
-        KeycodeW       -> gameMove player North
-        KeycodeS       -> gameMove player South
-        KeycodeA       -> gameMove player West
-        KeycodeD       -> gameMove player East
+        KeycodeW       -> if shift then gameRotate player North else gameMove player North
+        KeycodeS       -> if shift then gameRotate player South else gameMove player South
+        KeycodeA       -> if shift then gameRotate player West  else gameMove player West
+        KeycodeD       -> if shift then gameRotate player East  else gameMove player East
         -- KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
         -- KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
         KeycodeUp      -> modify $ gameCamera %~ cameraMove North
@@ -81,8 +94,7 @@ engineHandleBareKeycode keycode = do
         KeycodeRight   -> modify $ gameCamera %~ cameraMove East
         KeycodeLeft    -> modify $ gameCamera %~ cameraMove West
         KeycodeY       -> modify $ id -- gameCamera %~ (fromMaybe id (cameraTogglePinned <$> sysWorldCoordObjectId world player)) -- TODO: eeeww
-        KeycodeR       -> modify $ id -- gameWorld  %~ sysWorldMessage Nothing (Just player) RotateMsg
-        KeycodeE       -> modify $ gameUi     %~ uiMenuSwitch UiMenuMain
-        KeycodeEscape  -> modify $ gameUi     %~ uiMenuClear
+        KeycodeE       -> modify $ gameUi       %~ uiMenuSwitch UiMenuMain
+        KeycodeEscape  -> modify $ gameUi       %~ uiMenuClear
         _              -> modify $ id
     return False
