@@ -9,10 +9,11 @@ import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
 -- import System.Remote.Monitoring
 
-import Engine            (engineHandleEvent, enginePokeIO, engineInit)
+import Demo              (demoGame)
+import Engine            (engineHandleEvent, engineInit)
 import Renderer          (renderGame)
 import Types.Environment (Environment(..), EnvironmentT)
-import Types.Game        (Game, defaultGame)
+import Types.Game        (Game)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
@@ -40,7 +41,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     showWindow window
 
     -- Main loop
-    runReaderT (engineInit defaultGame >>= mainLoop) $ MkEnvironment
+    runReaderT (engineInit demoGame >>= mainLoop) $ MkEnvironment
         { envWindow   = window
         , envRenderer = renderer
         , envTileset  = tileset
@@ -59,12 +60,13 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
 
 mainLoop :: Game -> EnvironmentT IO ()
 mainLoop game = do
+    env <- ask
+
     -- Waiting for events; those can only be called in the same thread that set up the video mode
     events <- (:) <$> waitEvent <*> pollEvents
 
     -- As an optimisation, prevent chocking by processing all the queued up events at once
-    pokedGame <- enginePokeIO game
-    (shouldHalts, newGame) <- lift $ runStateT (traverse engineHandleEvent events) pokedGame
+    (shouldHalts, newGame) <- lift $ runStateT (traverse (engineHandleEvent env) events) game
 
     -- Then render the new game state
     renderGame newGame

@@ -15,7 +15,6 @@ module Camera
 import Control.Lens
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
-import Foreign.C.Types
 
 import Types.Coordinate
 
@@ -23,7 +22,7 @@ import Types.Coordinate
 -- The user can move this freely or it might temporarily be locked on the player.
 data Camera = MkCamera
     { _cameraCoordinate :: Coordinate
-    , _cameraViewport   :: V2 CInt
+    , _cameraViewport   :: V2 Int
     , _cameraPinned     :: Bool
     }
 
@@ -31,14 +30,14 @@ data Camera = MkCamera
 defaultCamera :: Camera
 defaultCamera = MkCamera
     { _cameraCoordinate = defaultCoordinate
-    , _cameraViewport   = V2 (CInt 0) (CInt 0)
+    , _cameraViewport   = V2 0 0
     , _cameraPinned     = False
     }
 
 -- Lenses
 cameraCoordinate :: Lens' Camera Coordinate
 cameraPinned     :: Lens' Camera Bool
-cameraViewport   :: Lens' Camera (V2 CInt)
+cameraViewport   :: Lens' Camera (V2 Int)
 cameraCoordinate = lens _cameraCoordinate (\s x -> s { _cameraCoordinate = x })
 cameraPinned     = lens _cameraPinned     (\s x -> s { _cameraPinned     = x })
 cameraViewport   = lens _cameraViewport   (\s x -> s { _cameraViewport   = x })

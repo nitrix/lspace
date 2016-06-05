@@ -1,7 +1,8 @@
 {-# LANGUAGE TupleSections #-}
 
 module Demo
-    ( demoObjects
+    ( demoGame
+    , demoObjects
     , demoShips
     ) where
 
@@ -13,6 +14,7 @@ import qualified Grid as G
 -- import Object.Box
 import Object.Player
 import Types.Coordinate
+import Types.Game
 import Types.Object
 import Types.Ship
 import Types.World
@@ -38,3 +40,10 @@ demoObjects = M.fromList $
     [ (0, defaultObject)
     , (1, playerObject defaultObject defaultPlayer & \s -> s { objCoordinate = coordinate 1 1 })
     ]
+
+demoGame :: Game
+demoGame = defaultGame &~ do
+    gamePlayer .= 1
+    zoom gameWorld $ do
+        worldShips   .= demoShips
+        worldObjects .= demoObjects

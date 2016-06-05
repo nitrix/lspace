@@ -50,12 +50,13 @@ executable lspace
                      , Types.Coordinate
                      , Types.Environment
                      , Types.Game
+                     , Types.Id
                      , Types.Message
                      , Types.Object
                      , Types.Ship
                      , Types.Sprite
-                     , Types.World
                      , Types.Ui
+                     , Types.World
                     
                      -- Uis
                      , Ui.Menu

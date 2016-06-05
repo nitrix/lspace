@@ -2,7 +2,6 @@ module Engine
     ( engineHandleEvent
     , engineHandleKeyboardEvent
     , engineInit
-    , enginePokeIO
     ) where
 
 import Control.Lens
@@ -13,39 +12,30 @@ import Linear (V2(V2))
 import SDL
 
 import Camera
-import Demo
 import Game
 import Types.Coordinate
 import Types.Environment
 import Types.Game
 import Types.Ui
-import Types.World
 import Ui.Menu
 
 engineInit :: Game -> ReaderT Environment IO Game
 engineInit game = do
-    newGame <- enginePokeIO $ game & gameWorld  .~ world -- demoWorld?
-                                   & gamePlayer .~ 1
     -- let playerCoord = sysWorldCoordObjectId (view gameWorld newGame) (view gamePlayer newGame)
     let playerCoord = Nothing
-    return $ fromMaybe newGame ((\coord -> newGame & gameCamera %~ cameraCenter coord) <$> playerCoord)
-    where
-        world = view gameWorld game &~ do
-            worldShips   .= demoShips
-            worldObjects .= demoObjects
-
-enginePokeIO :: Game -> EnvironmentT IO Game
-enginePokeIO game = do
-    window          <- asks envWindow
-    tileSize        <- asks envTileSize
-    V2 width height <- SDL.get $ windowSize window
-    return $ game & gameCamera . cameraViewport .~ V2 (width `div` fromIntegral tileSize)
-                                                      (height `div` fromIntegral tileSize)
+    return $ fromMaybe game ((\coord -> game & gameCamera %~ cameraCenter coord) <$> playerCoord)
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
-engineHandleEvent :: Event -> StateT Game IO Bool
-engineHandleEvent event = do
+engineHandleEvent :: Environment -> Event -> StateT Game IO Bool
+engineHandleEvent env event = do
+    let tileSize = envTileSize env
+
     case eventPayload event of
+        WindowResizedEvent wred -> do
+            let V2 width height = windowResizedEventSize wred
+            modify $ gameCamera . cameraViewport .~ V2 (fromIntegral width `div` fromIntegral tileSize)
+                                                       (fromIntegral height `div` fromIntegral tileSize)
+            return False
         KeyboardEvent ked -> state $ runState (engineHandleKeyboardEvent ked)
         QuitEvent         -> return True
         _                 -> return False

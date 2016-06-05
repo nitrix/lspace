@@ -73,8 +73,7 @@ subRenderWorld game = do
     tileSize        <- asks envTileSize
     V2 width height <- SDL.get $ windowSize window
     
-    let cameraCoordMaxX = (cameraX + (fromIntegral $ width `div` tileSize) + 1)
-    let cameraCoordMaxY = (cameraY + (fromIntegral $ height `div` tileSize) + 1)
+    let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
 
     let things = concat $
                  map (\s -> let sc = view H.shipCoordinate s in
@@ -114,10 +113,11 @@ subRenderWorld game = do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
     
     where
-        cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
-        cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
-        ships   = game ^. gameWorld  . worldShips
-        objects = game ^. gameWorld  . worldObjects
+        viewport = game ^. gameCamera . cameraViewport
+        cameraX  = game ^. gameCamera . cameraCoordinate . coordinateX
+        cameraY  = game ^. gameCamera . cameraCoordinate . coordinateY
+        ships    = game ^. gameWorld  . worldShips
+        objects  = game ^. gameWorld  . worldObjects
 
 subRenderVoid :: Game -> EnvironmentT IO ()
 subRenderVoid game = do
