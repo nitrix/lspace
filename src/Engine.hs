@@ -19,14 +19,15 @@ import Types.Game
 import Types.Ui
 import Ui.Menu
 
+-- TODO: that looks way too disgutsting for what it does
 engineInit :: Game -> ReaderT Environment IO Game
 engineInit game = do
     -- let playerCoord = sysWorldCoordObjectId (view gameWorld newGame) (view gamePlayer newGame)
     let playerCoord = Nothing
     return $ fromMaybe game ((\coord -> game & gameCamera %~ cameraCenter coord) <$> playerCoord)
 
--- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 -- TODO: disgusting environment passed explicitly
+-- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Environment -> Event -> StateT Game IO Bool
 engineHandleEvent env event = do
     case eventPayload event of

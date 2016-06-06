@@ -31,7 +31,6 @@ import Types.Ui
 import Types.World
 import Ui.Menu
 
--- TODO: to refactor most of this, please
 renderGame :: Game -> EnvironmentT IO ()
 renderGame game = do
     renderer <- asks envRenderer
@@ -106,8 +105,6 @@ subRenderWorld game = do
             return (Just src, Just dst, zIndex)
         )
 
-    -- let renderables = [(Just (Rectangle (P $ V2 0 0) 32), (Just (Rectangle (P $ V2 0 0) 32)), 0)]
-
     -- Render!
     forM_ (sortOn (\(_,_,a) -> a) renderables) $ \(src, dst, _) -> do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
@@ -123,17 +120,8 @@ subRenderVoid :: Game -> EnvironmentT IO ()
 subRenderVoid game = do
     renderer <- asks envRenderer
     cacheRef <- asks envCacheRef
+    cache    <- lift $ readIORef cacheRef
 
-    cache <- lift $ readIORef cacheRef
-
-    {-
-    let cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
-    let cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
-            let fixedRandomPoint prlx n = P $ V2
-                    (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(1337*prlx)) + negate cameraX * fromIntegral prlx) `mod` width)
-                    (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(7331*prlx)) + negate cameraY * fromIntegral prlx) `mod` height)
-    -}
-                
     case view cacheStars cache of
         [] -> do
             layers <- replicateM 5 $ do
@@ -148,11 +136,9 @@ subRenderVoid game = do
 
                 layer <- createTexture renderer RGBA8888 TextureAccessTarget (game ^. gameCamera . cameraWindowSize)
 
-                -- rendererRenderTarget renderer $= Nothing
                 rendererRenderTarget renderer $= Just layer
                 rendererDrawColor renderer $= V4 0 0 0 0 -- transparent black
                 clear renderer
-                -- textureAlphaMod layer $= 255
                 textureBlendMode layer $= BlendAlphaBlend
                 rendererDrawColor renderer $= V4 35 35 35 200    -- white quite dark
                 drawPoints renderer dark

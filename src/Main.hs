@@ -9,7 +9,6 @@ import Data.IORef
 import SDL
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
--- import System.Remote.Monitoring
 
 import Demo              (demoGame)
 import Engine            (engineHandleEvent, engineInit)
@@ -23,7 +22,6 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     -- Initialize SDL an SDL_image
     initializeAll
     Img.initialize [Img.InitPNG]
-    -- ekg <- forkServer "localhost" 8080
 
     -- Fullscreen window with the default renderer
     window <- createWindow "LoneSome Space" defaultWindow { windowMode = FullscreenDesktop }
@@ -56,10 +54,11 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
         , envWindow   = window
         }
     
-    -- Cleanup
+    -- Deleting cache
     stars <- view cacheStars <$> readIORef cacheRef
     mapM_ destroyTexture stars
-    -- killThread $ serverThreadId ekg
+
+    -- Cleanup
     Ttf.closeFont font
     destroyTexture tileset
     destroyRenderer renderer
@@ -67,9 +66,10 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     Img.quit
     quit
 
+-- Main loop
 mainLoop :: Game -> EnvironmentT IO ()
 mainLoop game = do
-    env <- ask
+    env <- ask -- TODO: this is ugly
 
     -- Waiting for events; those can only be called in the same thread that set up the video mode
     events <- (:) <$> waitEvent <*> pollEvents
