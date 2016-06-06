@@ -1,9 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Concurrent
+import Control.Lens
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
+import Data.IORef
 import SDL
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
@@ -12,6 +14,7 @@ import qualified SDL.TTF as Ttf
 import Demo              (demoGame)
 import Engine            (engineHandleEvent, engineInit)
 import Renderer          (renderGame)
+import Types.Cache       (defaultCache, cacheStars)
 import Types.Environment (Environment(..), EnvironmentT)
 import Types.Game        (Game)
 
@@ -40,16 +43,22 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     present renderer
     showWindow window
 
+    -- Creating cache
+    cacheRef <- newIORef defaultCache
+
     -- Main loop
     runReaderT (engineInit demoGame >>= mainLoop) $ MkEnvironment
-        { envWindow   = window
+        { envCacheRef = cacheRef
+        , envFont     = font
         , envRenderer = renderer
         , envTileset  = tileset
-        , envFont     = font
         , envTileSize = 32
+        , envWindow   = window
         }
     
     -- Cleanup
+    stars <- view cacheStars <$> readIORef cacheRef
+    mapM_ destroyTexture stars
     -- killThread $ serverThreadId ekg
     Ttf.closeFont font
     destroyTexture tileset

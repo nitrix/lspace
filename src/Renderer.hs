@@ -6,7 +6,7 @@ module Renderer
 
 import Control.Lens
 import Control.Monad.Reader
-import Data.Hash (hashInt, asWord64)
+import Data.IORef
 import Data.List
 import qualified Data.Map as M
 import Data.Maybe
@@ -17,9 +17,11 @@ import Linear.Affine (Point(P))
 import SDL
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
+import System.Random
 
 import Camera
 import qualified Grid as G
+import Types.Cache
 import Types.Coordinate
 import Types.Environment
 import Types.Game
@@ -119,25 +121,64 @@ subRenderWorld game = do
 
 subRenderVoid :: Game -> EnvironmentT IO ()
 subRenderVoid game = do
-    renderer        <- asks envRenderer
+    renderer <- asks envRenderer
+    cacheRef <- asks envCacheRef
 
+    cache <- lift $ readIORef cacheRef
+
+    {-
     let cameraX = game ^. gameCamera . cameraCoordinate . coordinateX
     let cameraY = game ^. gameCamera . cameraCoordinate . coordinateY
-        
-    -- TODO 67%
-    let fixedRandomPoint prlx n = P $ V2
-            (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(1337*prlx)) + negate cameraX * fromIntegral prlx) `mod` width)
-            (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(7331*prlx)) + negate cameraY * fromIntegral prlx) `mod` height)
+            let fixedRandomPoint prlx n = P $ V2
+                    (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(1337*prlx)) + negate cameraX * fromIntegral prlx) `mod` width)
+                    (fromIntegral (fromIntegral (asWord64 . hashInt $ n+(7331*prlx)) + negate cameraY * fromIntegral prlx) `mod` height)
+    -}
+                
+    case view cacheStars cache of
+        [] -> do
+            layers <- replicateM 5 $ do
+                gx <- lift newStdGen
+                let pointsx = randomRs (0, width) gx
+                gy <- lift newStdGen
+                let pointsy = randomRs (0, height) gy
+                let points = map (P . uncurry V2) $ zip pointsx pointsy
+                let dark   = VS.fromList $ take 700 points
+                let normal = VS.fromList $ take 300 points
+                let bright = VS.fromList $ take 50 points
 
-    let points1 = VS.generate 500 (fixedRandomPoint 1)
-    let points2 = VS.generate 200 (fixedRandomPoint 2)
-    let points3 = VS.generate 100 (fixedRandomPoint 3)
+                layer <- createTexture renderer RGBA8888 TextureAccessTarget (game ^. gameCamera . cameraWindowSize)
 
-    rendererDrawColor renderer $= V4 85 85 85 255    -- white quite dark
-    drawPoints renderer points1
-    rendererDrawColor renderer $= V4 170 170 170 255 -- white kinda visible
-    drawPoints renderer points2
-    rendererDrawColor renderer $= V4 255 255 255 255 -- white too bright
-    drawPoints renderer points3
+                -- rendererRenderTarget renderer $= Nothing
+                rendererRenderTarget renderer $= Just layer
+                rendererDrawColor renderer $= V4 0 0 0 0 -- transparent black
+                clear renderer
+                -- textureAlphaMod layer $= 255
+                textureBlendMode layer $= BlendAlphaBlend
+                rendererDrawColor renderer $= V4 35 35 35 200    -- white quite dark
+                drawPoints renderer dark
+                rendererDrawColor renderer $= V4 100 100 100 200 -- white kinda visible
+                drawPoints renderer normal
+                rendererDrawColor renderer $= V4 255 255 255 255 -- white too bright
+                drawPoints renderer bright
+                rendererRenderTarget renderer $= Nothing
+                copy renderer layer Nothing Nothing
+                return layer
+            lift $ modifyIORef cacheRef $ cacheStars .~ layers
+        layers -> do
+            forM_ (zip layers [1..]) $ \(layer, n) -> do
+                let x = negate (fromIntegral $ view (gameCamera.cameraCoordinate.coordinateX) game) `div` n `mod` width
+                let y = negate (fromIntegral $ view (gameCamera.cameraCoordinate.coordinateY) game) `div` n `mod` height
+                -- let x = negate (fromIntegral $ view (gameCamera.cameraCoordinate.coordinateX) game) * n `mod` width
+                -- let y = negate (fromIntegral $ view (gameCamera.cameraCoordinate.coordinateY) game) * n `mod` height
+                nicerCopy layer renderer (x-width) y          -- left
+                nicerCopy layer renderer x         (y-height) -- top
+                nicerCopy layer renderer x         y          -- middle
+                nicerCopy layer renderer x         (y+height) -- bottom
+                nicerCopy layer renderer (x+width) y          -- right
+                nicerCopy layer renderer (x-width) (y-height) -- top-left
+                nicerCopy layer renderer (x+width) (y-height) -- top-right
+                nicerCopy layer renderer (x-width) (y+height) -- bottom-left
+                nicerCopy layer renderer (x+width) (y+height) -- bottom-right
     where
         V2 width height = game ^. gameCamera . cameraWindowSize
+        nicerCopy lyr rdr tx ty = copy rdr lyr Nothing $ Just $ Rectangle (P $ V2 tx ty) (V2 width height)
