@@ -35,6 +35,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
 
     -- Some options for convenience
     disableScreenSaver
+    cursorVisible $= False
 
     -- Prepare all the things
     clear renderer
