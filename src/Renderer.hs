@@ -72,8 +72,10 @@ subRenderWorld game = do
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
     
+    -- TODO: I feel like this could be rewritten more nicely
     let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
 
+    -- TODO: Abandon hopes whoever wants to update this monster
     let things = concat $
                  map (\s -> let sc = view H.shipCoordinate s in
                     map (\(x, y, o) ->
@@ -89,6 +91,8 @@ subRenderWorld game = do
                  ) $ M.elems ships :: [(Coordinate, Object)]
 
     -- Collect renderables, because of zIndex
+    -- TODO: We might have to take "things" large than is visible on the screen if we have very large
+    -- multi-sprite objects that starts glitching the the edges of the screen.
     renderables <- concat <$> (forM things $ \(coord, obj) -> do
         forM (objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
             -- Bunch of positions to calculate

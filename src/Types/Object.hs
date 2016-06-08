@@ -1,6 +1,5 @@
 module Types.Object
     ( Object(..)
-    , ObjectId
     , defaultObject
     , fantasticObjMsg
     ) where
@@ -16,7 +15,7 @@ data Object = MkObject
     { objCoordinate :: Coordinate
     , objFacing     :: Direction
     , objId         :: ObjectId
-    , objMass       :: Integer
+    , objMass       :: Int
     , objMsg        :: Message -> State Object [Message]
     , objShipId     :: ShipId
     , objSolid      :: Bool
@@ -28,7 +27,7 @@ defaultObject = MkObject
     { objCoordinate = coordinate 0 0
     , objFacing     = South
     , objId         = 0
-    , objMass       = 0
+    , objMass       = 1
     , objMsg        = const $ return []
     , objShipId     = 0
     , objSolid      = True

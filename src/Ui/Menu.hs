@@ -6,12 +6,14 @@ import Data.Biapplicative
 import Data.List
 import SDL
 
--- import Object.Box
+import Game
+import Object.Box
 -- import Object.Floor
 -- import Object.Plant
 -- import Object.Wall
+import Types.Coordinate
 import Types.Game
--- import Types.Object
+import Types.Object
 import Types.Ui
 
 uiMenuClear :: Ui -> Ui
@@ -47,14 +49,14 @@ uiMenuInterceptKeycode keycode = do
         case modal of
             MkUiTypeMenu UiMenuBuild ->
                 case keycode of
-                    KeycodeB -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ boxObject defaultObject defaultBox
+                    KeycodeB -> decisive $ gameAdd (boxObject defaultObject defaultBox) (coordinate 0 1)
                     KeycodeF -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ floorObject defaultObject defaultFloor
                     KeycodeP -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ plantObject defaultObject defaultPlant
                     KeycodeW -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ wallObject defaultObject defaultWall
                     _        -> ignore
             MkUiTypeMenu UiMenuMain ->
                 case keycode of
-                    KeycodeB -> ignore -- hook $ gameUi %~ uiMenuSwitch UiMenuBuild
+                    KeycodeB -> hook $ gameUi %~ uiMenuSwitch UiMenuBuild
                     KeycodeQ -> hook $ gameUi %~ uiMenuSwitch UiMenuQuitConfirm
                     _        -> ignore
             MkUiTypeMenu UiMenuQuitConfirm ->
@@ -67,8 +69,8 @@ uiMenuInterceptKeycode keycode = do
     return $ foldl' (biliftA2 min (||)) (keycode, False) results
 
     where
-        -- decisive :: State Game () -> State Game (Keycode, Bool)
-        -- decisive f = f >> (hook $ gameUi %~ uiMenuClear)
+        decisive :: State Game () -> State Game (Keycode, Bool)
+        decisive f = f >> (hook $ gameUi %~ uiMenuClear)
         terminate  = return (KeycodeUnknown, True)
         ignore     = return (keycode, False)
         hook f     = (KeycodeUnknown, False) <$ modify f

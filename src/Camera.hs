@@ -50,10 +50,10 @@ cameraWindowSize = lens _cameraWindowSize (\s x -> s { _cameraWindowSize = x })
 
 -- | Move the camera in a specified Direction
 cameraMove :: Direction -> Camera -> Camera
-cameraMove North c = c & cameraCoordinate . coordinateY %~ subtract 1
-cameraMove South c = c & cameraCoordinate . coordinateY %~ (+1)
-cameraMove West  c = c & cameraCoordinate . coordinateX %~ subtract 1
-cameraMove East  c = c & cameraCoordinate . coordinateX %~ (+1)
+cameraMove North = cameraCoordinate . coordinateY %~ subtract 1
+cameraMove South = cameraCoordinate . coordinateY %~ (+1)
+cameraMove West  = cameraCoordinate . coordinateX %~ subtract 1
+cameraMove East  = cameraCoordinate . coordinateX %~ (+1)
 
 -- TODO: needs a serious refactoring
 cameraAuto :: Coordinate -> Camera -> Camera

@@ -26,9 +26,10 @@ demoAtlantis = MkShip
     { _shipCoordinate = coordinate 0 0
     , _shipGrid = G.fromList $
         [ (0, 0, 0)
-        , (1, 1, 1)
+        , (1, 0, 1)
         ]
-    , _shipMass = 0
+    , _shipId        = 1
+    , _shipMass      = 2
     , _shipVelocityX = 0
     , _shipVelocityY = 0
     , _shipDimension = V2 0 0
@@ -36,13 +37,15 @@ demoAtlantis = MkShip
 
 demoObjects :: WorldObjects
 demoObjects = M.fromList $
-    [ (0, defaultObject)
-    , (1, playerObject defaultObject defaultPlayer & \s -> s { objCoordinate = coordinate 1 1 })
+    [ (0, defaultObject & \s -> s { objId = 0, objShipId = 1 })
+    , (1, playerObject defaultObject defaultPlayer & \s -> s { objCoordinate = coordinate 0 1, objId = 1, objShipId = 1 })
     ]
 
 demoGame :: Game
 demoGame = defaultGame &~ do
     gamePlayer .= 1
     zoom gameWorld $ do
-        worldShips   .= demoShips
-        worldObjects .= demoObjects
+        worldShips      .= demoShips
+        worldObjects    .= demoObjects
+        worldNextObjId  .= 2
+        worldNextShipId .= 2

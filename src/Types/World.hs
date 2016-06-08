@@ -3,6 +3,8 @@ module Types.World
     , WorldShips
     , WorldObjects
     , defaultWorld
+    , worldNextObjId
+    , worldNextShipId
     , worldObjects
     , worldShips
 ) where
@@ -18,18 +20,26 @@ type WorldShips     = M.Map ShipId H.Ship
 type WorldObjects   = M.Map ObjectId Object
 
 data World = MkWorld
-    { _worldShips     :: WorldShips
-    , _worldObjects   :: WorldObjects
+    { _worldNextObjId  :: ObjectId
+    , _worldNextShipId :: ShipId
+    , _worldObjects    :: WorldObjects
+    , _worldShips      :: WorldShips
     }
 
 -- Lenses
-worldObjects  :: Lens' World WorldObjects
-worldShips    :: Lens' World WorldShips
-worldObjects  = lens _worldObjects (\s x -> s { _worldObjects = x })
-worldShips    = lens _worldShips (\s x -> s { _worldShips = x })
+worldNextObjId  :: Lens' World ObjectId
+worldNextShipId :: Lens' World ShipId
+worldObjects    :: Lens' World WorldObjects
+worldShips      :: Lens' World WorldShips
+worldNextObjId  = lens _worldNextObjId  (\s x -> s { _worldNextObjId  = x })
+worldNextShipId = lens _worldNextShipId (\s x -> s { _worldNextShipId = x })
+worldObjects    = lens _worldObjects    (\s x -> s { _worldObjects    = x })
+worldShips      = lens _worldShips      (\s x -> s { _worldShips      = x })
 
 defaultWorld :: World
 defaultWorld = MkWorld
-    { _worldShips   = M.empty
-    , _worldObjects = M.empty
+    { _worldNextObjId  = 0
+    , _worldNextShipId = 0
+    , _worldShips      = M.empty
+    , _worldObjects    = M.empty
     }

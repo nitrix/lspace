@@ -5,7 +5,6 @@ module Types.Game
     , gameKeyAlt
     , gameKeyShift
     , gamePlayer
-    -- , gameRenderer
     , gameUi
     , gameWorld
     ) where
@@ -13,8 +12,7 @@ module Types.Game
 import Control.Lens
 
 import Camera
-import Types.Object
--- import Types.Renderer
+import Types.Id
 import Types.Ui
 import Types.World
 
@@ -24,7 +22,6 @@ data Game = MkGame
     , _gameKeyAlt   :: Bool
     , _gameKeyShift :: Bool
     , _gamePlayer   :: ObjectId
-    -- , _gameRenderer :: Renderer
     , _gameUi       :: Ui
     , _gameWorld    :: World
     }
@@ -34,14 +31,12 @@ gameCamera   :: Lens' Game Camera
 gameKeyAlt   :: Lens' Game Bool
 gameKeyShift :: Lens' Game Bool
 gamePlayer   :: Lens' Game ObjectId
--- gameRenderer :: Lens' Game Renderer
 gameUi       :: Lens' Game Ui
 gameWorld    :: Lens' Game World
 gameCamera   = lens _gameCamera   (\s x -> s { _gameCamera   = x })
 gameKeyAlt   = lens _gameKeyAlt   (\s x -> s { _gameKeyAlt   = x })
 gameKeyShift = lens _gameKeyShift (\s x -> s { _gameKeyShift = x })
 gamePlayer   = lens _gamePlayer   (\s x -> s { _gamePlayer   = x })
--- gameRenderer = lens _gameRenderer (\s x -> s { _gameRenderer = x })
 gameUi       = lens _gameUi       (\s x -> s { _gameUi       = x })
 gameWorld    = lens _gameWorld    (\s x -> s { _gameWorld    = x })
 
@@ -52,7 +47,6 @@ defaultGame = MkGame
     , _gameKeyAlt   = False
     , _gameKeyShift = False
     , _gamePlayer   = 0
-    -- , _gameRenderer = defaultRenderer
     , _gameUi       = defaultUi
     , _gameWorld    = defaultWorld
     }

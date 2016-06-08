@@ -10,9 +10,10 @@ import Types.Id
 data Ship = MkShip
     { _shipCoordinate :: Coordinate
     , _shipGrid       :: G.Grid Int ObjectId
+    , _shipId         :: Int
     , _shipVelocityX  :: Int
     , _shipVelocityY  :: Int
-    , _shipMass       :: Integer
+    , _shipMass       :: Int
     , _shipDimension  :: V2 Integer
     }
 
@@ -20,6 +21,7 @@ defaultShip :: Ship
 defaultShip = MkShip
     { _shipCoordinate = coordinate 0 0
     , _shipGrid       = G.empty
+    , _shipId         = 0
     , _shipMass       = 0
     , _shipVelocityX  = 0
     , _shipVelocityY  = 0
@@ -30,4 +32,8 @@ shipGrid :: Lens' Ship (G.Grid Int ObjectId)
 shipGrid = lens _shipGrid (\s x -> s { _shipGrid = x })
 
 shipCoordinate :: Lens' Ship Coordinate
+shipId         :: Lens' Ship Int
+shipMass       :: Lens' Ship Int
 shipCoordinate = lens _shipCoordinate (\s x -> s { _shipCoordinate = x })
+shipId         = lens _shipId         (\s x -> s { _shipId         = x })
+shipMass       = lens _shipMass       (\s x -> s { _shipMass       = x })
