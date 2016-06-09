@@ -88,6 +88,7 @@ gameMove oid direction = do
     -- Move the object
     objects <- gets (view $ gameWorld . worldObjects)
     ships   <- gets (view $ gameWorld . worldShips)
+
     case M.lookup oid objects of
         Nothing  -> return ()
         Just obj -> case M.lookup (objShipId obj) ships of
