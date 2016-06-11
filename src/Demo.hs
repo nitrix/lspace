@@ -23,7 +23,7 @@ demoShips = M.fromList $ [(0, demoAtlantis)]
 
 demoAtlantis :: Ship
 demoAtlantis = MkShip
-    { _shipCoordinate = coordinate 0 0
+    { _shipCoordinate = coordinate 2 2
     , _shipGrid = G.fromList $
         [ (0, 0, 0)
         , (1, 0, 1)
@@ -38,7 +38,7 @@ demoAtlantis = MkShip
 demoObjects :: WorldObjects
 demoObjects = M.fromList $
     [ (0, defaultObject & \s -> s { objId = 0, objShipId = 0 })
-    , (1, playerObject defaultObject defaultPlayer & \s -> s { objCoordinate = coordinate 1 0, objId = 1, objShipId = 0 })
+    , (1, playerObject defaultObject defaultPlayer & \s -> s { objShipCoordinate = coordinate 1 0, objId = 1, objShipId = 0 })
     ]
 
 demoGame :: Game

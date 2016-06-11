@@ -12,11 +12,11 @@ import Types.Sprite
 import Types.Id
 
 data Object = MkObject
-    { objCoordinate :: Coordinate
-    , objFacing     :: Direction
+    { objFacing     :: Direction
     , objId         :: ObjectId
     , objMass       :: Int
     , objMsg        :: Message -> State Object [Message]
+    , objShipCoordinate :: Coordinate
     , objShipId     :: ShipId
     , objSolid      :: Bool
     , objSprite     :: Sprite
@@ -24,11 +24,11 @@ data Object = MkObject
 
 defaultObject :: Object
 defaultObject = MkObject
-    { objCoordinate = coordinate 0 0
-    , objFacing     = South
+    { objFacing     = South
     , objId         = 0
     , objMass       = 1
     , objMsg        = const $ return []
+    , objShipCoordinate = coordinate 0 0
     , objShipId     = 0
     , objSolid      = True
     , objSprite     = defaultSprite

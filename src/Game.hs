@@ -49,7 +49,7 @@ gameAdd obj coord = do
     -- Set the next object id
     modify $ gameWorld . worldNextObjId +~ 1
     -- Save the object
-    modify $ gameWorld . worldObjects %~ M.insert nextObjId (obj { objId = nextObjId, objCoordinate = coordinate gx gy })
+    modify $ gameWorld . worldObjects %~ M.insert nextObjId (obj { objId = nextObjId, objShipCoordinate = coordinate gx gy })
     -- Save the modified/new ship
     modify $ gameWorld . worldShips %~ M.insertWith
         (\_ old -> old & shipGrid %~ G.insert gx gy nextObjId & shipMass %~ (+) (objMass obj)) sid newShip
@@ -95,13 +95,13 @@ gameMove oid direction = do
             Nothing -> return ()
             Just ship -> do
                 -- The most important, the previous and new coordinates
-                let (x, y)       = objCoordinate obj ^. coordinates
-                let (newX, newY) = coordinateMove direction (objCoordinate obj) ^. coordinates
+                let (x, y)       = objShipCoordinate obj ^. coordinates
+                let (newX, newY) = coordinateMove direction (objShipCoordinate obj) ^. coordinates
 
                 -- Calculate what the new grid and ship would look like
                 let newGrid = G.insert newX newY oid $ G.delete x y oid (ship ^. shipGrid)
                 let newShip = shipGrid .~ newGrid $ ship
-                let newObj  = obj { objCoordinate = coordinate newX newY }
+                let newObj  = obj { objShipCoordinate = coordinate newX newY }
 
                 -- Update the object while also paying attention to collisions
                 let objsAtNewLocation = catMaybes $ flip M.lookup objects <$> G.lookup newX newY (ship ^. shipGrid)
