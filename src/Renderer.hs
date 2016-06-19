@@ -8,7 +8,6 @@ import Control.Lens
 import Control.Monad.Reader
 import Data.IORef
 import Data.List
-import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Vector.Storable as VS
 import Foreign.C.Types
@@ -21,6 +20,7 @@ import System.Random
 
 import Camera
 import qualified Grid as G
+import Link
 import Types.Cache
 import Types.Coordinate
 import Types.Environment
@@ -72,23 +72,37 @@ subRenderWorld game = do
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
     
-    -- TODO: I feel like this could be rewritten more nicely
-    let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
-
     -- TODO: Abandon hopes whoever wants to update this monster
+    prethings <- catMaybes . concat <$> (forM ships $ \ship -> do
+        let (scx, scy) = view (H.shipCoordinate . coordinates) ship
+        let grid       = view H.shipGrid ship
+        let range      = ( cameraX - scx
+                         , cameraY - scy
+                         , (cameraX - scx) + (cameraCoordMaxX - cameraX)
+                         , (cameraY - scy) + (cameraCoordMaxY - cameraY)
+                         )
+        
+        forM (G.range range grid) $ \(x, y, v) -> do
+            rv <- lift $ readLink v
+            return $ (\o -> (coordinate (scx+x) (scy+y), o)) <$> rv
+        )
+
+    {-
     let things = concat $
                  map (\s -> let sc = view H.shipCoordinate s in
                     map (\(x, y, o) ->
                         (coordinate (view coordinateX sc + x) (view coordinateY sc + y), o)
-                    ) $
-                    catMaybes $
-                    (\(x, y, oid) -> fmap (x,y,) (M.lookup oid objects)) <$> G.range (
+                    ) $ map _ $
+                    G.range (
                         cameraX - view coordinateX sc,
                         cameraY - view coordinateY sc,
                         (cameraX - view coordinateX sc) + (cameraCoordMaxX - cameraX),
                         (cameraY - view coordinateY sc) + (cameraCoordMaxY - cameraY)
                     ) (view H.shipGrid s)
-                 ) $ M.elems ships :: [(Coordinate, Object)]
+                 ) ships :: [(Coordinate, Object)]
+    -}
+
+    let things = prethings
 
     -- Collect renderables, because of zIndex
     -- TODO: We might have to take "things" large than is visible on the screen if we have very large
@@ -114,11 +128,11 @@ subRenderWorld game = do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
     
     where
+        (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
         viewport = game ^. gameCamera . cameraViewport
         cameraX  = game ^. gameCamera . cameraCoordinate . coordinateX
         cameraY  = game ^. gameCamera . cameraCoordinate . coordinateY
         ships    = game ^. gameWorld  . worldShips
-        objects  = game ^. gameWorld  . worldObjects
 
 subRenderVoid :: Game -> EnvironmentT IO ()
 subRenderVoid game = do

@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Types.Object
     ( Object(..)
     , defaultObject
@@ -5,33 +7,48 @@ module Types.Object
     ) where
 
 import Control.Monad.State
+import qualified Data.Aeson as JSON
+import qualified Data.Aeson.Types as JSON
 
 import Types.Coordinate
 import Types.Message
 import Types.Sprite
-import Types.Id
 
 data Object = MkObject
-    { objFacing     :: Direction
-    , objId         :: ObjectId
-    , objMass       :: Int
-    , objMsg        :: Message -> State Object [Message]
+    { objFacing         :: Direction
+    , objMass           :: Int
+    , objMsg            :: Message -> State Object [Message]
     , objShipCoordinate :: Coordinate
-    , objShipId     :: ShipId
-    , objSolid      :: Bool
-    , objSprite     :: Sprite
-    } 
+    , objSolid          :: Bool
+    , objSprite         :: Sprite
+    , objInnerToJson    :: [JSON.Value]
+    , objInnerFromJson  :: JSON.Value -> JSON.Result Object
+    }
+
+{-
+instance JSON.FromJSON Object where
+    parseJSON o = do
+        mass   <- o JSON..: "mass"
+        facing <- o JSON..: "facing"
+        return $ defaultObject { objMass = mass{-, objFacing = facing -}}
+-}
+
+instance JSON.ToJSON Object where
+    toJSON o = JSON.object $ [ "facing" JSON..= objFacing o
+                             , "mass"   JSON..= objMass o
+                             , "inner"  JSON..= objInnerToJson o
+                             ]
 
 defaultObject :: Object
 defaultObject = MkObject
-    { objFacing     = South
-    , objId         = 0
-    , objMass       = 1
-    , objMsg        = const $ return []
+    { objFacing         = South
+    , objMass           = 1
+    , objMsg            = const $ return []
     , objShipCoordinate = coordinate 0 0
-    , objShipId     = 0
-    , objSolid      = True
-    , objSprite     = defaultSprite
+    , objSolid          = True
+    , objSprite         = defaultSprite
+    , objInnerToJson    = [JSON.Null]
+    , objInnerFromJson  = const $ JSON.Success defaultObject
     }
 
 -- TODO: Lenses for all of those!
@@ -49,4 +66,4 @@ fantasticObjMsg handler builder inner msg = do
         return msgs
 
 instance Show Object where
-    show o = "{Object #" ++ show (objId o) ++ "}"
+    show _ = "{Object}"

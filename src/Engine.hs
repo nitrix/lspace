@@ -31,7 +31,7 @@ engineInit game = do
 engineHandleEvent :: Environment -> Event -> StateT Game IO Bool
 engineHandleEvent env event = do
     case eventPayload event of
-        KeyboardEvent d      -> state $ runState (engineHandleKeyboardEvent d)
+        KeyboardEvent d      -> engineHandleKeyboardEvent d
         WindowResizedEvent d -> engineHandleWindowResizedEvent env d
         QuitEvent            -> return True
         _                    -> return False
@@ -52,7 +52,7 @@ engineHandleWindowResizedEvent env wred = do
     return False
 
 -- | This function handles keyboard events in the engine
-engineHandleKeyboardEvent :: KeyboardEventData -> State Game Bool
+engineHandleKeyboardEvent :: KeyboardEventData -> StateT Game IO Bool
 engineHandleKeyboardEvent ked = do
     -- Modifier keys
     case keycode of
@@ -76,7 +76,7 @@ engineHandleKeyboardEvent ked = do
         keycode     = keysymKeycode keysym       -- ^ Which character is received from the operating system
         -- scancode    = keysymScancode keysym      -- ^ Physical key location as it would be on a US QWERTY keyboard
 
-engineHandleBareKeycode :: Keycode -> State Game Bool
+engineHandleBareKeycode :: Keycode -> StateT Game IO Bool
 engineHandleBareKeycode keycode = do
     player <- gets $ view gamePlayer
     shift  <- gets $ view gameKeyShift

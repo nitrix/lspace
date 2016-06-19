@@ -41,7 +41,7 @@ uiMenuOptions ty = case ty of
         , "[w] Wall"
         ]
 
-uiMenuInterceptKeycode :: Keycode -> State Game (Keycode, Bool)
+uiMenuInterceptKeycode :: Keycode -> StateT Game IO (Keycode, Bool)
 uiMenuInterceptKeycode keycode = do
     modals <- view (gameUi . uiVisible) <$> S.get
     
@@ -69,7 +69,7 @@ uiMenuInterceptKeycode keycode = do
     return $ foldl' (biliftA2 min (||)) (keycode, False) results
 
     where
-        decisive :: State Game () -> State Game (Keycode, Bool)
+        decisive :: StateT Game IO () -> StateT Game IO (Keycode, Bool)
         decisive f = f >> (hook $ gameUi %~ uiMenuClear)
         terminate  = return (KeycodeUnknown, True)
         ignore     = return (keycode, False)

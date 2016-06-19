@@ -12,6 +12,8 @@ module Types.Coordinate
     ) where
 
 import Control.Lens
+import qualified Data.Aeson as JSON
+import qualified Data.Text as T
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 import Prelude
@@ -21,6 +23,9 @@ data Direction = North
                | South
                | West
                deriving (Show, Bounded, Enum)
+
+instance JSON.ToJSON Direction where
+    toJSON = JSON.String . T.pack . show
 
 newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show)
 

@@ -2,31 +2,30 @@
 
 module Demo
     ( demoGame
-    , demoObjects
     , demoShips
     ) where
 
 import Control.Lens
-import qualified Data.Map as M
 import Linear (V2(V2))
 
 import qualified Grid as G
 import Object.Player
 import Types.Coordinate
 import Types.Game
+import Types.Link
 import Types.Object
 import Types.Ship
 import Types.World
 
 demoShips :: WorldShips
-demoShips = M.fromList $ [(0, demoAtlantis)]
+demoShips = [demoAtlantis]
 
 demoAtlantis :: Ship
 demoAtlantis = MkShip
     { _shipCoordinate = coordinate 2 2
     , _shipGrid = G.fromList $
-        [ (0, 0, 0)
-        , (1, 0, 1)
+        [ (0, 0, LinkId 0)
+        , (1, 0, LinkId 1)
         ]
     , _shipId        = 0
     , _shipMass      = 2
@@ -35,17 +34,10 @@ demoAtlantis = MkShip
     , _shipDimension = V2 0 0
     }
 
-demoObjects :: WorldObjects
-demoObjects = M.fromList $
-    [ (0, defaultObject & \s -> s { objId = 0, objShipId = 0 })
-    , (1, playerObject defaultObject defaultPlayer & \s -> s { objShipCoordinate = coordinate 1 0, objId = 1, objShipId = 0 })
-    ]
-
 demoGame :: Game
 demoGame = defaultGame &~ do
-    gamePlayer .= 1
+    gamePlayer .= LinkId 1
     zoom gameWorld $ do
-        worldShips      .= demoShips
-        worldObjects    .= demoObjects
-        worldNextObjId  .= 2
-        worldNextShipId .= 1
+        worldShips .= demoShips
+
+-- playerObject defaultObject defaultPlayer & \s -> s { objShipCoordinate = coordinate 1 0 

@@ -13,9 +13,11 @@ cabal-version:       >=1.10
 
 executable lspace
   main-is:             Main.hs
-  build-depends:       base       >= 4.8      && < 4.9
+  build-depends:       aeson      >= 0.11.2.0 && < 0.11.3.0
+                     , base       >= 4.8      && < 4.9
                      , bifunctors >= 5.2      && < 5.3
                      , containers >= 0.5.6.2  && < 0.5.7.0
+                     , directory  >= 6.12.2   && < 6.13.0
 --                     , data-hash  >= 0.2.0.1  && < 0.2.1.0
 --                     , ekg        >= 0.4.0.9  && < 0.4.1.0
 --                     , ekg-json   >= 0.1.0.1  && < 0.1.1.0
@@ -37,6 +39,7 @@ executable lspace
                      , Engine
                      , Game
                      , Grid
+                     , Link
                      , Renderer
 
                      -- Objects
@@ -51,7 +54,7 @@ executable lspace
                      , Types.Coordinate
                      , Types.Environment
                      , Types.Game
-                     , Types.Id
+                     , Types.Link
                      , Types.Message
                      , Types.Object
                      , Types.Ship

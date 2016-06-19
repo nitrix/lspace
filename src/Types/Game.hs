@@ -12,7 +12,8 @@ module Types.Game
 import Control.Lens
 
 import Camera
-import Types.Id
+import Types.Link
+import Types.Object
 import Types.Ui
 import Types.World
 
@@ -21,7 +22,7 @@ data Game = MkGame
     { _gameCamera   :: Camera
     , _gameKeyAlt   :: Bool
     , _gameKeyShift :: Bool
-    , _gamePlayer   :: ObjectId
+    , _gamePlayer   :: Link Object
     , _gameUi       :: Ui
     , _gameWorld    :: World
     }
@@ -30,7 +31,7 @@ data Game = MkGame
 gameCamera   :: Lens' Game Camera
 gameKeyAlt   :: Lens' Game Bool
 gameKeyShift :: Lens' Game Bool
-gamePlayer   :: Lens' Game ObjectId
+gamePlayer   :: Lens' Game (Link Object)
 gameUi       :: Lens' Game Ui
 gameWorld    :: Lens' Game World
 gameCamera   = lens _gameCamera   (\s x -> s { _gameCamera   = x })
@@ -46,7 +47,7 @@ defaultGame = MkGame
     { _gameCamera   = defaultCamera
     , _gameKeyAlt   = False
     , _gameKeyShift = False
-    , _gamePlayer   = 0
+    , _gamePlayer   = LinkId 0
     , _gameUi       = defaultUi
     , _gameWorld    = defaultWorld
     }
