@@ -6,20 +6,24 @@ module Types.Cache
     ) where
 
 import Control.Lens
+import qualified Data.Sequence as S
 import qualified Data.Map as M
 import qualified SDL as SDL
 
 import Types.Coordinate
+import Types.Link
 
 data Cache = MkCache
     { _cacheChunks :: M.Map Coordinate SDL.Texture
     , _cacheStars  :: [SDL.Texture]
+    , _cacheLinks  :: S.Seq Linkage
     }
 
 defaultCache :: Cache
 defaultCache = MkCache
     { _cacheChunks = M.empty
     , _cacheStars  = []
+    , _cacheLinks  = S.empty
     }
 
 cacheChunks :: Lens' Cache (M.Map Coordinate SDL.Texture)
