@@ -1,3 +1,5 @@
+{-# LANGUAGE ImpredicativeTypes #-}
+
 module Types.Cache
     ( Cache(..)
     , defaultCache
@@ -16,7 +18,7 @@ import Types.Link
 data Cache = MkCache
     { _cacheChunks :: M.Map Coordinate SDL.Texture
     , _cacheStars  :: [SDL.Texture]
-    , _cacheLinks  :: S.Seq Linkage
+    , _cacheLinks  :: S.Seq (forall a. Link a)
     }
 
 defaultCache :: Cache
