@@ -31,5 +31,7 @@ defaultCache = MkCache
 
 cacheChunks :: Lens' Cache (M.Map Coordinate SDL.Texture)
 cacheStars  :: Lens' Cache [SDL.Texture]
+cacheLinks  :: Lens' Cache (S.Seq AnyIORef)
 cacheChunks = lens _cacheChunks (\s x -> s { _cacheChunks = x })
 cacheStars  = lens _cacheStars  (\s x -> s { _cacheStars  = x })
+cacheLinks  = lens _cacheLinks  (\s x -> s { _cacheLinks  = x })
