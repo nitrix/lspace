@@ -31,7 +31,14 @@ instance JSON.FromJSON Direction where
     parseJSON (JSON.String s) = return $ read $ T.unpack s
     parseJSON _ = error "Unable to parse JSON for Direction"
 
-newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show)
+instance JSON.ToJSON Coordinate where
+    toJSON c = JSON.String . T.pack . show $ getCoordinate c
+
+instance JSON.FromJSON Coordinate where
+    parseJSON (JSON.String s) = return $ read $ T.unpack s
+    parseJSON _ = error "Unable to parse JSON for Coordinate"
+
+newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show, Read)
 
 -- Lenses
 coordinateX :: Lens' Coordinate Int

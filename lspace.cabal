@@ -40,14 +40,8 @@ executable lspace
                      , Game
                      , Grid
                      , Link
+                     , Object
                      , Renderer
-
-                     -- Objects
-                     , Object.Box
-                     , Object.Floor
-                     , Object.Plant
-                     , Object.Player
-                     , Object.Wall
 
                      -- Types
                      , Types.Cache

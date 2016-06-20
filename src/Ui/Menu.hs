@@ -7,10 +7,6 @@ import Data.List
 import SDL
 
 import Game
-import Object.Box
--- import Object.Floor
--- import Object.Plant
--- import Object.Wall
 import Types.Coordinate
 import Types.Game
 import Types.Object
@@ -49,14 +45,14 @@ uiMenuInterceptKeycode keycode = do
         case modal of
             MkUiTypeMenu UiMenuBuild ->
                 case keycode of
-                    KeycodeB -> decisive $ gameAdd (boxObject defaultObject defaultBox) (coordinate 0 1)
+                    KeycodeB -> ignore -- decisive $ gameAdd (boxObject defaultObject defaultBox) (coordinate 0 1)
                     KeycodeF -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ floorObject defaultObject defaultFloor
                     KeycodeP -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ plantObject defaultObject defaultPlant
                     KeycodeW -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ wallObject defaultObject defaultWall
                     _        -> ignore
             MkUiTypeMenu UiMenuMain ->
                 case keycode of
-                    KeycodeB -> hook $ gameUi %~ uiMenuSwitch UiMenuBuild
+                    KeycodeB -> ignore -- hook $ gameUi %~ uiMenuSwitch UiMenuBuild
                     KeycodeQ -> hook $ gameUi %~ uiMenuSwitch UiMenuQuitConfirm
                     _        -> ignore
             MkUiTypeMenu UiMenuQuitConfirm ->

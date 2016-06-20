@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Types.Sprite
     ( Sprite
     , ZIndex(..)
@@ -5,6 +7,9 @@ module Types.Sprite
     , sprite
     , spritePart
     ) where
+
+import qualified Data.Aeson as J
+import GHC.Generics
 
 import Types.Coordinate
 
@@ -15,7 +20,10 @@ data ZIndex = ZGround
             | ZOnGround
             | ZOnTop
             | ZInAir
-            deriving (Eq, Ord, Show)
+            deriving (Eq, Ord, Show, Read, Generic)
+
+instance J.ToJSON ZIndex
+instance J.FromJSON ZIndex
 
 sprite :: Int -> Int -> ZIndex -> Sprite
 sprite x y z = [spritePart 0 0 x y z]

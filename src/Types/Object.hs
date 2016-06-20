@@ -1,69 +1,64 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
-module Types.Object
-    ( Object(..)
-    , defaultObject
-    , fantasticObjMsg
-    ) where
+module Types.Object where
 
-import Control.Monad.State
 import qualified Data.Aeson as J
+import GHC.Generics
 
 import Types.Coordinate
-import Types.Message
 import Types.Sprite
 
-data Object = MkObject
+data ObjectCommon = MkObjectCommon
     { objFacing         :: Direction
-    , objInnerToJson    :: J.Value
-    , objInnerFromJson  :: J.Value -> J.Result Object
     , objMass           :: Int
-    , objMsg            :: Message -> State Object [Message]
     , objShipCoordinate :: Coordinate
     , objSolid          :: Bool
-    , objSprite         :: Sprite
-    , objType           :: String
-    }
+    } deriving Generic
 
-instance J.FromJSON Object where
-    parseJSON (J.Object o) = do
-        theMass   <- o J..: "mass"
-        theFacing <- o J..: "facing"
-        return $ defaultObject { objMass = theMass, objFacing = theFacing }
-    parseJSON _ = error "Unable to parse the JSON for Object"
+data Object = MkObject ObjectCommon ObjectInfo deriving Generic
+data ObjectInfo = ObjectBox     Box
+                | ObjectFloor
+                | ObjectPlant
+                | ObjectPlayer  Player
+                | ObjectWall    Wall
+                | ObjectUnknown
+                deriving Generic
 
-instance J.ToJSON Object where
-    toJSON o = J.object $ [ "facing" J..= objFacing o
-                          , "mass"   J..= objMass o
-                          , "inner"  J..= objInnerToJson o
-                          ]
+data Box      = MkBox    { _boxState     :: BoxState } deriving Generic
+data Player   = MkPlayer { _playerHealth :: Int }      deriving Generic
+data Wall     = MkWall   { _wallType     :: WallType } deriving Generic
+
+data BoxState = BoxOpened | BoxClosed deriving Generic
+data WallType = WallTypeHorizontal deriving Generic
+
+instance J.FromJSON Box
+instance J.FromJSON BoxState
+instance J.FromJSON Object
+instance J.FromJSON ObjectInfo
+instance J.FromJSON ObjectCommon
+instance J.FromJSON Player
+instance J.FromJSON Wall
+instance J.FromJSON WallType
+
+instance J.ToJSON Box
+instance J.ToJSON BoxState
+instance J.ToJSON Object
+instance J.ToJSON ObjectInfo
+instance J.ToJSON ObjectCommon
+instance J.ToJSON Player
+instance J.ToJSON Wall
+instance J.ToJSON WallType
 
 defaultObject :: Object
 defaultObject = MkObject
+    ( MkObjectCommon
     { objFacing         = South
-    , objInnerToJson    = J.Null
-    , objInnerFromJson  = const $ J.Success defaultObject
     , objMass           = 1
-    , objMsg            = const $ return []
     , objShipCoordinate = coordinate 0 0
     , objSolid          = True
-    , objSprite         = defaultSprite
-    , objType           = "default"
-    }
-
--- TODO: Lenses for all of those!
-
--- This needs a better name
-fantasticObjMsg :: (Message -> State inner [Message]) -- Object's message handler
-                -> (Object -> inner -> Object)        -- Object's builder, trapping an `inner` type
-                -> inner                              -- The `inner` in question
-                -> Message -> State Object [Message]  -- Resulting type for the record field
-
-fantasticObjMsg handler builder inner msg = do
-        let (msgs, newInner) = runState (handler msg) inner
-        o <- get
-        put $ builder o newInner
-        return msgs
+    } )
+    ObjectUnknown
 
 instance Show Object where
     show _ = "{Object}"

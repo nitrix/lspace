@@ -21,11 +21,11 @@ import System.Random
 import Camera
 import qualified Grid as G
 import Link
+import Object
 import Types.Cache
 import Types.Coordinate
 import Types.Environment
 import Types.Game
-import Types.Object
 import qualified Types.Ship as H
 import Types.Ui
 import Types.World
