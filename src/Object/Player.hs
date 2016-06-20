@@ -9,7 +9,6 @@ import Types.Sprite
 
 data Player = MkPlayer
     { _playerHealth :: Int
-    , _playerFacing :: Direction
     }
 
 -- This only initializes the original object; it is NOT a permanent binding that everytime
@@ -24,7 +23,6 @@ playerObject obj p = obj
 defaultPlayer :: Player
 defaultPlayer = MkPlayer 
     { _playerHealth = 100
-    , _playerFacing = South
     }
 
 playerSprite :: Object -> Sprite

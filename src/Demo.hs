@@ -9,11 +9,9 @@ import Control.Lens
 import Linear (V2(V2))
 
 import qualified Grid as G
-import Object.Player
 import Types.Coordinate
 import Types.Game
 import Types.Link
-import Types.Object
 import Types.Ship
 import Types.World
 

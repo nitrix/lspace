@@ -22,10 +22,14 @@ data Direction = North
                | East
                | South
                | West
-               deriving (Show, Bounded, Enum)
+               deriving (Show, Read, Bounded, Enum)
 
 instance JSON.ToJSON Direction where
     toJSON = JSON.String . T.pack . show
+
+instance JSON.FromJSON Direction where
+    parseJSON (JSON.String s) = return $ read $ T.unpack s
+    parseJSON _ = error "Unable to parse JSON for Direction"
 
 newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show)
 
