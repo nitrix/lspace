@@ -1,4 +1,4 @@
-{-# LANGUAGE ImpredicativeTypes #-}
+{-# LANGUAGE ExistentialQuantification #-}
 
 module Types.Cache
     ( Cache(..)
@@ -8,17 +8,18 @@ module Types.Cache
     ) where
 
 import Control.Lens
+import Data.IORef
 import qualified Data.Sequence as S
 import qualified Data.Map as M
 import qualified SDL as SDL
 
 import Types.Coordinate
-import Types.Link
 
+data AnyIORef = forall a. MkAnyIORef (IORef a)
 data Cache = MkCache
     { _cacheChunks :: M.Map Coordinate SDL.Texture
     , _cacheStars  :: [SDL.Texture]
-    , _cacheLinks  :: S.Seq (forall a. Link a)
+    , _cacheLinks  :: S.Seq AnyIORef
     }
 
 defaultCache :: Cache
