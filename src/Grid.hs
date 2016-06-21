@@ -1,5 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Grid where
 
@@ -10,14 +11,18 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
 import Prelude hiding (lookup)
 import qualified Data.List as L
+import GHC.Generics
+import qualified Aeson.
 
 type Region k = (k, k, k, k)
 type ChunkCoord k = (k, k)
 type Chunk v = V.Vector [v]
-type Grid k v = M.Map (ChunkCoord k) (Chunk v)
+newtype Grid k v = MkGrid { runGrid :: M.Map (ChunkCoord k) (Chunk v) } deriving Generic
+
+instance J.FromJSON
 
 empty :: Grid k v
-empty = M.empty
+empty = MkGrid M.empty
 
 emptyChunk :: Chunk v
 emptyChunk = V.replicate (chunkSize * chunkSize) []
@@ -38,22 +43,22 @@ idx x y = fromIntegral $ iy * chunkSize + ix
         iy = y `mod` chunkSize
 
 insert :: Integral k => k -> k -> v -> Grid k v -> Grid k v
-insert x y v g = M.insertWith (const insertedTo) (coord x y) (insertedTo emptyChunk) g
+insert x y v g = MkGrid $ M.insertWith (const insertedTo) (coord x y) (insertedTo emptyChunk) (runGrid g)
     where
         insertedTo o = V.unsafeUpd o [(idx x y, [v])]
 
 delete :: (Integral k, Eq v) => k -> k -> v -> Grid k v -> Grid k v
-delete x y v = M.update (\chunk -> Just $ V.modify go chunk) (coord x y)
+delete x y v g = MkGrid $ M.update (\chunk -> Just $ V.modify go chunk) (coord x y) (runGrid g)
     where
         go vec = VM.modify vec (L.delete v) (idx x y)
 
 lookup :: Integral k => k -> k -> Grid k v -> [v]
-lookup x y g = fromMaybe [] $ (\chunk -> chunk V.! idx x y) <$> M.lookup (coord x y) g
+lookup x y g = fromMaybe [] $ (\chunk -> chunk V.! idx x y) <$> M.lookup (coord x y) (runGrid g)
 
 range :: forall k v. (Show k, Integral k) => Region k -> Grid k v -> [(k, k, v)]
 range (lx, ly, hx, hy) g =
     foldl
-    (\acc c -> fromMaybe [] (triage . processChunk c <$> M.lookup c g) ++ acc)
+    (\acc c -> fromMaybe [] (triage . processChunk c <$> M.lookup c (runGrid g)) ++ acc)
     []
     chunkCoords
     where

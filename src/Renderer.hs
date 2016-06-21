@@ -72,8 +72,10 @@ subRenderWorld game = do
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
     
+    ships <- lift $ catMaybes <$> mapM readLink shipLinks
+
     -- TODO: Abandon hopes whoever wants to update this monster
-    prethings <- catMaybes . concat <$> (forM ships $ \ship -> do
+    things <- catMaybes . concat <$> (forM ships $ \ship -> do
         let (scx, scy) = view (H.shipCoordinate . coordinates) ship
         let grid       = view H.shipGrid ship
         let range      = ( cameraX - scx
@@ -84,6 +86,7 @@ subRenderWorld game = do
         
         forM (G.range range grid) $ \(x, y, v) -> do
             rv <- lift $ readLink v
+            lift $ print rv
             return $ (\o -> (coordinate (scx+x) (scy+y), o)) <$> rv
         )
 
@@ -101,8 +104,6 @@ subRenderWorld game = do
                     ) (view H.shipGrid s)
                  ) ships :: [(Coordinate, Object)]
     -}
-
-    let things = prethings
 
     -- Collect renderables, because of zIndex
     -- TODO: We might have to take "things" large than is visible on the screen if we have very large
@@ -129,10 +130,10 @@ subRenderWorld game = do
     
     where
         (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
-        viewport = game ^. gameCamera . cameraViewport
-        cameraX  = game ^. gameCamera . cameraCoordinate . coordinateX
-        cameraY  = game ^. gameCamera . cameraCoordinate . coordinateY
-        ships    = game ^. gameWorld  . worldShips
+        viewport  = game ^. gameCamera . cameraViewport
+        cameraX   = game ^. gameCamera . cameraCoordinate . coordinateX
+        cameraY   = game ^. gameCamera . cameraCoordinate . coordinateY
+        shipLinks = game ^. gameWorld  . worldShips
 
 subRenderVoid :: Game -> EnvironmentT IO ()
 subRenderVoid game = do

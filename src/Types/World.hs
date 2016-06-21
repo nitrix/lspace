@@ -8,7 +8,9 @@ module Types.World
 import Control.Lens
 import qualified Types.Ship as H
 
-type WorldShips = [H.Ship]
+import Types.Link
+
+type WorldShips = [Link H.Ship]
 
 data World = MkWorld
     { _worldShips :: WorldShips

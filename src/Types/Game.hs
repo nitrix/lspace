@@ -1,6 +1,5 @@
 module Types.Game
     ( Game
-    , defaultGame
     , gameCamera
     , gameKeyAlt
     , gameKeyShift
@@ -40,14 +39,3 @@ gameKeyShift = lens _gameKeyShift (\s x -> s { _gameKeyShift = x })
 gamePlayer   = lens _gamePlayer   (\s x -> s { _gamePlayer   = x })
 gameUi       = lens _gameUi       (\s x -> s { _gameUi       = x })
 gameWorld    = lens _gameWorld    (\s x -> s { _gameWorld    = x })
-
--- | Default engine state with an empty world, player and camera at 0,0
-defaultGame :: Game
-defaultGame = MkGame
-    { _gameCamera   = defaultCamera
-    , _gameKeyAlt   = False
-    , _gameKeyShift = False
-    , _gamePlayer   = LinkId 0
-    , _gameUi       = defaultUi
-    , _gameWorld    = defaultWorld
-    }

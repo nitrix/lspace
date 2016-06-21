@@ -24,4 +24,4 @@ readLink (LinkId i) = do
         print $ "Link #" ++ show i ++ " not found"
         return Nothing
     where
-        filepath = "data/links/" ++ show i ++ ".json"
+        filepath = "data/" ++ show i ++ ".json"

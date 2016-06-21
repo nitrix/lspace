@@ -37,7 +37,6 @@ executable lspace
   ghc-options:         -Wall -threaded -with-rtsopts=-T -O1
   -- ghc-options:         -threaded -with-rtsopts=-T -O -ddump-simpl -ddump-to-file -dsuppress-all
   other-modules:       Camera
-                     , Demo
                      , Engine
                      , Game
                      , Grid
