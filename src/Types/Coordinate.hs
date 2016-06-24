@@ -1,4 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Types.Coordinate
     ( Coordinate(getCoordinate) -- TODO: ewww
@@ -11,8 +13,8 @@ module Types.Coordinate
     , defaultCoordinate
     ) where
 
-import Control.Lens
-import qualified Data.Aeson as JSON
+import Control.Lens (Lens', lens, (%~), (&), view, set, (.~))
+import Data.Aeson as J
 import qualified Data.Text as T
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
@@ -24,19 +26,37 @@ data Direction = North
                | West
                deriving (Show, Read, Bounded, Enum)
 
-instance JSON.ToJSON Direction where
-    toJSON = JSON.String . T.pack . show
+instance ToJSON Direction where
+    toJSON = String . T.pack . show
 
-instance JSON.FromJSON Direction where
-    parseJSON (JSON.String s) = return $ read $ T.unpack s
+instance FromJSON Direction where
+    parseJSON (J.String s) = return $ read $ T.unpack s
     parseJSON _ = error "Unable to parse JSON for Direction"
 
-instance JSON.ToJSON Coordinate where
-    toJSON c = JSON.String . T.pack . show $ getCoordinate c
+instance ToJSON Coordinate where
+    toJSON c = String . T.pack . show $ getCoordinate c
 
-instance JSON.FromJSON Coordinate where
-    parseJSON (JSON.String s) = return $ read $ T.unpack s
+instance FromJSON Coordinate where
+    parseJSON (J.String s) = return $ read $ T.unpack s
     parseJSON _ = error "Unable to parse JSON for Coordinate"
+
+instance ToJSON (V2 Integer) where
+    toJSON (V2 x y) = object [("x", Number $ fromInteger x), ("y", Number $ fromInteger y)]
+
+instance ToJSON (V2 Int) where
+    toJSON (V2 x y) = object [("x", Number $ fromIntegral x), ("y", Number $ fromIntegral y)]
+
+instance FromJSON (V2 Integer) where
+    parseJSON (Object o) = do
+        x <- o .: "x"
+        y <- o .: "y"
+        return $ V2 x y
+
+instance FromJSON (V2 Int) where
+    parseJSON (Object o) = do
+        x <- o .: "x"
+        y <- o .: "y"
+        return $ V2 x y
 
 newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show, Read)
 

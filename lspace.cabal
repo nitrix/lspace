@@ -55,7 +55,6 @@ executable lspace
                      , Types.Ship
                      , Types.Sprite
                      , Types.Ui
-                     , Types.World
                     
                      -- Uis
                      , Ui.Menu

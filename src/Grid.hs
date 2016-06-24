@@ -1,6 +1,5 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Grid where
 
@@ -11,15 +10,11 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
 import Prelude hiding (lookup)
 import qualified Data.List as L
-import GHC.Generics
-import qualified Aeson.
 
 type Region k = (k, k, k, k)
 type ChunkCoord k = (k, k)
 type Chunk v = V.Vector [v]
-newtype Grid k v = MkGrid { runGrid :: M.Map (ChunkCoord k) (Chunk v) } deriving Generic
-
-instance J.FromJSON
+newtype Grid k v = MkGrid { runGrid :: M.Map (ChunkCoord k) (Chunk v) }
 
 empty :: Grid k v
 empty = MkGrid M.empty

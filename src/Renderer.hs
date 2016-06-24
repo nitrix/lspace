@@ -28,7 +28,6 @@ import Types.Environment
 import Types.Game
 import qualified Types.Ship as H
 import Types.Ui
-import Types.World
 import Ui.Menu
 
 renderGame :: Game -> EnvironmentT IO ()
@@ -133,7 +132,7 @@ subRenderWorld game = do
         viewport  = game ^. gameCamera . cameraViewport
         cameraX   = game ^. gameCamera . cameraCoordinate . coordinateX
         cameraY   = game ^. gameCamera . cameraCoordinate . coordinateY
-        shipLinks = game ^. gameWorld  . worldShips
+        shipLinks = game ^. gameShips
 
 subRenderVoid :: Game -> EnvironmentT IO ()
 subRenderVoid game = do

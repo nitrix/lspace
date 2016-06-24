@@ -1,41 +1,58 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Types.Game
     ( Game
     , gameCamera
     , gameKeyAlt
     , gameKeyShift
     , gamePlayer
+    , gameShips
     , gameUi
-    , gameWorld
     ) where
 
+import Data.Aeson
 import Control.Lens
 
 import Camera
 import Types.Link
-import Types.Object
+import Types.Object as O
+import Types.Ship
 import Types.Ui
-import Types.World
 
 -- | Contains the state of the engine (things that will change over time)
 data Game = MkGame
     { _gameCamera   :: Camera
     , _gameKeyAlt   :: Bool
     , _gameKeyShift :: Bool
-    , _gamePlayer   :: Link Object
+    , _gamePlayer   :: Link O.Object
+    , _gameShips    :: [Link Ship]
     , _gameUi       :: Ui
-    , _gameWorld    :: World
     }
 
 -- Lenses
 gameCamera   :: Lens' Game Camera
 gameKeyAlt   :: Lens' Game Bool
 gameKeyShift :: Lens' Game Bool
-gamePlayer   :: Lens' Game (Link Object)
+gamePlayer   :: Lens' Game (Link O.Object)
+gameShips    :: Lens' Game [Link Ship]
 gameUi       :: Lens' Game Ui
-gameWorld    :: Lens' Game World
 gameCamera   = lens _gameCamera   (\s x -> s { _gameCamera   = x })
 gameKeyAlt   = lens _gameKeyAlt   (\s x -> s { _gameKeyAlt   = x })
 gameKeyShift = lens _gameKeyShift (\s x -> s { _gameKeyShift = x })
 gamePlayer   = lens _gamePlayer   (\s x -> s { _gamePlayer   = x })
+gameShips    = lens _gameShips    (\s x -> s { _gameShips    = x })
 gameUi       = lens _gameUi       (\s x -> s { _gameUi       = x })
-gameWorld    = lens _gameWorld    (\s x -> s { _gameWorld    = x })
+
+instance FromJSON Game where    
+    parseJSON (Object o) = do
+        player <- o .: "player"
+        ships  <- o .: "ships"
+        return $ MkGame
+            { _gameCamera   = defaultCamera
+            , _gameKeyAlt   = False
+            , _gameKeyShift = False
+            , _gamePlayer   = player
+            , _gameShips    = ships
+            , _gameUi       = defaultUi
+            }
+    parseJSON _ = error "Unable to parse Game json"

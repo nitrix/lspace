@@ -2,10 +2,12 @@ module Game where
 
 import Control.Lens
 import Control.Monad.State
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as M
 import Data.Maybe
 
 import Camera
+import qualified Data.Aeson as J
 import qualified Grid as G
 import Types.Coordinate
 import Types.Game
@@ -13,7 +15,6 @@ import Types.Link
 import Types.Message
 import Types.Object (Object(..))
 import Types.Ship
-import Types.World
 
 gameAdd :: Object -> Coordinate -> StateT Game IO ()
 gameAdd obj coord = return ()
@@ -114,3 +115,8 @@ gameMove resObj direction = do
                     modify $ gameWorld . worldObjects %~ M.insert oid newObj
                     gameMsg Nothing (Just oid) [MovedMsg direction]
 -}
+
+gameLoad :: String -> IO Game
+gameLoad name = do 
+    json <- BL.readFile $ "data/" ++ name ++ "/" ++ "game.json"
+    return $ fromJust $ J.decode json

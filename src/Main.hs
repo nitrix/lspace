@@ -11,6 +11,7 @@ import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
 
 import Engine            (engineHandleEvent, engineInit)
+import Game              (gameLoad)
 import Renderer          (renderGame)
 import Types.Cache       (defaultCache, cacheStars)
 import Types.Environment (Environment(..), EnvironmentT)
@@ -45,8 +46,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     cacheRef <- newIORef defaultCache
 
     -- Load game
-    let game = MkGame {
-    }
+    game <- gameLoad "demo"
 
     -- Main loop
     runReaderT (engineInit game >>= mainLoop) $ MkEnvironment

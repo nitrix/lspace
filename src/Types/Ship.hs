@@ -1,27 +1,25 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Types.Ship where
 
-import Control.Lens
+import Control.Lens (Lens', lens)
 import Linear (V2(V2))
 import GHC.Generics
-import qualified Data.Aeson as J
-import qualified Data.Map as M
+import Data.Aeson
 
 import qualified Grid as G
 import Types.Coordinate
 import Types.Link
-import Types.Object
+import qualified Types.Object as O
 
-type ShipGrid = G.Grid Int (Link Object)
 data Ship = MkShip
     { _shipCoordinate :: Coordinate
-    , _shipGrid       :: ShipGrid
+    , _shipGrid       :: G.Grid Int (Link O.Object)
     , _shipId         :: Int
-    , _shipVelocityX  :: Int
-    , _shipVelocityY  :: Int
+    , _shipVelocity   :: V2 Int
     , _shipMass       :: Int
     , _shipDimension  :: V2 Integer
     } deriving Generic
@@ -32,17 +30,37 @@ defaultShip = MkShip
     , _shipGrid       = G.empty
     , _shipId         = 0
     , _shipMass       = 0
-    , _shipVelocityX  = 0
-    , _shipVelocityY  = 0
+    , _shipVelocity   = V2 0 0
     , _shipDimension  = V2 0 0
     }
 
-instance J.FromJSON Ship
-instance J.FromJSON ShipGrid
-instance J.ToJSON Ship
-instance J.ToJSON ShipGrid
+instance FromJSON Ship where
+    parseJSON (Object o) = do
+        sCoord     <- o .: "coordinate"
+        sId        <- o .: "id"
+        sMass      <- o .: "mass"
+        sVelocity  <- o .: "velocity"
+        sDimension <- o .: "dimension"
+        return $ MkShip
+            { _shipCoordinate = sCoord
+            , _shipGrid       = G.empty -- TODO, id system
+            , _shipId         = sId
+            , _shipVelocity   = sVelocity
+            , _shipMass       = sMass
+            , _shipDimension  = sDimension
+            }
+    parseJSON _ = error "Unable to parse Ship json"
 
-shipGrid :: Lens' Ship (G.Grid Int (Link Object))
+instance ToJSON Ship where
+    toJSON s = object
+        [ "coordinate" .= _shipCoordinate s
+        , "id"         .= _shipId s
+        , "mass"       .= _shipMass s
+        , "velocity"   .= _shipVelocity s
+        , "dimension"  .= _shipDimension s
+        ]
+
+shipGrid :: Lens' Ship (G.Grid Int (Link O.Object))
 shipGrid = lens _shipGrid (\s x -> s { _shipGrid = x })
 
 shipCoordinate :: Lens' Ship Coordinate
