@@ -10,10 +10,13 @@ module Types.Game
     , gameUi
     ) where
 
-import Data.Aeson
 import Control.Lens
+import Data.Aeson
+import Data.IORef
+import System.IO.Unsafe
 
 import Camera
+import Types.Cache
 import Types.Link
 import Types.Object as O
 import Types.Ship

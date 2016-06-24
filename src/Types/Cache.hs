@@ -4,7 +4,9 @@ module Types.Cache
     ( Cache(..)
     , defaultCache
     , cacheChunks
+    , cacheLinks
     , cacheStars
+    , AnyIORef(MkAnyIORef)
     ) where
 
 import Control.Lens

@@ -1,27 +1,62 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Link where
 
+import Control.Lens hiding ((|>))
 import qualified Data.Aeson as J
 import Data.IORef
+import Data.Sequence
 import qualified Data.ByteString.Lazy as LB
 import System.Directory
 import System.Mem.Weak
 
+import Types.Cache
+import Types.Game
 import Types.Link
 
-readLink :: J.FromJSON a => Link a -> IO (Maybe a)
-readLink (LinkRef i r) = do
-    xRef <- deRefWeak r
-    case xRef of
-        Nothing -> readLink (LinkId i)
-        Just x  -> readIORef x >>= return . Just
-readLink (LinkId i) = do
-    ok <- doesFileExist filepath
-    if ok
-    then do
-        json <- LB.readFile filepath
-        return $ J.decode json 
-    else do
-        print $ "Link #" ++ show i ++ " not found"
-        return Nothing
+readLink :: forall a. J.FromJSON a => IORef Cache -> Link a -> IO (Maybe a)
+readLink refCache (MkLink link) = do
+    -- Read the link unsafe bastraction
+    (i, r) <- readIORef link
+    case r of
+        -- Determines if we have a link reference
+        Nothing -> do
+            result <- loadFreshLinkId i
+            case result of
+                Nothing -> return Nothing
+                Just a  -> do
+                    writeIORef link a
+                    readLink refCache $ MkLink link
+        Just x  -> do
+            final <- deRefWeak x
+            -- Does the reference point to something that still exists
+            case final of
+                Just z  -> do
+                    v <- readIORef z
+                    return $ Just v
+                Nothing -> do
+                    result <- loadFreshLinkId i
+                    case result of
+                        Nothing -> return Nothing
+                        Just a  -> do
+                            writeIORef link a
+                            readLink refCache $ MkLink link
     where
-        filepath = "data/" ++ show i ++ ".json"
+        loadFreshLinkId :: Int -> IO (Maybe (Int, Maybe (Weak (IORef a))))
+        loadFreshLinkId i = do
+            ok <- doesFileExist filepath
+            if ok
+            then do
+                json <- LB.readFile filepath
+                case J.decode json of
+                    Nothing -> return Nothing
+                    Just d  -> do
+                        ref <- newIORef d
+                        modifyIORef refCache $ cacheLinks %~ (|> MkAnyIORef ref)
+                        weakRef <- mkWeakIORef ref (return ())
+                        return . Just $ (i, Just weakRef)
+            else do
+                print $ "Link #" ++ show i ++ " not found"
+                return Nothing
+            where
+                filepath = "data/" ++ show i ++ ".json"

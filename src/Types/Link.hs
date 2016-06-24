@@ -3,10 +3,11 @@ module Types.Link where
 import Data.Aeson as J
 import Data.IORef
 import System.Mem.Weak
+import System.IO.Unsafe
 
-data Link a = LinkId Int | LinkRef Int (Weak (IORef a))
+data Link a = MkLink (IORef (Int, Maybe (Weak (IORef a))))
 
 instance FromJSON (Link a) where
     parseJSON (J.Number n) = do
-        return $ LinkId $ truncate n
+        return $ MkLink $ unsafePerformIO $ newIORef $ (truncate n, Nothing)
     parseJSON _ = error "Unable to parse Link json"

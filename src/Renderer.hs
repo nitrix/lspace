@@ -70,8 +70,9 @@ subRenderWorld game = do
     renderer        <- asks envRenderer
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
+    cacheRef        <- asks envCacheRef
     
-    ships <- lift $ catMaybes <$> mapM readLink shipLinks
+    ships <- lift $ catMaybes <$> mapM (readLink cacheRef) shipLinks
 
     -- TODO: Abandon hopes whoever wants to update this monster
     things <- catMaybes . concat <$> (forM ships $ \ship -> do
@@ -84,7 +85,7 @@ subRenderWorld game = do
                          )
         
         forM (G.range range grid) $ \(x, y, v) -> do
-            rv <- lift $ readLink v
+            rv <- lift $ readLink cacheRef v
             lift $ print rv
             return $ (\o -> (coordinate (scx+x) (scy+y), o)) <$> rv
         )
