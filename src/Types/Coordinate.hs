@@ -40,24 +40,6 @@ instance FromJSON Coordinate where
     parseJSON (J.String s) = return $ read $ T.unpack s
     parseJSON _ = error "Unable to parse JSON for Coordinate"
 
-instance ToJSON (V2 Integer) where
-    toJSON (V2 x y) = object [("x", Number $ fromInteger x), ("y", Number $ fromInteger y)]
-
-instance ToJSON (V2 Int) where
-    toJSON (V2 x y) = object [("x", Number $ fromIntegral x), ("y", Number $ fromIntegral y)]
-
-instance FromJSON (V2 Integer) where
-    parseJSON (Object o) = do
-        x <- o .: "x"
-        y <- o .: "y"
-        return $ V2 x y
-
-instance FromJSON (V2 Int) where
-    parseJSON (Object o) = do
-        x <- o .: "x"
-        y <- o .: "y"
-        return $ V2 x y
-
 newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show, Read)
 
 -- Lenses

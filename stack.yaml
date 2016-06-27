@@ -4,7 +4,10 @@ packages:
 - location:
     git: https://github.com/nitrix/sdl2-image
     commit: 0808be3039ce362402166cfdd02fb74c6cd4a2a3
+- location:
+    git: https://github.com/nitrix/sdl2
+    commit: c1532a34f2a5a7fcfe22c80893ee83f8bd940223
 extra-deps:
-- sdl2-2.1.0
+- sdl2-2.1.1
 - sdl2-ttf-1.0.0
-resolver: lts-6.0
+resolver: nightly-2016-06-21 # previously lts-6.0

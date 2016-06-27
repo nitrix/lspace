@@ -5,8 +5,8 @@
 
 module Types.Ship where
 
-import Control.Lens (Lens', lens)
-import Linear (V2(V2))
+import Control.Lens (Lens', lens, view)
+import Linear (V2(V2), _x, _y)
 import GHC.Generics
 import Data.Aeson
 
@@ -52,8 +52,14 @@ instance ToJSON Ship where
         [ "coordinate" .= _shipCoordinate s
         , "grid"       .= _shipGrid s -- TODO
         , "mass"       .= _shipMass s
-        , "velocity"   .= _shipVelocity s
-        , "dimension"  .= _shipDimension s
+        , "velocity"   .= object
+            [ "x" .= (view _x $ _shipVelocity s)
+            , "y" .= (view _y $ _shipVelocity s)
+            ]
+        , "dimension"  .= object
+            [ "x" .= (view _x $ _shipDimension s)
+            , "y" .= (view _y $ _shipDimension s)
+            ]
         ]
 
 shipGrid :: Lens' Ship (G.Grid Int (Link O.Object))
