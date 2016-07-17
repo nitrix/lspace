@@ -50,7 +50,7 @@ delete x y v g = MkGrid $ M.update (\chunk -> Just $ V.modify go chunk) (coord x
 lookup :: Integral k => k -> k -> Grid k v -> [v]
 lookup x y g = fromMaybe [] $ (\chunk -> chunk V.! idx x y) <$> M.lookup (coord x y) (runGrid g)
 
-range :: forall k v. (Show k, Integral k) => Region k -> Grid k v -> [(k, k, v)]
+range :: forall k v. Integral k => Region k -> Grid k v -> [(k, k, v)]
 range (lx, ly, hx, hy) g =
     foldl
     (\acc c -> fromMaybe [] (triage . processChunk c <$> M.lookup c (runGrid g)) ++ acc)

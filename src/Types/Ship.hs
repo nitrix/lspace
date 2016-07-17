@@ -41,9 +41,9 @@ instance FromJSON Ship where
         return $ MkShip
             { _shipCoordinate = sCoord
             , _shipGrid       = G.empty -- TODO
-            -- , _shipVelocity   = sVelocity
+            , _shipVelocity   = V2 0 0
             , _shipMass       = sMass
-            -- , _shipDimension  = sDimension
+            , _shipDimension  = V2 0 0
             }
     parseJSON _ = error "Unable to parse Ship json"
 

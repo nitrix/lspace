@@ -7,7 +7,7 @@ import qualified Data.Aeson as J
 import GHC.Generics
 
 import Types.Coordinate
-import Types.Sprite
+-- import Types.Sprite
 
 data ObjectCommon = MkObjectCommon
     { objFacing         :: Direction

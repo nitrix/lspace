@@ -1,26 +1,26 @@
 module Game where
 
-import Control.Lens
+-- import Control.Lens
 import Control.Monad.State
 import qualified Data.ByteString.Lazy as BL
-import Data.IORef
-import qualified Data.Map as M
+-- import Data.IORef
+-- import qualified Data.Map as M
 import Data.Maybe
-import SDL
+-- import SDL
 
-import Camera
+-- import Camera
 import qualified Data.Aeson as J
-import qualified Grid as G
-import Types.Cache
+-- import qualified Grid as G
+-- import Types.Cache
 import Types.Coordinate
 import Types.Game
 import Types.Link
 import Types.Message
 import Types.Object (Object(..))
-import Types.Ship
+-- import Types.Ship
 
 gameAdd :: Object -> Coordinate -> StateT Game IO ()
-gameAdd obj coord = return ()
+gameAdd _ _ = return ()
 {-
 gameAdd obj coord = do
     (cx, cy)   <- gets $ view $ gameCamera . cameraCoordinate . coordinates
@@ -59,7 +59,7 @@ gameAdd obj coord = do
 -}
 
 gameMsg :: Maybe (Link Object) -> Maybe (Link Object) -> [Message] -> StateT Game IO ()
-gameMsg resObjFrom resObjTo msgs = return ()
+gameMsg _ _ _ = return ()
 {-
 gameMsg _ _ [] = return ()
 gameMsg _ Nothing _ = return () -- Replies to non-objects, e.g. direct calls to gameMove
@@ -75,7 +75,7 @@ gameMsg fromObj (Just toObj) (msg:msgs) = do
 -}
 
 gameRotate :: Link Object -> Direction -> StateT Game IO ()
-gameRotate resObj direction = do
+gameRotate _ _ = do
     return ()
 {-
     objects <- gets (view $ gameWorld . worldObjects)

@@ -6,10 +6,10 @@ import Data.Biapplicative
 import Data.List
 import SDL
 
-import Game
-import Types.Coordinate
+-- import Game
+-- import Types.Coordinate
 import Types.Game
-import Types.Object
+-- import Types.Object
 import Types.Ui
 
 uiMenuClear :: Ui -> Ui
@@ -65,8 +65,8 @@ uiMenuInterceptKeycode keycode = do
     return $ foldl' (biliftA2 min (||)) (keycode, False) results
 
     where
-        decisive :: StateT Game IO () -> StateT Game IO (Keycode, Bool)
-        decisive f = f >> (hook $ gameUi %~ uiMenuClear)
+        -- decisive :: StateT Game IO () -> StateT Game IO (Keycode, Bool)
+        -- decisive f = f >> (hook $ gameUi %~ uiMenuClear)
         terminate  = return (KeycodeUnknown, True)
         ignore     = return (keycode, False)
         hook f     = (KeycodeUnknown, False) <$ modify f

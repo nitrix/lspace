@@ -17,7 +17,6 @@ import Control.Monad.Trans
 import Control.Monad.Trans.State
 import Data.Aeson
 import Data.IORef
-import System.IO.Unsafe
 
 import Camera
 import Types.Cache
@@ -37,7 +36,7 @@ data Game = MkGame
     , _gameUi       :: Ui
     }
 
-newtype GameM a = GameM { getGame :: StateT Game IO a } deriving (Functor, Applicative, Monad)
+newtype GameM a = GameM (StateT Game IO a) deriving (Functor, Applicative, Monad)
 
 resolveLink :: FromJSON a => Link a -> GameM (Maybe a)
 resolveLink link = GameM $ lift $ do
