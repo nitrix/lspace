@@ -11,7 +11,6 @@ import System.Directory
 import System.Mem.Weak
 
 import Types.Cache
-import Types.Game
 import Types.Link
 
 readLink :: forall a. J.FromJSON a => IORef Cache -> Link a -> IO (Maybe a)

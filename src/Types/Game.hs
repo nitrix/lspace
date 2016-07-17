@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Types.Game
     ( Game
+    , GameM
     , gameCamera
     , gameKeyAlt
     , gameKeyShift
@@ -11,6 +13,8 @@ module Types.Game
     ) where
 
 import Control.Lens
+import Control.Monad.Trans
+import Control.Monad.Trans.State
 import Data.Aeson
 import Data.IORef
 import System.IO.Unsafe
@@ -21,6 +25,7 @@ import Types.Link
 import Types.Object as O
 import Types.Ship
 import Types.Ui
+import Link
 
 -- | Contains the state of the engine (things that will change over time)
 data Game = MkGame
@@ -31,6 +36,13 @@ data Game = MkGame
     , _gameShips    :: [Link Ship]
     , _gameUi       :: Ui
     }
+
+newtype GameM a = GameM { getGame :: StateT Game IO a } deriving (Functor, Applicative, Monad)
+
+resolveLink :: FromJSON a => Link a -> GameM (Maybe a)
+resolveLink link = GameM $ lift $ do
+    tmpCache <- newIORef defaultCache
+    readLink tmpCache link
 
 -- Lenses
 gameCamera   :: Lens' Game Camera

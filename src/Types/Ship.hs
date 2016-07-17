@@ -36,21 +36,21 @@ instance FromJSON Ship where
     parseJSON (Object o) = do
         sCoord     <- o .: "coordinate"
         sMass      <- o .: "mass"
-        sVelocity  <- o .: "velocity"
-        sDimension <- o .: "dimension"
+        -- sVelocity  <- o .: "velocity"
+        -- sDimension <- o .: "dimension"
         return $ MkShip
             { _shipCoordinate = sCoord
             , _shipGrid       = G.empty -- TODO
-            , _shipVelocity   = sVelocity
+            -- , _shipVelocity   = sVelocity
             , _shipMass       = sMass
-            , _shipDimension  = sDimension
+            -- , _shipDimension  = sDimension
             }
     parseJSON _ = error "Unable to parse Ship json"
 
 instance ToJSON Ship where
     toJSON s = object
         [ "coordinate" .= _shipCoordinate s
-        , "grid"       .= _shipGrid s -- TODO
+        -- , "grid"       .= _shipGrid s -- TODO
         , "mass"       .= _shipMass s
         , "velocity"   .= object
             [ "x" .= (view _x $ _shipVelocity s)

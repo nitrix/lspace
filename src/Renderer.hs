@@ -33,13 +33,16 @@ import Ui.Menu
 renderGame :: Game -> EnvironmentT IO ()
 renderGame game = do
     renderer <- asks envRenderer
+
     -- Let's prepare a new fresh screen
     rendererDrawColor renderer $= V4 0 0 0 0 -- black
     clear renderer
+
     -- Render various things
     subRenderVoid game
     subRenderWorld game
     subRenderUi game
+
     -- Present to the screen
     present renderer
 
