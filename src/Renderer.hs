@@ -89,7 +89,6 @@ subRenderWorld game = do
         
         forM (G.range range grid) $ \(x, y, v) -> do
             rv <- lift $ readLink cacheRef v
-            lift $ print rv
             return $ (\o -> (coordinate (scx+x) (scy+y), o)) <$> rv
         )
 

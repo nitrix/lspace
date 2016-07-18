@@ -1,6 +1,4 @@
 {-# LANGUAGE DeriveGeneric #-}
--- {-# LANGUAGE TypeSynonymInstances #-}
--- {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Types.Ship where
@@ -35,12 +33,13 @@ defaultShip = MkShip
 instance FromJSON Ship where
     parseJSON (Object o) = do
         sCoord     <- o .: "coordinate"
+        sDimension <- o .: "dimension"
+        sGrid      <- o .: "grid"
         sMass      <- o .: "mass"
         sVelocity  <- o .: "velocity"
-        sDimension <- o .: "dimension"
         return $ MkShip
             { _shipCoordinate = sCoord
-            , _shipGrid       = G.empty -- TODO
+            , _shipGrid       = sGrid
             , _shipVelocity   = sVelocity
             , _shipMass       = sMass
             , _shipDimension  = sDimension
@@ -50,7 +49,7 @@ instance FromJSON Ship where
 instance ToJSON Ship where
     toJSON s = object
         [ "coordinate" .= _shipCoordinate s
-        -- , "grid"       .= _shipGrid s -- TODO
+        , "grid"       .= _shipGrid s
         , "mass"       .= _shipMass s
         , "velocity"   .= _shipVelocity s
         , "dimension"  .= _shipDimension s

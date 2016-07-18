@@ -4,6 +4,7 @@
 module Types.Object where
 
 import qualified Data.Aeson as J
+import qualified Data.Aeson.Types as J
 import GHC.Generics
 
 import Types.Coordinate
@@ -29,7 +30,7 @@ data Box      = MkBox    { _boxState     :: BoxState } deriving Generic
 data Player   = MkPlayer { _playerHealth :: Int }      deriving Generic
 data Wall     = MkWall   { _wallType     :: WallType } deriving Generic
 
-data BoxState = BoxOpened | BoxClosed deriving Generic
+data BoxState = BoxClosed deriving Generic
 data WallType = WallTypeHorizontal deriving Generic
 
 instance J.FromJSON Box

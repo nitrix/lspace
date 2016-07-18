@@ -1,11 +1,17 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Grid where
 
+import Data.Aeson
+import Data.Aeson.Types
+import Data.Maybe
 import Data.Foldable (foldl')
 import Data.Maybe
 import qualified Data.Map as M
+import qualified Data.Text as T
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
 import Prelude hiding (lookup)
@@ -15,6 +21,26 @@ type Region k = (k, k, k, k)
 type ChunkCoord k = (k, k)
 type Chunk v = V.Vector [v]
 newtype Grid k v = MkGrid { runGrid :: M.Map (ChunkCoord k) (Chunk v) }
+
+instance (ToJSON k, ToJSON v, Show k, Integral k) => ToJSON (Grid k v) where
+    toJSON x = Array
+             $ V.fromList
+             $ map (\(x, y, v) -> object ["x" .= x, "y" .= y, "v" .= v])
+             $ toList x
+
+instance (FromJSON k, FromJSON v, Integral k) => FromJSON (Grid k v) where
+    parseJSON (Array a) = return
+                        $ fromList
+                        $ catMaybes
+                        $ map (\obj -> parseMaybe (\o -> do
+                            x <- o .: "x"
+                            y <- o .: "y"
+                            v <- o .: "v"
+                            return ((x, y, v) :: (k, k, v))
+                          ) obj)
+                        $ map (\x -> case x of Object o -> o; _ -> error "Non-object in Grid array json")
+                        $ V.toList a
+    parseJSON _ = error "Unable to parse Grid json"
 
 instance Show (Grid k v) where
     show = const "{Grid}"
@@ -30,6 +56,15 @@ chunkSize = 25
 
 fromList :: Integral k => [(k, k, v)] -> Grid k v
 fromList xs = foldl' (\g (x, y, v) -> insert x y v g) empty xs
+
+toList :: forall k v. Integral k => Grid k v -> [(k, k, v)]
+toList g = concatMap (\(chunkCoord, chunk) -> concatMap (\(i, vs) -> xy chunkCoord i vs) $ zip [1..] $ V.toList chunk) $ M.toList (runGrid g)
+    where
+        xy :: ChunkCoord k -> Int -> [v] -> [(k, k, v)]
+        xy (cx, cy) i vs = foldl' (\acc v -> (cx * chunkSize + ix, cy * chunkSize + iy, v) : acc) [] vs
+            where
+                ix = fromIntegral i `mod` chunkSize
+                iy = (fromIntegral i - ix) `div` chunkSize
 
 coord :: Integral k => k -> k -> ChunkCoord k
 coord x y = (x `div` chunkSize, y `div` chunkSize)

@@ -6,8 +6,7 @@ import Types.Sprite
 
 objSprite :: Object -> Sprite
 objSprite (MkObject _ (ObjectBox box)) = case _boxState box of
-    BoxOpened -> sprite 0 2 ZOnGround
-    BoxClosed -> sprite 0 1 ZOnGround
+    BoxClosed -> sprite 0 0 ZOnGround
 objSprite (MkObject _ ObjectFloor) = sprite 4 1 ZGround
 objSprite (MkObject _ ObjectPlant) = sprite 0 1 ZOnGround
 objSprite (MkObject common (ObjectPlayer _)) = case objFacing common of
