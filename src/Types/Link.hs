@@ -5,7 +5,7 @@ import Data.IORef
 import System.Mem.Weak
 import System.IO.Unsafe
 
-data Link a = MkLink (IORef (Int, Maybe (Weak (IORef a))))
+data Link a = MkLink {-# UNPACK #-} !(IORef (Int, Maybe (Weak (IORef a))))
 
 instance FromJSON (Link a) where
     parseJSON (J.Number n) = do

@@ -17,7 +17,7 @@ import qualified SDL as SDL
 
 import Types.Coordinate
 
-data AnyIORef = forall a. MkAnyIORef (IORef a)
+data AnyIORef = forall a. MkAnyIORef {-# UNPACK #-} !(IORef a)
 data Cache = MkCache
     { _cacheChunks :: M.Map Coordinate SDL.Texture
     , _cacheStars  :: [SDL.Texture]
