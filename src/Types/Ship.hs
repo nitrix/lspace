@@ -3,8 +3,7 @@
 
 module Types.Ship where
 
-import Control.Lens (Lens', lens, view)
-import Linear (V2(V2), _x, _y)
+import Control.Lens (Lens', lens)
 import GHC.Generics
 import Data.Aeson
 

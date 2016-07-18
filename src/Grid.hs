@@ -9,9 +9,9 @@ import Data.Aeson
 import Data.Aeson.Types
 import Data.Maybe
 import Data.Foldable (foldl')
-import Data.Maybe
+-- import Data.Maybe
 import qualified Data.Map as M
-import qualified Data.Text as T
+-- import qualified Data.Text as T
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
 import Prelude hiding (lookup)
@@ -22,11 +22,11 @@ type ChunkCoord k = (k, k)
 type Chunk v = V.Vector [v]
 newtype Grid k v = MkGrid { runGrid :: M.Map (ChunkCoord k) (Chunk v) }
 
-instance (ToJSON k, ToJSON v, Show k, Integral k) => ToJSON (Grid k v) where
-    toJSON x = Array
+instance (ToJSON k, ToJSON v, Integral k) => ToJSON (Grid k v) where
+    toJSON g = Array
              $ V.fromList
              $ map (\(x, y, v) -> object ["x" .= x, "y" .= y, "v" .= v])
-             $ toList x
+             $ toList g
 
 instance (FromJSON k, FromJSON v, Integral k) => FromJSON (Grid k v) where
     parseJSON (Array a) = return

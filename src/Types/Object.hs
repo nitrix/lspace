@@ -4,7 +4,6 @@
 module Types.Object where
 
 import qualified Data.Aeson as J
-import qualified Data.Aeson.Types as J
 import GHC.Generics
 
 import Types.Coordinate

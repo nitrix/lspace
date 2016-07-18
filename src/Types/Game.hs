@@ -13,18 +13,18 @@ module Types.Game
     ) where
 
 import Control.Lens
-import Control.Monad.Trans
+-- import Control.Monad.Trans
 import Control.Monad.Trans.State
 import Data.Aeson
-import Data.IORef
+-- import Data.IORef
 
 import Camera
-import Types.Cache
+-- import Types.Cache
 import Types.Link
 import Types.Object as O
 import Types.Ship
 import Types.Ui
-import Link
+-- import Link
 
 -- | Contains the state of the engine (things that will change over time)
 data Game = MkGame
