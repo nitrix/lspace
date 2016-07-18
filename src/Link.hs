@@ -5,7 +5,7 @@ module Link where
 import Control.Lens hiding ((|>))
 import qualified Data.Aeson as J
 import Data.IORef
-import Data.Sequence
+import Data.Sequence as S
 import qualified Data.ByteString.Lazy as LB
 import System.Directory
 import System.Mem.Weak
@@ -51,11 +51,14 @@ readLink refCache (MkLink link) = do
                     Nothing -> return Nothing
                     Just d  -> do
                         ref <- newIORef d
-                        modifyIORef refCache $ cacheLinks %~ (|> MkAnyIORef ref)
+
+                        modifyIORef refCache $ cacheLinks %~ \links ->
+                            (if S.length links > 100 then S.drop 1 links else links) |> MkAnyIORef ref
+
                         weakRef <- mkWeakIORef ref (return ())
                         return . Just $ (i, Just weakRef)
             else do
                 print $ "Link #" ++ show i ++ " not found"
                 return Nothing
             where
-                filepath = "data/" ++ show i ++ ".json"
+                filepath = "data/demo/" ++ show i ++ ".json" -- TODO: This has to be fixed

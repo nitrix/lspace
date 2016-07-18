@@ -37,7 +37,7 @@ instance ToJSON Coordinate where
     toJSON c = String . T.pack . show $ getCoordinate c
 
 instance FromJSON Coordinate where
-    parseJSON (J.String s) = return $ read $ T.unpack s
+    parseJSON (J.String s) = return $ Coordinate $ read $ T.unpack s
     parseJSON _ = error "Unable to parse JSON for Coordinate"
 
 newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show, Read)

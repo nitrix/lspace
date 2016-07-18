@@ -16,6 +16,9 @@ type ChunkCoord k = (k, k)
 type Chunk v = V.Vector [v]
 newtype Grid k v = MkGrid { runGrid :: M.Map (ChunkCoord k) (Chunk v) }
 
+instance Show (Grid k v) where
+    show = const "{Grid}"
+
 empty :: Grid k v
 empty = MkGrid M.empty
 

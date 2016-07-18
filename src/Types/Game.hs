@@ -38,10 +38,12 @@ data Game = MkGame
 
 newtype GameM a = GameM (StateT Game IO a) deriving (Functor, Applicative, Monad)
 
+{-
 resolveLink :: FromJSON a => Link a -> GameM (Maybe a)
 resolveLink link = GameM $ lift $ do
     tmpCache <- newIORef defaultCache
     readLink tmpCache link
+-}
 
 -- Lenses
 gameCamera   :: Lens' Game Camera
