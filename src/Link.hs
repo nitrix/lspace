@@ -14,9 +14,12 @@ import System.Mem.Weak
 import Types.Cache
 import Types.Link
 
+-- trace :: b -> a -> a
+-- trace = const id
+
 -- New %~ lens combinator that's strict (thanks to puregreen)
 data Id a = Id {runId :: !a} deriving Functor
-(%~!) :: forall c a a1 a2. ((a1 -> Id a2) -> a -> Id c) -> (a1 -> a2) -> a -> c
+(%~!) :: ((a -> Id b) -> c -> Id d) -> (a -> b) -> c -> d
 l %~! f = runId . l (Id . f)
 
 readLink :: forall a. J.FromJSON a => IORef Cache -> Link a -> IO (Maybe a)
