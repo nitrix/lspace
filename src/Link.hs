@@ -3,7 +3,6 @@
 
 module Link where
 
-import Debug.Trace
 import qualified Data.Aeson as J
 import Data.IORef
 import Data.Sequence as S
@@ -57,27 +56,22 @@ readLink refCache (MkLink link) = do
             ok <- doesFileExist filepath
             if ok
             then do
-                trace ("Loading link #" ++ show i) $ do
                 json <- LB.readFile filepath
                 case J.decode json of
                     Nothing -> do
-                        trace "Failed to load json" $ do
                         return Nothing
                     Just d  -> do
                         ref <- newIORef d
 
                         modifyIORef' refCache $ cacheLinks %~! \links -> (
                                                 if S.length links >= maxLinks
-                                                then (trace ("Kicking out an older link") $ S.drop 1 links)
+                                                then S.drop 1 links
                                                 else links
                                               ) |> MkAnyIORef ref
-
-                        trace ("Link #" ++ show i ++ " loaded") $ do
 
                         weakRef <- mkWeakIORef ref (return ())
                         return . Just $ (i, Just weakRef)
             else do
-                print $ "Link #" ++ show i ++ " not found"
                 return Nothing
             where
                 filepath = "data/demo/" ++ show i ++ ".json" -- TODO: This has to be fixed
