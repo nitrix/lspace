@@ -37,7 +37,7 @@ uiMenuOptions ty = case ty of
         , "[w] Wall"
         ]
 
-uiMenuInterceptKeycode :: Keycode -> StateT Game IO (Keycode, Bool)
+uiMenuInterceptKeycode :: Keycode -> StateT GameState IO (Keycode, Bool)
 uiMenuInterceptKeycode keycode = do
     modals <- view (gameUi . uiVisible) <$> S.get
     

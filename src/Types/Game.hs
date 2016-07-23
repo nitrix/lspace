@@ -3,7 +3,7 @@
 
 module Types.Game
     ( Game
-    , GameM
+    , GameState
     , gameCamera
     , gameKeyAlt
     , gameKeyShift
@@ -27,7 +27,7 @@ import Types.Ui
 -- import Link
 
 -- | Contains the state of the engine (things that will change over time)
-data Game = MkGame
+data GameState = MkGameState
     { _gameCamera   :: Camera
     , _gameKeyAlt   :: Bool
     , _gameKeyShift :: Bool
@@ -36,7 +36,7 @@ data Game = MkGame
     , _gameUi       :: Ui
     }
 
-newtype GameM a = GameM (StateT Game IO a) deriving (Functor, Applicative, Monad)
+newtype Game a = Game (StateT GameState IO a) deriving (Functor, Applicative, Monad)
 
 {-
 resolveLink :: FromJSON a => Link a -> GameM (Maybe a)
@@ -46,12 +46,12 @@ resolveLink link = GameM $ lift $ do
 -}
 
 -- Lenses
-gameCamera   :: Lens' Game Camera
-gameKeyAlt   :: Lens' Game Bool
-gameKeyShift :: Lens' Game Bool
-gamePlayer   :: Lens' Game (Link O.Object)
-gameShips    :: Lens' Game [Link Ship]
-gameUi       :: Lens' Game Ui
+gameCamera   :: Lens' GameState Camera
+gameKeyAlt   :: Lens' GameState Bool
+gameKeyShift :: Lens' GameState Bool
+gamePlayer   :: Lens' GameState (Link O.Object)
+gameShips    :: Lens' GameState [Link Ship]
+gameUi       :: Lens' GameState Ui
 gameCamera   = lens _gameCamera   (\s x -> s { _gameCamera   = x })
 gameKeyAlt   = lens _gameKeyAlt   (\s x -> s { _gameKeyAlt   = x })
 gameKeyShift = lens _gameKeyShift (\s x -> s { _gameKeyShift = x })
@@ -59,11 +59,11 @@ gamePlayer   = lens _gamePlayer   (\s x -> s { _gamePlayer   = x })
 gameShips    = lens _gameShips    (\s x -> s { _gameShips    = x })
 gameUi       = lens _gameUi       (\s x -> s { _gameUi       = x })
 
-instance FromJSON Game where    
+instance FromJSON GameState where    
     parseJSON (Object o) = do
         player <- o .: "player"
         ships  <- o .: "ships"
-        return $ MkGame
+        return $ MkGameState
             { _gameCamera   = defaultCamera
             , _gameKeyAlt   = False
             , _gameKeyShift = False

@@ -30,7 +30,7 @@ import qualified Types.Ship as H
 import Types.Ui
 import Ui.Menu
 
-renderGame :: Game -> EnvironmentT IO ()
+renderGame :: GameState -> EnvironmentT IO ()
 renderGame game = do
     renderer <- asks envRenderer
 
@@ -46,7 +46,7 @@ renderGame game = do
     -- Present to the screen
     present renderer
 
-subRenderUi :: Game -> EnvironmentT IO ()
+subRenderUi :: GameState -> EnvironmentT IO ()
 subRenderUi game = do
     -- Information needed to render
     renderer    <- asks envRenderer
@@ -67,7 +67,7 @@ subRenderUi game = do
     where
         V2 _ height = game ^. gameCamera . cameraWindowSize
 
-subRenderWorld :: Game -> EnvironmentT IO ()
+subRenderWorld :: GameState -> EnvironmentT IO ()
 subRenderWorld game = do
     -- Information needed to render
     renderer        <- asks envRenderer
@@ -137,7 +137,7 @@ subRenderWorld game = do
         cameraY   = game ^. gameCamera . cameraCoordinate . coordinateY
         shipLinks = game ^. gameShips
 
-subRenderVoid :: Game -> EnvironmentT IO ()
+subRenderVoid :: GameState -> EnvironmentT IO ()
 subRenderVoid game = do
     renderer <- asks envRenderer
     cacheRef <- asks envCacheRef

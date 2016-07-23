@@ -14,7 +14,7 @@ import Game              (gameLoad)
 import Renderer          (renderGame)
 import Types.Cache       (defaultCache)
 import Types.Environment (Environment(..), EnvironmentT)
-import Types.Game        (Game)
+import Types.Game        (GameState)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
@@ -69,7 +69,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     quit
 
 -- Main loop
-mainLoop :: Game -> EnvironmentT IO ()
+mainLoop :: GameState -> EnvironmentT IO ()
 mainLoop game = do
     env <- ask -- TODO: this is ugly
 
