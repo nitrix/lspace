@@ -19,7 +19,7 @@ import Types.Message
 import Types.Object (Object(..))
 -- import Types.Ship
 
-gameAdd :: Object -> Coordinate -> StateT GameState IO ()
+gameAdd :: Object -> Coordinate -> Game ()
 gameAdd _ _ = return ()
 {-
 gameAdd obj coord = do
@@ -58,7 +58,7 @@ gameAdd obj coord = do
         (x, y) = view coordinates coord
 -}
 
-gameMsg :: Maybe (Link Object) -> Maybe (Link Object) -> [Message] -> StateT GameState IO ()
+gameMsg :: Maybe (Link Object) -> Maybe (Link Object) -> [Message] -> Game ()
 gameMsg _ _ _ = return ()
 {-
 gameMsg _ _ [] = return ()
@@ -74,7 +74,7 @@ gameMsg fromObj (Just toObj) (msg:msgs) = do
     gameMsg fromOid (Just toOid) msgs
 -}
 
-gameRotate :: Link Object -> Direction -> StateT GameState IO ()
+gameRotate :: Link Object -> Direction -> Game ()
 gameRotate _ _ = do
     return ()
 {-
@@ -87,7 +87,7 @@ gameRotate _ _ = do
             gameMsg Nothing (Just oid) [RotatedMsg direction]
 -}
 
-gameMove :: Link Object -> Direction -> StateT GameState IO ()
+gameMove :: Link Object -> Direction -> Game ()
 gameMove resObj direction = do
     -- Rotate the object
     gameRotate resObj direction

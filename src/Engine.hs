@@ -28,7 +28,7 @@ engineInit game = do
 
 -- TODO: disgusting environment passed explicitly
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
-engineHandleEvent :: Environment -> Event -> StateT GameState IO Bool
+engineHandleEvent :: Environment -> Event -> Game Bool
 engineHandleEvent env event = do
     case eventPayload event of
         KeyboardEvent d      -> engineHandleKeyboardEvent d
@@ -37,7 +37,7 @@ engineHandleEvent env event = do
         _                    -> return False
 
 -- TODO: disgusting environment passed explicitly
-engineHandleWindowResizedEvent :: Environment -> WindowResizedEventData -> StateT GameState IO Bool
+engineHandleWindowResizedEvent :: Environment -> WindowResizedEventData -> Game Bool
 engineHandleWindowResizedEvent env wred = do
     ws <- SDL.get $ windowSize $ envWindow env
 
@@ -52,7 +52,7 @@ engineHandleWindowResizedEvent env wred = do
     return False
 
 -- | This function handles keyboard events in the engine
-engineHandleKeyboardEvent :: KeyboardEventData -> StateT GameState IO Bool
+engineHandleKeyboardEvent :: KeyboardEventData -> Game Bool
 engineHandleKeyboardEvent ked = do
     -- Modifier keys
     case keycode of
@@ -76,7 +76,7 @@ engineHandleKeyboardEvent ked = do
         keycode     = keysymKeycode keysym       -- ^ Which character is received from the operating system
         -- scancode    = keysymScancode keysym      -- ^ Physical key location as it would be on a US QWERTY keyboard
 
-engineHandleBareKeycode :: Keycode -> StateT GameState IO Bool
+engineHandleBareKeycode :: Keycode -> Game Bool
 engineHandleBareKeycode keycode = do
     player <- gets $ view gamePlayer
     shift  <- gets $ view gameKeyShift

@@ -4,7 +4,9 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
+import Control.Monad.Trans.Maybe
 import Data.IORef
+import Data.Maybe
 import SDL
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
@@ -14,7 +16,7 @@ import Game              (gameLoad)
 import Renderer          (renderGame)
 import Types.Cache       (defaultCache)
 import Types.Environment (Environment(..), EnvironmentT)
-import Types.Game        (GameState)
+import Types.Game        (GameState, runGame)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
@@ -77,10 +79,11 @@ mainLoop game = do
     events <- (:) <$> waitEvent <*> pollEvents
 
     -- As an optimisation, prevent chocking by processing all the queued up events at once
-    (shouldHalts, newGame) <- lift $ runStateT (traverse (engineHandleEvent env) events) game
+    -- (shouldHalts, newGame) <- lift $ runStateT (traverse (engineHandleEvent env) events) game
+    (shouldHalts, newGame) <- lift $ runStateT (runMaybeT (runGame (traverse (engineHandleEvent env) events))) game
 
     -- Then render the new game state
     renderGame newGame
 
     -- Continue doing it over and over again
-    unless (or shouldHalts) (mainLoop newGame)
+    unless (or $ catMaybes $ sequence shouldHalts) (mainLoop newGame)

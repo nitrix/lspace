@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Types.Game
     ( Game
@@ -10,21 +11,24 @@ module Types.Game
     , gamePlayer
     , gameShips
     , gameUi
+    , runGame
     ) where
 
 import Control.Lens
--- import Control.Monad.Trans
+import Control.Monad.State.Class
+import Control.Monad.Trans
 import Control.Monad.Trans.State
+import Control.Monad.Trans.Maybe
 import Data.Aeson
--- import Data.IORef
+import Data.IORef
 
 import Camera
--- import Types.Cache
+import Types.Cache
 import Types.Link
 import Types.Object as O
 import Types.Ship
 import Types.Ui
--- import Link
+import Link
 
 -- | Contains the state of the engine (things that will change over time)
 data GameState = MkGameState
@@ -36,14 +40,13 @@ data GameState = MkGameState
     , _gameUi       :: Ui
     }
 
-newtype Game a = Game (StateT GameState IO a) deriving (Functor, Applicative, Monad)
+newtype Game a = Game { runGame :: MaybeT (StateT GameState IO) a } deriving (Functor, Applicative, Monad, MonadState GameState, MonadIO)
+-- TODO remove MonadIO very soon
 
-{-
-resolveLink :: FromJSON a => Link a -> GameM (Maybe a)
-resolveLink link = GameM $ lift $ do
-    tmpCache <- newIORef defaultCache
-    readLink tmpCache link
--}
+resolveLink :: FromJSON a => Link a -> Game a
+resolveLink link = Game $ MaybeT $ do
+    tmpCache <- lift $ newIORef defaultCache -- TODO: caching should be internal to the link module
+    lift $ readLink tmpCache link
 
 -- Lenses
 gameCamera   :: Lens' GameState Camera
