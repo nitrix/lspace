@@ -160,7 +160,7 @@ subRenderVoid game = do
                 rendererRenderTarget renderer $= Just layer
                 rendererDrawColor renderer $= V4 0 0 0 0 -- transparent black
                 clear renderer
-                textureBlendMode layer $= BlendAlphaBlend
+                textureBlendMode layer $= BlendAdditive -- BlendAlphaBlend
                 rendererDrawColor renderer $= V4 35 35 35 200    -- white quite dark
                 drawPoints renderer dark
                 rendererDrawColor renderer $= V4 100 100 100 200 -- white kinda visible
