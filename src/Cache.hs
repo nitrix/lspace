@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Types.Cache
+module Cache
     ( Cache(..)
     , defaultCache
     , cacheChunks
@@ -15,7 +15,7 @@ import qualified Data.Sequence as S
 import qualified Data.Map as M
 import qualified SDL as SDL
 
-import Types.Coordinate
+import Coordinate
 
 data AnyIORef = forall a. MkAnyIORef {-# UNPACK #-} !(IORef a)
 data Cache = MkCache

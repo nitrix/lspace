@@ -37,25 +37,18 @@ executable lspace
   extra-libraries:     SDL2_image
   ghc-options:         -Wall -threaded -with-rtsopts=-T -O1
   -- ghc-options:         -threaded -with-rtsopts=-T -O -ddump-simpl -ddump-to-file -dsuppress-all
-  other-modules:       Camera
+  other-modules:       Cache
+                     , Camera
+                     , Coordinate
                      , Engine
+                     , Environment
                      , Game
                      , Grid
                      , Link
+                     , Message
                      , Object
                      , Renderer
-
-                     -- Types
-                     , Types.Cache
-                     , Types.Coordinate
-                     , Types.Environment
-                     , Types.Game
-                     , Types.Link
-                     , Types.Message
-                     , Types.Object
-                     , Types.Ship
-                     , Types.Sprite
-                     , Types.Ui
-                    
-                     -- Uis
+                     , Ship
+                     , Sprite
+                     , Ui
                      , Ui.Menu

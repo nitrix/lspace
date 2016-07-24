@@ -13,10 +13,9 @@ import SDL
 
 import Camera
 import Game
-import Types.Coordinate
-import Types.Environment
-import Types.Game
-import Types.Ui
+import Coordinate
+import Environment
+import Ui
 import Ui.Menu
 
 -- TODO: that looks way too disgutsting for what it does

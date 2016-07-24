@@ -18,16 +18,16 @@ import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import System.Random
 
+import Cache
 import Camera
+import Coordinate
+import Environment
 import qualified Grid as G
 import Link
 import Object
-import Types.Cache
-import Types.Coordinate
-import Types.Environment
-import Types.Game
-import qualified Types.Ship as H
-import Types.Ui
+import qualified Ship as H
+import Game
+import Ui
 import Ui.Menu
 
 renderGame :: GameState -> EnvironmentT IO ()

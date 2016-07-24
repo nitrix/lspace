@@ -1,14 +1,90 @@
-module Game where
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
+module Game
+    ( Game
+    , GameState
+    , gameCamera
+    , gameKeyAlt
+    , gameKeyShift
+    , gamePlayer
+    , gameRotate
+    , gameMove
+    , gameAdd
+    , gameMsg
+    , gameLoad
+    , gameShips
+    , gameUi
+    , runGame
+    ) where
+
+import Control.Lens
+import Control.Monad.State.Class
+import Control.Monad.Trans
+import Control.Monad.Trans.State
+import Control.Monad.Trans.Maybe
+import qualified Data.Aeson as J
+import Data.IORef
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe
 
-import qualified Data.Aeson as J
-import Types.Coordinate
-import Types.Game
-import Types.Link
-import Types.Message
-import Types.Object (Object(..))
+import Coordinate
+import Message
+import Camera
+import Cache
+import Link
+import Object as O
+import Ship
+import Ui
+import Link
+
+-- | Contains the state of the engine (things that will change over time)
+data GameState = MkGameState
+    { _gameCamera   :: Camera
+    , _gameKeyAlt   :: Bool
+    , _gameKeyShift :: Bool
+    , _gamePlayer   :: Link O.Object
+    , _gameShips    :: [Link Ship]
+    , _gameUi       :: Ui
+    }
+
+newtype Game a = Game { runGame :: MaybeT (StateT GameState IO) a }
+    deriving (Functor, Applicative, Monad, MonadState GameState)
+    -- TODO remove MonadIO very soon
+
+resolveLink :: J.FromJSON a => Link a -> Game a
+resolveLink link = Game $ MaybeT $ do
+    tmpCache <- lift $ newIORef defaultCache -- TODO: caching should be internal to the link module
+    lift $ readLink tmpCache link
+
+-- Lenses
+gameCamera   :: Lens' GameState Camera
+gameKeyAlt   :: Lens' GameState Bool
+gameKeyShift :: Lens' GameState Bool
+gamePlayer   :: Lens' GameState (Link O.Object)
+gameShips    :: Lens' GameState [Link Ship]
+gameUi       :: Lens' GameState Ui
+gameCamera   = lens _gameCamera   (\s x -> s { _gameCamera   = x })
+gameKeyAlt   = lens _gameKeyAlt   (\s x -> s { _gameKeyAlt   = x })
+gameKeyShift = lens _gameKeyShift (\s x -> s { _gameKeyShift = x })
+gamePlayer   = lens _gamePlayer   (\s x -> s { _gamePlayer   = x })
+gameShips    = lens _gameShips    (\s x -> s { _gameShips    = x })
+gameUi       = lens _gameUi       (\s x -> s { _gameUi       = x })
+
+instance J.FromJSON GameState where    
+    parseJSON (J.Object o) = do
+        player <- o J..: "player"
+        ships  <- o J..: "ships"
+        return $ MkGameState
+            { _gameCamera   = defaultCamera
+            , _gameKeyAlt   = False
+            , _gameKeyShift = False
+            , _gamePlayer   = player
+            , _gameShips    = ships
+            , _gameUi       = defaultUi
+            }
+    parseJSON _ = error "Unable to parse Game json"
 
 gameAdd :: Object -> Coordinate -> Game ()
 gameAdd _ _ = return ()

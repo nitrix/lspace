@@ -8,9 +8,9 @@ import SDL
 
 -- import Game
 -- import Types.Coordinate
-import Types.Game
+import Game
 -- import Types.Object
-import Types.Ui
+import Ui
 
 uiMenuClear :: Ui -> Ui
 uiMenuClear = uiVisible %~ filter (isn't _UiTypeMenu)

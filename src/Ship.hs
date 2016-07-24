@@ -1,16 +1,16 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Types.Ship where
+module Ship where
 
 import Control.Lens (Lens', lens)
 import GHC.Generics
 import Data.Aeson
 
 import qualified Grid as G
-import Types.Coordinate
-import Types.Link
-import qualified Types.Object as O
+import Coordinate
+import Link
+import qualified Object as O
 
 data Ship = MkShip
     { _shipCoordinate :: Coordinate

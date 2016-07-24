@@ -1,6 +1,6 @@
-module Types.Message where
+module Message where
 
-import Types.Coordinate (Direction)
+import Coordinate (Direction)
 
 data Message = MovedMsg Direction
              | RotatedMsg Direction

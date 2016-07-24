@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Types.Coordinate
+module Coordinate
     ( Coordinate(getCoordinate) -- TODO: ewww
     , Direction(..)
     , coordinate

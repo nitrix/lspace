@@ -18,7 +18,7 @@ import Foreign.C.Types
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 
-import Types.Coordinate
+import Coordinate
 
 -- | Top view camera onto the world (2 axis).
 -- The user can move this freely or it might temporarily be locked on the player.

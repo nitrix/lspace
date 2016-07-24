@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Types.Sprite
+module Sprite
     ( Sprite
     , ZIndex(..)
     , defaultSprite
@@ -11,7 +11,7 @@ module Types.Sprite
 import qualified Data.Aeson as J
 import GHC.Generics
 
-import Types.Coordinate
+import Coordinate
 
 type Sprite = [SpritePart]
 type SpritePart = (Coordinate, Coordinate, ZIndex)

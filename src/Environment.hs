@@ -1,4 +1,4 @@
-module Types.Environment
+module Environment
     ( EnvironmentT
     , Environment(..)
     ) where
@@ -9,7 +9,7 @@ import Foreign.C.Types
 import SDL
 import SDL.TTF.FFI (TTFFont)
 
-import Types.Cache
+import Cache
 
 -- | Convenience type to express computations that needs the Environment' to do their work
 type EnvironmentT m a = ReaderT Environment m a

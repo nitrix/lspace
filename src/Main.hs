@@ -11,12 +11,12 @@ import SDL
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
 
-import Engine            (engineHandleEvent, engineInit)
-import Game              (gameLoad)
-import Renderer          (renderGame)
-import Types.Cache       (defaultCache)
-import Types.Environment (Environment(..), EnvironmentT)
-import Types.Game        (GameState, runGame)
+import Engine      (engineHandleEvent, engineInit)
+import Game        (gameLoad)
+import Renderer    (renderGame)
+import Cache       (defaultCache)
+import Environment (Environment(..), EnvironmentT)
+import Game        (GameState, runGame)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
