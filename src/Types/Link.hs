@@ -2,7 +2,6 @@
 
 module Types.Link where
 
-import Control.Monad
 import Data.Aeson as J
 import Data.IORef
 import System.Mem.Weak

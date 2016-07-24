@@ -50,7 +50,6 @@ coordinateX = lens (view _x . getCoordinate) (\s z -> Coordinate $ getCoordinate
 coordinateY = lens (view _y . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _y .~ z)
 coordinates = lens (\c -> (view coordinateX c, view coordinateY c)) (\s c -> s & set coordinateX (fst c)
                                                                                & set coordinateY (snd c))
-
 -- | Simplified Coordinate constructor
 coordinate :: Int -> Int -> Coordinate
 coordinate x y = Coordinate $ P $ V2 x y

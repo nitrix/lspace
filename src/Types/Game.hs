@@ -40,8 +40,9 @@ data GameState = MkGameState
     , _gameUi       :: Ui
     }
 
-newtype Game a = Game { runGame :: MaybeT (StateT GameState IO) a } deriving (Functor, Applicative, Monad, MonadState GameState, MonadIO)
--- TODO remove MonadIO very soon
+newtype Game a = Game { runGame :: MaybeT (StateT GameState IO) a }
+    deriving (Functor, Applicative, Monad, MonadState GameState)
+    -- TODO remove MonadIO very soon
 
 resolveLink :: FromJSON a => Link a -> Game a
 resolveLink link = Game $ MaybeT $ do

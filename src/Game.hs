@@ -1,23 +1,14 @@
 module Game where
 
--- import Control.Lens
-import Control.Monad.State
 import qualified Data.ByteString.Lazy as BL
--- import Data.IORef
--- import qualified Data.Map as M
 import Data.Maybe
--- import SDL
 
--- import Camera
 import qualified Data.Aeson as J
--- import qualified Grid as G
--- import Types.Cache
 import Types.Coordinate
 import Types.Game
 import Types.Link
 import Types.Message
 import Types.Object (Object(..))
--- import Types.Ship
 
 gameAdd :: Object -> Coordinate -> Game ()
 gameAdd _ _ = return ()

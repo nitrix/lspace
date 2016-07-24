@@ -39,12 +39,10 @@ engineHandleEvent env event = do
 -- TODO: disgusting environment passed explicitly
 engineHandleWindowResizedEvent :: Environment -> WindowResizedEventData -> Game Bool
 engineHandleWindowResizedEvent env wred = do
-    ws <- SDL.get $ windowSize $ envWindow env
-
     let tileSize = envTileSize env
     let V2 width height = windowResizedEventSize wred
 
-    modify $ gameCamera . cameraWindowSize .~ ws
+    modify $ gameCamera . cameraWindowSize .~ V2 (fromIntegral width) (fromIntegral height)
     modify $ gameCamera . cameraViewport .~ V2
         (fromIntegral width `div` fromIntegral tileSize)
         (fromIntegral height `div` fromIntegral tileSize)
