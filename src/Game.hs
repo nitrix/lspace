@@ -25,19 +25,16 @@ import Control.Monad.Trans
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Maybe
 import qualified Data.Aeson as J
-import Data.IORef
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe
 
 import Coordinate
 import Message
 import Camera
-import Cache
 import Link
 import Object as O
 import Ship
 import Ui
-import Link
 
 -- | Contains the state of the engine (things that will change over time)
 data GameState = MkGameState
@@ -51,12 +48,9 @@ data GameState = MkGameState
 
 newtype Game a = Game { runGame :: MaybeT (StateT GameState IO) a }
     deriving (Functor, Applicative, Monad, MonadState GameState)
-    -- TODO remove MonadIO very soon
 
 resolveLink :: J.FromJSON a => Link a -> Game a
-resolveLink link = Game $ MaybeT $ do
-    tmpCache <- lift $ newIORef defaultCache -- TODO: caching should be internal to the link module
-    lift $ readLink tmpCache link
+resolveLink = Game . MaybeT . lift . readLink
 
 -- Lenses
 gameCamera   :: Lens' GameState Camera

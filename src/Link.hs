@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE ExistentialQuantification #-}
 
 module Link where
 
@@ -10,8 +11,6 @@ import qualified Data.ByteString.Lazy as LB
 import System.Directory
 import System.Mem.Weak
 import System.IO.Unsafe
-
-import Cache
 
 data Link a = MkLink {-# UNPACK #-} !(IORef (Int, Maybe (Weak (IORef a))))
 
@@ -28,8 +27,15 @@ data Id a = Id {runId :: !a} deriving Functor
 (%~!) :: ((a -> Id b) -> c -> Id d) -> (a -> b) -> c -> d
 l %~! f = runId . l (Id . f)
 
-readLink :: forall a. J.FromJSON a => IORef Cache -> Link a -> IO (Maybe a)
-readLink refCache (MkLink link) = do
+data AnyIORef = forall a. MkAnyIORef {-# UNPACK #-} !(IORef a)
+
+-- TODO: temporary absolutely disgusting and super unsafe
+{-# NOINLINE refCache #-}
+refCache :: IORef (S.Seq AnyIORef)
+refCache = unsafePerformIO (newIORef S.empty)
+
+readLink :: forall a. J.FromJSON a => Link a -> IO (Maybe a)
+readLink (MkLink link) = do
     -- Read the link unsafe bastraction
     (i, r) <- readIORef link
     case r of
@@ -41,7 +47,7 @@ readLink refCache (MkLink link) = do
                 Just a  -> do
                     -- writeIORef link a
                     modifyIORef' link $ const a
-                    readLink refCache $ MkLink link
+                    readLink $ MkLink link
         Just x  -> do
             final <- deRefWeak x
             -- Does the reference point to something that still exists
@@ -56,21 +62,21 @@ readLink refCache (MkLink link) = do
                         Just a  -> do
                             -- writeIORef link a
                             modifyIORef' link $ const a
-                            readLink refCache $ MkLink link
+                            readLink $ MkLink link
     where
         loadFreshLinkId :: Int -> IO (Maybe (Int, Maybe (Weak (IORef a))))
         loadFreshLinkId i = do
             ok <- doesFileExist filepath
             if ok
             then do
-                json <- LB.readFile filepath
-                case J.decode json of
+                content <- LB.readFile filepath
+                case J.decode content of
                     Nothing -> do
                         return Nothing
                     Just d  -> do
                         ref <- newIORef d
 
-                        modifyIORef' refCache $ cacheLinks %~! \links -> (
+                        modifyIORef' refCache $ \links -> (
                                                 if S.length links >= maxLinks
                                                 then S.drop 1 links
                                                 else links
