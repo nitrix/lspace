@@ -7,30 +7,32 @@ import qualified Data.Aeson as J
 import GHC.Generics
 
 import Coordinate
+import Link
+import Ship
 import Sprite
 
 data ObjectCommon = MkObjectCommon
-    { objFacing         :: Direction
-    , objMass           :: Int
-    , objShipCoordinate :: Coordinate
-    , objSolid          :: Bool
-    } deriving Generic
+    { objFacing :: Direction
+    , objMass   :: Int
+    , objShip   :: Link (Ship Int Object)
+    , objSolid  :: Bool
+    } deriving (Generic, Eq, Ord)
 
-data Object = MkObject ObjectCommon ObjectInfo deriving Generic
-data ObjectInfo = ObjectBox     Box
+data Object = MkObject ObjectCommon ObjectInfo deriving (Generic, Eq, Ord)
+data ObjectInfo = ObjectBox    Box
                 | ObjectFloor
                 | ObjectPlant
-                | ObjectPlayer  Player
-                | ObjectWall    Wall
+                | ObjectPlayer Player
+                | ObjectWall   Wall
                 | ObjectUnknown
-                deriving Generic
+                deriving (Generic, Eq, Ord)
 
-data Box      = MkBox    { _boxState     :: BoxState } deriving Generic
-data Player   = MkPlayer { _playerHealth :: Int }      deriving Generic
-data Wall     = MkWall   { _wallType     :: WallType } deriving Generic
+data Box    = MkBox    { _boxState     :: BoxState } deriving (Generic, Eq, Ord)
+data Player = MkPlayer { _playerHealth :: Int      } deriving (Generic, Eq, Ord)
+data Wall   = MkWall   { _wallType     :: WallType } deriving (Generic, Eq, Ord)
 
-data BoxState = BoxClosed deriving Generic
-data WallType = WallTypeHorizontal deriving Generic
+data BoxState = BoxClosed deriving (Generic, Eq, Ord)
+data WallType = WallTypeHorizontal deriving (Generic, Eq, Ord)
 
 instance J.FromJSON Box
 instance J.FromJSON BoxState
@@ -49,16 +51,6 @@ instance J.ToJSON ObjectCommon
 instance J.ToJSON Player
 instance J.ToJSON Wall
 instance J.ToJSON WallType
-
-defaultObject :: Object
-defaultObject = MkObject
-    ( MkObjectCommon
-    { objFacing         = South
-    , objMass           = 1
-    , objShipCoordinate = coordinate 0 0
-    , objSolid          = True
-    } )
-    ObjectUnknown
 
 instance Show Object where
     show _ = "{Object}"

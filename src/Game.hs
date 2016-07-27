@@ -28,11 +28,11 @@ import qualified Data.Aeson as J
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe
 
-import Coordinate
-import Message
 import Camera
+import Coordinate
 import Link
-import Object as O
+import Message
+import Object
 import Ship
 import Ui
 
@@ -41,8 +41,8 @@ data GameState = MkGameState
     { _gameCamera   :: Camera
     , _gameKeyAlt   :: Bool
     , _gameKeyShift :: Bool
-    , _gamePlayer   :: Link O.Object
-    , _gameShips    :: [Link Ship]
+    , _gamePlayer   :: Link Object
+    , _gameShips    :: [Link (Ship Int Object)]
     , _gameUi       :: Ui
     }
 
@@ -56,8 +56,8 @@ resolveLink = Game . MaybeT . lift . readLink
 gameCamera   :: Lens' GameState Camera
 gameKeyAlt   :: Lens' GameState Bool
 gameKeyShift :: Lens' GameState Bool
-gamePlayer   :: Lens' GameState (Link O.Object)
-gameShips    :: Lens' GameState [Link Ship]
+gamePlayer   :: Lens' GameState (Link Object)
+gameShips    :: Lens' GameState [Link (Ship Int Object)]
 gameUi       :: Lens' GameState Ui
 gameCamera   = lens _gameCamera   (\s x -> s { _gameCamera   = x })
 gameKeyAlt   = lens _gameKeyAlt   (\s x -> s { _gameKeyAlt   = x })

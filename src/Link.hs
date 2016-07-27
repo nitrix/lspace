@@ -14,6 +14,18 @@ import System.IO.Unsafe
 
 data Link a = MkLink {-# UNPACK #-} !(IORef (Int, Maybe (Weak (IORef a))))
 
+instance Eq (Link a) where
+    (==) (MkLink refA) (MkLink refB) = unsafePerformIO $ do
+        a <- fst <$> readIORef refA
+        b <- fst <$> readIORef refB
+        return $ a == b 
+
+instance Ord (Link a) where
+    compare (MkLink refA) (MkLink refB) = unsafePerformIO $ do
+        a <- fst <$> readIORef refA
+        b <- fst <$> readIORef refB
+        return $ a `compare` b 
+
 instance FromJSON (Link a) where
     parseJSON (J.Number n) = do
         return $ MkLink $ unsafePerformIO $ newIORef $ (truncate n, Nothing)

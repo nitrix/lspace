@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Ship where
 
@@ -10,17 +11,16 @@ import Data.Aeson
 import qualified Grid as G
 import Coordinate
 import Link
-import qualified Object as O
 
-data Ship = MkShip
+data Ship k v = MkShip
     { _shipCoordinate :: Coordinate
-    , _shipDimension  :: (Int, Int)
-    , _shipGrid       :: G.Grid Int (Link O.Object)
-    , _shipMass       :: Int
-    , _shipVelocity   :: (Int, Int)
+    , _shipDimension  :: (k, k)
+    , _shipGrid       :: G.Grid k (Link v)
+    , _shipMass       :: k
+    , _shipVelocity   :: (k, k)
     } deriving (Show, Generic)
 
-defaultShip :: Ship
+defaultShip :: Num k => Ship k v
 defaultShip = MkShip
     { _shipCoordinate = coordinate 0 0
     , _shipDimension  = (0, 0)
@@ -29,7 +29,7 @@ defaultShip = MkShip
     , _shipVelocity   = (0, 0)
     }
 
-instance FromJSON Ship where
+instance (FromJSON k, Integral k, Ord (Link v)) => FromJSON (Ship k v) where
     parseJSON (Object o) = do
         sCoord     <- o .: "coordinate"
         sDimension <- o .: "dimension"
@@ -45,7 +45,7 @@ instance FromJSON Ship where
             }
     parseJSON _ = error "Unable to parse Ship json"
 
-instance ToJSON Ship where
+instance (ToJSON k, Integral k) => ToJSON (Ship k v) where
     toJSON s = object
         [ "coordinate" .= _shipCoordinate s
         , "grid"       .= _shipGrid s
@@ -54,10 +54,10 @@ instance ToJSON Ship where
         , "dimension"  .= _shipDimension s
         ]
 
-shipGrid :: Lens' Ship (G.Grid Int (Link O.Object))
+shipGrid :: Lens' (Ship k v) (G.Grid k (Link v))
 shipGrid = lens _shipGrid (\s x -> s { _shipGrid = x })
 
-shipCoordinate :: Lens' Ship Coordinate
-shipMass       :: Lens' Ship Int
+shipCoordinate :: Lens' (Ship k v) Coordinate
+shipMass       :: Lens' (Ship k v) k
 shipCoordinate = lens _shipCoordinate (\s x -> s { _shipCoordinate = x })
 shipMass       = lens _shipMass       (\s x -> s { _shipMass       = x })

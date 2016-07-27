@@ -24,7 +24,7 @@ data Direction = North
                | East
                | South
                | West
-               deriving (Show, Read, Bounded, Enum)
+               deriving (Show, Read, Bounded, Enum, Eq, Ord)
 
 instance ToJSON Direction where
     toJSON = String . T.pack . show
