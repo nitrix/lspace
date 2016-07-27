@@ -5,6 +5,7 @@
 module Link where
 
 import Data.Aeson as J
+import Data.Maybe
 import Data.IORef
 import Data.Sequence as S
 import qualified Data.ByteString.Lazy as LB
@@ -45,6 +46,35 @@ data AnyIORef = forall a. MkAnyIORef {-# UNPACK #-} !(IORef a)
 {-# NOINLINE refCache #-}
 refCache :: IORef (S.Seq AnyIORef)
 refCache = unsafePerformIO (newIORef S.empty)
+
+createLink :: a -> IO (Link a)
+createLink x = do
+    ref           <- newIORef x
+    weakRef       <- mkWeakIORef ref (return ())
+    nextCountLink <- MkLink <$> newIORef (0, Nothing)
+    nextCount     <- fromMaybe 1 <$> readLink nextCountLink
+    linkRef       <- newIORef (nextCount, Just weakRef)
+    modifyLink nextCountLink (+1)
+    return $ MkLink linkRef
+
+modifyLink :: J.FromJSON a => Link a -> (a -> a) -> IO ()
+modifyLink link@(MkLink ref) f = do
+    (_, maybeWeak) <- readIORef ref
+    content <- readLink link
+    case content of
+        Nothing -> return () -- Broken link, cannot be updated
+        Just _  -> do
+            case maybeWeak of
+                Nothing -> return () -- Broken link, cannot be updated
+                Just weak -> do
+                    maybeContent <- deRefWeak weak
+                    case maybeContent of
+                        Nothing   -> return () -- Broken link, cannot be updated
+                        Just refY -> do
+                            modifyIORef' refY f
+
+getLinkId :: Int -> Link a
+getLinkId n = unsafePerformIO $ MkLink <$> newIORef (n, Nothing)
 
 readLink :: forall a. J.FromJSON a => Link a -> IO (Maybe a)
 readLink (MkLink link) = do
