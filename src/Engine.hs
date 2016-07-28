@@ -2,11 +2,14 @@ module Engine
     ( engineHandleEvent
     , engineHandleKeyboardEvent
     , engineInit
+    , engineLoadGame
     ) where
 
 import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
+import qualified Data.Aeson as J
+import qualified Data.ByteString.Lazy as BL
 import Data.Maybe
 import Linear (V2(V2))
 import SDL
@@ -15,6 +18,8 @@ import Camera
 import Game
 import Coordinate
 import Environment
+import Link
+import Object
 import Ui
 import Ui.Menu
 
@@ -78,10 +83,10 @@ engineHandleBareKeycode keycode = do
     player <- gets $ view gamePlayer
     shift  <- gets $ view gameKeyShift
     case keycode of
-        KeycodeW       -> if shift then gameRotate player North else gameMove player North
-        KeycodeS       -> if shift then gameRotate player South else gameMove player South
-        KeycodeA       -> if shift then gameRotate player West  else gameMove player West
-        KeycodeD       -> if shift then gameRotate player East  else gameMove player East
+        KeycodeW       -> if shift then engineRotateObject player North else engineMoveObject player North
+        KeycodeS       -> if shift then engineRotateObject player South else engineMoveObject player South
+        KeycodeA       -> if shift then engineRotateObject player West  else engineMoveObject player West
+        KeycodeD       -> if shift then engineRotateObject player East  else engineMoveObject player East
         -- KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
         -- KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
         KeycodeUp      -> modify $ gameCamera %~ cameraMove North
@@ -93,3 +98,108 @@ engineHandleBareKeycode keycode = do
         KeycodeEscape  -> modify $ gameUi       %~ uiMenuClear
         _              -> modify $ id
     return False
+
+--engineAddObject :: Object -> Coordinate -> Game ()
+--engineAddObject _ _ = return ()
+{-
+gameAdd obj coord = do
+    (cx, cy)   <- gets $ view $ gameCamera . cameraCoordinate . coordinates
+    ships      <- gets $ view $ gameWorld . worldShips
+    
+    -- Find things at the given location
+    let findThings s = G.lookup (x + cx - view (shipCoordinate . coordinateX) s)
+                                (y + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
+                       G.lookup (x + 1 + cx - view (shipCoordinate . coordinateX) s)
+                                (y + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
+                       G.lookup (x + 1 + cx - view (shipCoordinate . coordinateX) s)
+                                (y + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
+                       G.lookup (x + cx - view (shipCoordinate . coordinateX) s)
+                                (y + 1 + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
+                       G.lookup (x + cx - view (shipCoordinate . coordinateX) s)
+                                (y + 1 + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s)
+                     :: [Object]
+
+    let things = fmap findThings <$> zip ships ships :: [(Ship, [Object])]
+    let nonEmptyThings = filter ((/= 0) . length . snd) things
+    let newShip = defaultShip & shipMass .~ (objMass obj) & shipCoordinate .~ coord
+
+    -- Determine if it's an existing ship or if we should create one
+    let newShips = case nonEmptyThings of
+                [] -> newShip : ships
+                sl -> foldr _ [] sl
+                      -- grid insert object, change mass ship
+                      -- let (gx, gy) = view (shipCoordinate . coordinates) ship in (head s, x + cx - sx, y + cy - sy)
+                      -- let newObj = obj { objShipCoordinate = coordinate gx gy }
+
+
+    -- Save the modified/new ship & object
+    modify $ gameWorld . worldShips .~ newShips
+    where
+        (x, y) = view coordinates coord
+-}
+
+--engineMsg :: Maybe (Link Object) -> Maybe (Link Object) -> [Message] -> Game ()
+--engineMsg _ _ _ = return ()
+{-
+gameMsg _ _ [] = return ()
+gameMsg _ Nothing _ = return () -- Replies to non-objects, e.g. direct calls to gameMove
+gameMsg fromObj (Just toObj) (msg:msgs) = do
+    case toObj of
+        Nothing -> return ()
+        Just t  -> do
+            -- trace ("Sending msg `" ++ show msg ++ "` to object #" ++ show toOid) $ do
+            let (responses, newToObj) = runState (objMsg t msg) t
+            modify $ gameWorld . worldObjects %~ M.insert toOid newToObj
+            gameMsg (Just toOid) fromOid responses
+    gameMsg fromOid (Just toOid) msgs
+-}
+
+engineRotateObject :: Link Object -> Direction -> Game ()
+engineRotateObject _ _ = do
+    return ()
+{-
+    objects <- gets (view $ gameWorld . worldObjects)
+    case M.lookup oid objects of
+        Nothing -> return ()
+        Just obj -> do
+            let objRotated = obj { objFacing = direction }
+            modify $ gameWorld . worldObjects %~ M.insert oid objRotated
+            gameMsg Nothing (Just oid) [RotatedMsg direction]
+-}
+
+engineMoveObject :: Link Object -> Direction -> Game ()
+engineMoveObject resObj direction = do
+    -- Rotate the object
+    engineRotateObject resObj direction
+
+{-
+    objects <- gets (view $ gameWorld . worldObjects)
+    ships   <- gets (view $ gameWorld . worldShips)
+
+    -- Move the object
+    case M.lookup oid objects of
+        Nothing  -> return ()
+        Just obj -> case M.lookup (objShipId obj) ships of
+            Nothing -> return ()
+            Just ship -> do
+                -- The most important, the previous and new coordinates
+                let (x, y)       = objShipCoordinate obj ^. coordinates
+                let (newX, newY) = coordinateMove direction (objShipCoordinate obj) ^. coordinates
+
+                -- Calculate what the new grid and ship would look like
+                let newGrid = G.insert newX newY oid $ G.delete x y oid (ship ^. shipGrid)
+                let newShip = shipGrid .~ newGrid $ ship
+                let newObj  = obj { objShipCoordinate = coordinate newX newY }
+
+                -- Update the object while also paying attention to collisions
+                let objsAtNewLocation = catMaybes $ flip M.lookup objects <$> G.lookup newX newY (ship ^. shipGrid)
+                when (not $ any objSolid objsAtNewLocation) $ do
+                    modify $ gameWorld . worldShips   %~ M.insert (objShipId newObj) newShip
+                    modify $ gameWorld . worldObjects %~ M.insert oid newObj
+                    gameMsg Nothing (Just oid) [MovedMsg direction]
+-}
+
+engineLoadGame :: String -> IO GameState
+engineLoadGame name = do 
+    json <- BL.readFile $ "data/" ++ name ++ "/" ++ "game.json"
+    return $ fromJust $ J.decode json

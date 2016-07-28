@@ -3,16 +3,13 @@
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
-import Control.Monad.State
-import Control.Monad.Trans.Maybe
 import Data.IORef
 import Data.Maybe
 import SDL
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
 
-import Engine      (engineHandleEvent, engineInit)
-import Game        (gameLoad)
+import Engine      (engineHandleEvent, engineInit, engineLoadGame)
 import Renderer    (renderGame)
 import Cache       (defaultCache)
 import Environment (Environment(..), EnvironmentT)
@@ -24,15 +21,11 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     initializeAll
     Img.initialize [Img.InitPNG]
 
-    -- Fullscreen window with the default renderer
-    window <- createWindow "LoneSome Space" defaultWindow { windowMode = FullscreenDesktop }
+    -- Fullscreen window with the default renderer, tileset and fonts
+    window   <- createWindow "LoneSome Space" defaultWindow { windowMode = FullscreenDesktop }
     renderer <- createRenderer window (-1) defaultRenderer
-
-    -- Loading texture
-    tileset <- Img.loadTexture renderer "assets/tileset.png"
-
-    -- Loading fonts
-    font <- Ttf.openFont "assets/terminus.ttf" 16
+    tileset  <- Img.loadTexture renderer "assets/tileset.png"
+    font     <- Ttf.openFont "assets/terminus.ttf" 16
 
     -- Some options for convenience
     disableScreenSaver
@@ -47,7 +40,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     cacheRef <- newIORef defaultCache
     
     -- Load game
-    game <- gameLoad "demo"
+    game <- engineLoadGame "demo"
 
     -- Main loop
     runReaderT (engineInit game >>= mainLoop) $ MkEnvironment
@@ -80,7 +73,7 @@ mainLoop game = do
 
     -- As an optimisation, prevent chocking by processing all the queued up events at once
     -- (shouldHalts, newGame) <- lift $ runStateT (traverse (engineHandleEvent env) events) game
-    (shouldHalts, newGame) <- lift $ runStateT (runMaybeT (runGame (traverse (engineHandleEvent env) events))) game
+    (shouldHalts, newGame) <- lift $ runGame (traverse (engineHandleEvent env) events) game
 
     -- Then render the new game state
     renderGame newGame
