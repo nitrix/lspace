@@ -1,1 +1,1 @@
-[{"objFacing":"South","objMass":1,"objSolid":true,"objShip":1},{"tag":"ObjectPlayer","contents":{"_playerHealth":100}}]
+[{"_objFacing":"South","_objMass":1,"_objSolid":true,"_objShip":1},{"tag":"ObjectPlayer","contents":{"_playerHealth":100}}]

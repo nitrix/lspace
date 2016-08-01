@@ -6,16 +6,17 @@ module Object where
 import qualified Data.Aeson as J
 import GHC.Generics
 
+import Control.Lens
 import Coordinate
 import Link
 import Ship
 import Sprite
 
 data ObjectCommon = MkObjectCommon
-    { objFacing :: Direction
-    , objMass   :: Int
-    , objShip   :: Link (Ship Int Object)
-    , objSolid  :: Bool
+    { _objFacing :: Direction
+    , _objMass   :: Int
+    , _objShip   :: Link (Ship Int Object)
+    , _objSolid  :: Bool
     } deriving (Generic, Eq, Ord)
 
 data Object = MkObject ObjectCommon ObjectInfo deriving (Generic, Eq, Ord)
@@ -27,8 +28,11 @@ data ObjectInfo = ObjectBox    Box
                 | ObjectUnknown
                 deriving (Generic, Eq, Ord)
 
+objFacing :: Lens' Object Direction
+objFacing = lens (\(MkObject common _) -> _objFacing common) (\(MkObject common info) x -> MkObject common { _objFacing = x } info)
+
 data Box    = MkBox    { _boxState     :: BoxState } deriving (Generic, Eq, Ord)
-data Player = MkPlayer { _playerHealth :: Int      } deriving (Generic, Eq, Ord)
+data Player = MkPlayer { _playerHealth :: Int      } deriving (Generic, Eq, Ord, Show)
 data Wall   = MkWall   { _wallType     :: WallType } deriving (Generic, Eq, Ord)
 
 data BoxState = BoxClosed deriving (Generic, Eq, Ord)
@@ -60,7 +64,7 @@ objSprite (MkObject _ (ObjectBox box)) = case _boxState box of
     BoxClosed -> sprite 0 0 ZOnGround
 objSprite (MkObject _ ObjectFloor) = sprite 4 1 ZGround
 objSprite (MkObject _ ObjectPlant) = sprite 0 1 ZOnGround
-objSprite (MkObject common (ObjectPlayer _)) = case objFacing common of
+objSprite (MkObject common (ObjectPlayer _)) = case _objFacing common of
     North -> sprite 1 0 ZOnTop
     South -> sprite 1 2 ZOnTop
     West  -> sprite 1 1 ZOnTop

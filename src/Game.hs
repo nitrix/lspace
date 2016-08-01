@@ -13,6 +13,7 @@ module Game
     , gameUi
     , gameCreateLink
     , gameModifyLink
+    , gameWriteLink
     , gameReadLink
     , runGame
     ) where
@@ -76,6 +77,9 @@ gameReadLink = Game . MaybeT . lift . readLink
 
 gameModifyLink :: J.FromJSON a => Link a -> (a -> a) -> Game ()
 gameModifyLink link f = Game . MaybeT . lift $ Just <$> modifyLink link f
+
+gameWriteLink :: J.FromJSON a => Link a -> a -> Game ()
+gameWriteLink link x = Game . MaybeT . lift $ Just <$> writeLink link x
 
 gameCreateLink :: a -> Game (Link a)
 gameCreateLink x = Game . MaybeT . lift $ Just <$> createLink x

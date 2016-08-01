@@ -155,17 +155,9 @@ gameMsg fromObj (Just toObj) (msg:msgs) = do
 -}
 
 engineRotateObject :: Link Object -> Direction -> Game ()
-engineRotateObject _ _ = do
-    return ()
-{-
-    objects <- gets (view $ gameWorld . worldObjects)
-    case M.lookup oid objects of
-        Nothing -> return ()
-        Just obj -> do
-            let objRotated = obj { objFacing = direction }
-            modify $ gameWorld . worldObjects %~ M.insert oid objRotated
-            gameMsg Nothing (Just oid) [RotatedMsg direction]
--}
+engineRotateObject obj direction = do
+    gameModifyLink obj $ objFacing .~ direction
+    -- TODO: Tell the object it got rotated?
 
 engineMoveObject :: Link Object -> Direction -> Game ()
 engineMoveObject resObj direction = do
@@ -173,9 +165,6 @@ engineMoveObject resObj direction = do
     engineRotateObject resObj direction
 
 {-
-    objects <- gets (view $ gameWorld . worldObjects)
-    ships   <- gets (view $ gameWorld . worldShips)
-
     -- Move the object
     case M.lookup oid objects of
         Nothing  -> return ()
