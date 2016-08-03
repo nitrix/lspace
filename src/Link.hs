@@ -63,7 +63,6 @@ createLink x = do
     weakRef       <- mkWeakIORef ref (return ())
     nextCountLink <- MkLink <$> newIORef (0, Nothing)
     nextCount     <- fromMaybe 1 <$> readLink nextCountLink
-    trace ("Creating link #" ++ show nextCount) $ do
     linkRef       <- newIORef (nextCount, Just weakRef)
     modifyLink nextCountLink (+1)
     return $ MkLink linkRef
@@ -71,8 +70,6 @@ createLink x = do
 writeLink :: Linked a => Link a -> a -> IO ()
 writeLink link@(MkLink ref) x = do
     maybeContent <- readLink link
-    (i, _) <- readIORef ref
-    trace ("Writing link #" ++ show i) $ do
     case maybeContent of
         Nothing -> return ()
         Just _ -> do
@@ -89,8 +86,7 @@ writeLink link@(MkLink ref) x = do
 modifyLink :: Linked a => Link a -> (a -> a) -> IO ()
 modifyLink link@(MkLink ref) f = do
     content <- readLink link
-    (i, maybeWeak) <- readIORef ref
-    trace ("Modifying link #" ++ show i) $ do
+    (_, maybeWeak) <- readIORef ref
     case content of
         Nothing -> return () -- Broken link, cannot be updated
         Just _  -> do
@@ -116,7 +112,6 @@ getLinkId n = unsafePerformIO $ do
                 return $ MkLink ref
             Nothing -> error "This cannot happen"
         Nothing -> do
-            trace ("Getting link #" ++ show n ++ " making new") $ do
             ref <- newIORef (n, Nothing)
             let (newNewLinks, _) = L.insertInforming n (toDyn ref) newLinks
             modifyIORef' refCache $ const newNewLinks
@@ -127,7 +122,6 @@ readLink :: forall a. Linked a => Link a -> IO (Maybe a)
 readLink (MkLink link) = do
     -- Read the link unsafe bastraction
     (i, r) <- readIORef link
-    trace ("Reading link #" ++ show i) $ do
     case r of
         -- Determines if we have a link reference
         Nothing -> do
@@ -156,7 +150,6 @@ readLink (MkLink link) = do
     where
         loadFreshLinkId :: Int -> IO (Maybe (Int, Maybe (Weak (IORef a))))
         loadFreshLinkId i = do
-            trace ("Loading fresh link #" ++ show i) $ do
             ok <- doesFileExist filepath
             if ok
             then do
@@ -168,6 +161,7 @@ readLink (MkLink link) = do
                         ref <- newIORef d
 
                         links <- readIORef refCache
+                        
                         let (newLinks, maybeDropped) = L.insertInforming i (toDyn ref) links
                         case maybeDropped of
                             Nothing -> return ()
@@ -183,7 +177,7 @@ readLink (MkLink link) = do
                 return Nothing
             where
                 filepath = "data/demo/" ++ show i ++ ".json" -- TODO: This has to be fixed
-                
+     
 saveLink :: Linked a => Link a -> IO ()
 saveLink link@(MkLink ref) = do
     content <- readLink link -- TODO do not use readLink, risk of infinite loops
