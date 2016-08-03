@@ -1,12 +1,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Link where
 
-import Debug.Trace
+-- import Debug.Trace
 
 import Data.Aeson as J
+import Data.Dynamic
 import Data.Maybe
 import Data.IORef
 import qualified Data.ByteString.Lazy as LB
@@ -14,10 +16,14 @@ import System.Directory
 import System.Mem.Weak
 import System.IO.Unsafe
 import qualified Data.Cache.LRU as L
-import Unsafe.Coerce
 
 type LinkId = Int
 data Link a = MkLink {-# UNPACK #-} !(IORef (LinkId, Maybe (Weak (IORef a))))
+
+type Linked a = (Typeable a, FromJSON a, ToJSON a)
+
+trace :: a -> b -> b
+trace _ x = x
 
 -- TODO: Could even replace the LRU with an array
 
@@ -33,7 +39,7 @@ instance Ord (Link a) where
         b <- fst <$> readIORef refB
         return $ a `compare` b 
 
-instance FromJSON (Link a) where
+instance Linked a => FromJSON (Link a) where
     parseJSON (J.Number n) = do
         return $ getLinkId $ truncate n
     parseJSON _ = error "Unable to parse Link json"
@@ -46,11 +52,9 @@ instance ToJSON (Link a) where
 -- (%~!) :: ((a -> Id b) -> c -> Id d) -> (a -> b) -> c -> d
 -- l %~! f = runId . l (Id . f)
 
-data AnyIORef = forall a. MkAnyIORef {-# UNPACK #-} !(IORef a)
-
 -- TODO: temporary absolutely disgusting and super unsafe
 {-# NOINLINE refCache #-}
-refCache :: IORef (L.LRU LinkId AnyIORef)
+refCache :: IORef (L.LRU LinkId Dynamic)
 refCache = unsafePerformIO (newIORef $ L.newLRU $ Just 1000) -- TODO: option?
 
 createLink :: a -> IO (Link a)
@@ -64,7 +68,7 @@ createLink x = do
     modifyLink nextCountLink (+1)
     return $ MkLink linkRef
 
-writeLink :: J.FromJSON a => Link a -> a -> IO ()
+writeLink :: Linked a => Link a -> a -> IO ()
 writeLink link@(MkLink ref) x = do
     maybeContent <- readLink link
     (i, _) <- readIORef ref
@@ -82,7 +86,7 @@ writeLink link@(MkLink ref) x = do
                         Just v -> writeIORef v x
 
 -- TODO: bogus
-modifyLink :: J.FromJSON a => Link a -> (a -> a) -> IO ()
+modifyLink :: Linked a => Link a -> (a -> a) -> IO ()
 modifyLink link@(MkLink ref) f = do
     content <- readLink link
     (i, maybeWeak) <- readIORef ref
@@ -99,28 +103,27 @@ modifyLink link@(MkLink ref) f = do
                         Just refY -> do
                             modifyIORef' refY f
 
-getLinkId :: Int -> Link a
+getLinkId :: Linked a => Int -> Link a
 getLinkId n = unsafePerformIO $ do
     links <- readIORef refCache
     let (newLinks, maybeVal) = L.lookup n links
     case maybeVal of
-        Just val -> case val of
-            (MkAnyIORef r) -> do
+        Just val -> case fromDynamic val of
+            Just r -> do
                 trace ("Getting link #" ++ show n ++ " re-using existing") $ do
                 weak <- mkWeakIORef r (return ())
                 ref <- newIORef (n, Just weak)
-                return $ unsafeCoerce $ MkLink ref
+                return $ MkLink ref
+            Nothing -> error "This cannot happen"
         Nothing -> do
             trace ("Getting link #" ++ show n ++ " making new") $ do
             ref <- newIORef (n, Nothing)
-            let (newNewLinks, maybeDropped) = L.insertInforming n (MkAnyIORef ref) newLinks
+            let (newNewLinks, _) = L.insertInforming n (toDyn ref) newLinks
             modifyIORef' refCache $ const newNewLinks
-            case maybeDropped of
-                Nothing -> return ()
-                Just dropped -> return () -- TODO: Save link dropped
+            -- TODO, the _ is maybeDropped
             return $ MkLink ref
 
-readLink :: forall a. J.FromJSON a => Link a -> IO (Maybe a)
+readLink :: forall a. Linked a => Link a -> IO (Maybe a)
 readLink (MkLink link) = do
     -- Read the link unsafe bastraction
     (i, r) <- readIORef link
@@ -165,15 +168,28 @@ readLink (MkLink link) = do
                         ref <- newIORef d
 
                         links <- readIORef refCache
-                        let (newLinks, maybeDropped) = L.insertInforming i (MkAnyIORef ref) links
-                        modifyIORef' refCache $ const newLinks
+                        let (newLinks, maybeDropped) = L.insertInforming i (toDyn ref) links
                         case maybeDropped of
                             Nothing -> return ()
-                            Just dropped -> return () -- TODO: Save link dropped
+                            Just dropped -> case (fromDynamic $ snd dropped) of
+                                Just v -> saveLink (v :: Link a)
+                                Nothing -> return ()
 
+                        modifyIORef' refCache $ const newLinks
+                            
                         weakRef <- mkWeakIORef ref (return ())
                         return . Just $ (i, Just weakRef)
             else do
                 return Nothing
             where
                 filepath = "data/demo/" ++ show i ++ ".json" -- TODO: This has to be fixed
+                
+saveLink :: Linked a => Link a -> IO ()
+saveLink link@(MkLink ref) = do
+    content <- readLink link -- TODO do not use readLink, risk of infinite loops
+    (i, _) <- readIORef ref
+    let filepath = "data/demo" ++ show i ++ ".json" -- TODO: This has to be fixed
+    case content of
+        Nothing -> return ()
+        Just val -> do
+            LB.writeFile filepath $ J.encode val
