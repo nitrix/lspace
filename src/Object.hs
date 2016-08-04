@@ -28,6 +28,9 @@ data ObjectInfo = ObjectBox    Box
                 | ObjectUnknown
                 deriving (Generic, Eq, Ord)
 
+objShip :: Lens' Object (Link (Ship Int Object))
+objShip = lens (\(MkObject common _) -> _objShip common) (\(MkObject common info) x -> MkObject common { _objShip = x } info)
+
 objFacing :: Lens' Object Direction
 objFacing = lens (\(MkObject common _) -> _objFacing common) (\(MkObject common info) x -> MkObject common { _objFacing = x } info)
 

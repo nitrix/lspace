@@ -8,6 +8,7 @@ module Coordinate
     , coordinate
     , coordinateMove
     , coordinates
+    , coordinatesMove
     , coordinateX
     , coordinateY
     , defaultCoordinate
@@ -60,6 +61,9 @@ coordinateMove North = coordinateY %~ subtract 1
 coordinateMove South = coordinateY %~ (+1)
 coordinateMove West  = coordinateX %~ subtract 1
 coordinateMove East  = coordinateX %~ (+1)
+
+coordinatesMove :: Direction -> (Int, Int) -> (Int, Int)
+coordinatesMove direction (x, y) = view coordinates $ coordinateMove direction (coordinate x y)
 
 -- | Center point
 defaultCoordinate :: Coordinate

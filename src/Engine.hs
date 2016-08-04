@@ -5,6 +5,8 @@ module Engine
     , engineLoadGame
     ) where
 
+import Debug.Trace
+    
 import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
@@ -15,11 +17,13 @@ import Linear (V2(V2))
 import SDL
 
 import Camera
-import Game
 import Coordinate
 import Environment
+import Game
+import qualified Grid as G
 import Link
 import Object
+import Ship
 import Ui
 import Ui.Menu
 
@@ -155,15 +159,29 @@ gameMsg fromObj (Just toObj) (msg:msgs) = do
 -}
 
 engineRotateObject :: Link Object -> Direction -> Game ()
-engineRotateObject obj direction = do
-    gameModifyLink obj $ objFacing .~ direction
+engineRotateObject objLink direction = trace "engineRotateObject" $ do
+    gameModifyLink objLink $ objFacing .~ direction
     -- TODO: Tell the object it got rotated?
 
 engineMoveObject :: Link Object -> Direction -> Game ()
-engineMoveObject resObj direction = do
+engineMoveObject objLink direction = trace "engineMoveObject" $ do
     -- Rotate the object
-    engineRotateObject resObj direction
-
+    engineRotateObject objLink direction
+    
+    -- Obtaining ship from object
+    shipLink <- view objShip <$> gameReadLink objLink
+    ship <- gameReadLink shipLink
+    
+    -- Asking the ship's grid about the current position of our object
+    let maybePosition = G.reverseLookup objLink (view shipGrid ship)
+    case maybePosition of
+        Nothing -> return ()
+        Just position@(x, y) -> do
+            traceShow position $ do
+            let newPosition@(newX, newY) = coordinatesMove direction position
+            traceShow newPosition $ do
+            gameModifyLink shipLink $ shipGrid %~ G.delete x y objLink . G.insert newX newY objLink
+            return ()
 {-
     -- Move the object
     case M.lookup oid objects of

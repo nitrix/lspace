@@ -54,10 +54,9 @@ instance (ToJSON k, Integral k) => ToJSON (Ship k v) where
         , "dimension"  .= _shipDimension s
         ]
 
-shipGrid :: Lens' (Ship k v) (G.Grid k (Link v))
-shipGrid = lens _shipGrid (\s x -> s { _shipGrid = x })
-
+shipGrid       :: Lens' (Ship k v) (G.Grid k (Link v))
+shipGrid       = lens _shipGrid (\s x -> s { _shipGrid = x })
 shipCoordinate :: Lens' (Ship k v) Coordinate
-shipMass       :: Lens' (Ship k v) k
 shipCoordinate = lens _shipCoordinate (\s x -> s { _shipCoordinate = x })
+shipMass       :: Lens' (Ship k v) k
 shipMass       = lens _shipMass       (\s x -> s { _shipMass       = x })
