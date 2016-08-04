@@ -18,33 +18,35 @@ import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import System.Random
 
+import Cache
 import Camera
+import Coordinate
+import Environment
 import qualified Grid as G
 import Link
 import Object
-import Types.Cache
-import Types.Coordinate
-import Types.Environment
-import Types.Game
-import qualified Types.Ship as H
-import Types.Ui
-import Types.World
+import qualified Ship as H
+import Game
+import Ui
 import Ui.Menu
 
-renderGame :: Game -> EnvironmentT IO ()
+renderGame :: GameState -> EnvironmentT IO ()
 renderGame game = do
     renderer <- asks envRenderer
+
     -- Let's prepare a new fresh screen
     rendererDrawColor renderer $= V4 0 0 0 0 -- black
     clear renderer
+
     -- Render various things
     subRenderVoid game
     subRenderWorld game
     subRenderUi game
+
     -- Present to the screen
     present renderer
 
-subRenderUi :: Game -> EnvironmentT IO ()
+subRenderUi :: GameState -> EnvironmentT IO ()
 subRenderUi game = do
     -- Information needed to render
     renderer    <- asks envRenderer
@@ -65,15 +67,17 @@ subRenderUi game = do
     where
         V2 _ height = game ^. gameCamera . cameraWindowSize
 
-subRenderWorld :: Game -> EnvironmentT IO ()
+subRenderWorld :: GameState -> EnvironmentT IO ()
 subRenderWorld game = do
     -- Information needed to render
     renderer        <- asks envRenderer
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
     
+    ships <- lift $ catMaybes <$> mapM readLink shipLinks
+
     -- TODO: Abandon hopes whoever wants to update this monster
-    prethings <- catMaybes . concat <$> (forM ships $ \ship -> do
+    things <- catMaybes . concat <$> (forM ships $ \ship -> do
         let (scx, scy) = view (H.shipCoordinate . coordinates) ship
         let grid       = view H.shipGrid ship
         let range      = ( cameraX - scx
@@ -102,8 +106,6 @@ subRenderWorld game = do
                  ) ships :: [(Coordinate, Object)]
     -}
 
-    let things = prethings
-
     -- Collect renderables, because of zIndex
     -- TODO: We might have to take "things" large than is visible on the screen if we have very large
     -- multi-sprite objects that starts glitching the the edges of the screen.
@@ -129,12 +131,12 @@ subRenderWorld game = do
     
     where
         (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
-        viewport = game ^. gameCamera . cameraViewport
-        cameraX  = game ^. gameCamera . cameraCoordinate . coordinateX
-        cameraY  = game ^. gameCamera . cameraCoordinate . coordinateY
-        ships    = game ^. gameWorld  . worldShips
+        viewport  = game ^. gameCamera . cameraViewport
+        cameraX   = game ^. gameCamera . cameraCoordinate . coordinateX
+        cameraY   = game ^. gameCamera . cameraCoordinate . coordinateY
+        shipLinks = game ^. gameShips
 
-subRenderVoid :: Game -> EnvironmentT IO ()
+subRenderVoid :: GameState -> EnvironmentT IO ()
 subRenderVoid game = do
     renderer <- asks envRenderer
     cacheRef <- asks envCacheRef
@@ -157,7 +159,7 @@ subRenderVoid game = do
                 rendererRenderTarget renderer $= Just layer
                 rendererDrawColor renderer $= V4 0 0 0 0 -- transparent black
                 clear renderer
-                textureBlendMode layer $= BlendAlphaBlend
+                textureBlendMode layer $= BlendAdditive -- BlendAlphaBlend
                 rendererDrawColor renderer $= V4 35 35 35 200    -- white quite dark
                 drawPoints renderer dark
                 rendererDrawColor renderer $= V4 100 100 100 200 -- white kinda visible

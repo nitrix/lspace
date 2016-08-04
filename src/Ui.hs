@@ -1,4 +1,4 @@
-module Types.Ui
+module Ui
     ( Ui
     , UiType(..)
     , UiTypeMenu(..)

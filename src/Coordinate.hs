@@ -1,6 +1,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-module Types.Coordinate
+module Coordinate
     ( Coordinate(getCoordinate) -- TODO: ewww
     , Direction(..)
     , coordinate
@@ -11,8 +13,8 @@ module Types.Coordinate
     , defaultCoordinate
     ) where
 
-import Control.Lens
-import qualified Data.Aeson as JSON
+import Control.Lens (Lens', lens, (%~), (&), view, set, (.~))
+import Data.Aeson as J
 import qualified Data.Text as T
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
@@ -22,20 +24,20 @@ data Direction = North
                | East
                | South
                | West
-               deriving (Show, Read, Bounded, Enum)
+               deriving (Show, Read, Bounded, Enum, Eq, Ord)
 
-instance JSON.ToJSON Direction where
-    toJSON = JSON.String . T.pack . show
+instance ToJSON Direction where
+    toJSON = String . T.pack . show
 
-instance JSON.FromJSON Direction where
-    parseJSON (JSON.String s) = return $ read $ T.unpack s
+instance FromJSON Direction where
+    parseJSON (J.String s) = return $ read $ T.unpack s
     parseJSON _ = error "Unable to parse JSON for Direction"
 
-instance JSON.ToJSON Coordinate where
-    toJSON c = JSON.String . T.pack . show $ getCoordinate c
+instance ToJSON Coordinate where
+    toJSON c = String . T.pack . show $ getCoordinate c
 
-instance JSON.FromJSON Coordinate where
-    parseJSON (JSON.String s) = return $ read $ T.unpack s
+instance FromJSON Coordinate where
+    parseJSON (J.String s) = return $ Coordinate $ read $ T.unpack s
     parseJSON _ = error "Unable to parse JSON for Coordinate"
 
 newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show, Read)
@@ -48,7 +50,6 @@ coordinateX = lens (view _x . getCoordinate) (\s z -> Coordinate $ getCoordinate
 coordinateY = lens (view _y . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _y .~ z)
 coordinates = lens (\c -> (view coordinateX c, view coordinateY c)) (\s c -> s & set coordinateX (fst c)
                                                                                & set coordinateY (snd c))
-
 -- | Simplified Coordinate constructor
 coordinate :: Int -> Int -> Coordinate
 coordinate x y = Coordinate $ P $ V2 x y

@@ -1,25 +1,31 @@
-module Ui.Menu where
+module Ui.Menu
+( uiMenuClear
+, uiMenuSwitch
+, uiMenuInterceptKeycode
+, uiMenuOptions
+)
+where
 
 import Control.Monad.State as S
 import Control.Lens
 import Data.Biapplicative
 import Data.List
-import SDL
+import SDL.Input.Keyboard.Codes
 
 import Game
-import Types.Coordinate
-import Types.Game
-import Types.Object
-import Types.Ui
+import Ui
 
+-- | Clear all visible menus from a Ui.
 uiMenuClear :: Ui -> Ui
 uiMenuClear = uiVisible %~ filter (isn't _UiTypeMenu)
 
+-- | Remove currently visible menus and only show the new given one.
 uiMenuSwitch :: UiTypeMenu -> Ui -> Ui
-uiMenuSwitch ty ui = uiMenuClear ui & uiVisible %~ (MkUiTypeMenu ty:)
+uiMenuSwitch tm ui = uiMenuClear ui & uiVisible %~ (MkUiTypeMenu tm:)
 
+-- | All menu options
 uiMenuOptions :: UiTypeMenu -> [String]
-uiMenuOptions ty = case ty of
+uiMenuOptions tm = case tm of
     UiMenuMain ->
         [ "[b] Build menu (soon)"
         , "[x] Destroy mode (soon)"
@@ -37,36 +43,38 @@ uiMenuOptions ty = case ty of
         , "[w] Wall"
         ]
 
-uiMenuInterceptKeycode :: Keycode -> StateT Game IO (Keycode, Bool)
+uiMenuInterceptKeycode :: Keycode -> Game (Keycode, Bool)
 uiMenuInterceptKeycode keycode = do
-    modals <- view (gameUi . uiVisible) <$> S.get
+    modals <- S.gets $ view (gameUi . uiVisible)
     
     results <- forM modals $ \modal -> do
         case modal of
             MkUiTypeMenu UiMenuBuild ->
                 case keycode of
-                    KeycodeB -> ignore -- decisive $ gameAdd (boxObject defaultObject defaultBox) (coordinate 0 1)
-                    KeycodeF -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ floorObject defaultObject defaultFloor
-                    KeycodeP -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ plantObject defaultObject defaultPlant
-                    KeycodeW -> ignore -- decisive $ sysWorldAddObjectAtPlayer $ wallObject defaultObject defaultWall
+                    KeycodeB -> ignore -- action $ gameAdd (boxObject defaultObject defaultBox) (coordinate 0 1)
+                    KeycodeF -> ignore -- action $ sysWorldAddObjectAtPlayer $ floorObject defaultObject defaultFloor
+                    KeycodeP -> ignore -- action $ sysWorldAddObjectAtPlayer $ plantObject defaultObject defaultPlant
+                    KeycodeW -> ignore -- action $ sysWorldAddObjectAtPlayer $ wallObject defaultObject defaultWall
                     _        -> ignore
             MkUiTypeMenu UiMenuMain ->
                 case keycode of
-                    KeycodeB -> ignore -- hook $ gameUi %~ uiMenuSwitch UiMenuBuild
-                    KeycodeQ -> hook $ gameUi %~ uiMenuSwitch UiMenuQuitConfirm
+                    KeycodeB -> ignore -- switch UiMenuBuild
+                    KeycodeQ -> switch UiMenuQuitConfirm
                     _        -> ignore
             MkUiTypeMenu UiMenuQuitConfirm ->
                 case keycode of
                     KeycodeY -> terminate
-                    KeycodeN -> hook $ gameUi %~ uiMenuSwitch UiMenuMain
+                    KeycodeN -> switch UiMenuMain
                     _        -> ignore
             -- _ -> ignore
 
+    -- Fold result tuples by keeping the `min` of all the `fst` and `||` of all the `snd`
     return $ foldl' (biliftA2 min (||)) (keycode, False) results
 
     where
-        decisive :: StateT Game IO () -> StateT Game IO (Keycode, Bool)
-        decisive f = f >> (hook $ gameUi %~ uiMenuClear)
-        terminate  = return (KeycodeUnknown, True)
-        ignore     = return (keycode, False)
-        hook f     = (KeycodeUnknown, False) <$ modify f
+        -- Trusty convenient helpers to give the intercepted keycode the desired behavior
+        terminate    = return (KeycodeUnknown, True)                                   :: Game (Keycode, Bool)
+        ignore       = return (keycode, False)                                         :: Game (Keycode, Bool)
+        -- action f  = f >> clear                                                      :: Game (Keycode, Bool)
+        switch tm    = (KeycodeUnknown, False) <$ (modify $ gameUi %~ uiMenuSwitch tm) :: Game (Keycode, Bool)
+        -- clear     = (KeycodeUnknown, False) <$ (modify $ gameUi %~ uiMenuClear)     :: Game (Keycode, Bool)
