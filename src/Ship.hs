@@ -29,7 +29,7 @@ defaultShip = MkShip
     , _shipVelocity   = (0, 0)
     }
 
-instance (Linked v, FromJSON k, Integral k, Ord (Link v)) => FromJSON (Ship k v) where
+instance (Linked v, FromJSON k, Show k, Integral k, Ord (Link v)) => FromJSON (Ship k v) where
     parseJSON (Object o) = do
         sCoord     <- o .: "coordinate"
         sDimension <- o .: "dimension"

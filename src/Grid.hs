@@ -13,6 +13,8 @@ module Grid
 , range
 , lookup
 , reverseLookup
+
+, idx
 )
 where
 
@@ -44,7 +46,7 @@ instance (ToJSON k, ToJSON v, Integral k) => ToJSON (Grid k v) where
              $ map (\(x, y, v) -> object ["x" .= x, "y" .= y, "v" .= v])
              $ toList g
 
-instance (FromJSON k, FromJSON v, Integral k, Ord v) => FromJSON (Grid k v) where
+instance (FromJSON k, FromJSON v, Show k, Integral k, Ord v) => FromJSON (Grid k v) where
     parseJSON (Array a) = return
                         $ fromList
                         $ catMaybes
@@ -74,7 +76,7 @@ fromList :: (Integral k, Ord v) => [(k, k, v)] -> Grid k v
 fromList xs = foldl' (\g (x, y, v) -> insert x y v g) empty xs
 
 toList :: forall k v. Integral k => Grid k v -> [(k, k, v)]
-toList g = concatMap (\(chunkCoord, chunk) -> concatMap (\(i, vs) -> xy chunkCoord i vs) $ zip [1..] $ V.toList chunk) $ M.toList (natural g)
+toList g = concatMap (\(chunkCoord, chunk) -> concatMap (\(i, vs) -> xy chunkCoord i vs) $ zip [0..] $ V.toList chunk) $ M.toList (natural g)
     where
         xy :: ChunkCoord k -> Int -> [v] -> [(k, k, v)]
         xy (cx, cy) i vs = foldl' (\acc v -> (cx * chunkSize + ix, cy * chunkSize + iy, v) : acc) [] vs
@@ -86,7 +88,7 @@ coord :: Integral k => k -> k -> ChunkCoord k
 coord x y = (x `div` chunkSize, y `div` chunkSize)
 
 idx :: Integral k => k -> k -> Int
-idx x y = fromIntegral $ iy * chunkSize + ix
+idx x y = (fromIntegral $ iy * chunkSize + ix)
     where
         ix = x `mod` chunkSize
         iy = y `mod` chunkSize
