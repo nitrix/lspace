@@ -175,13 +175,15 @@ engineMoveObject objLink direction = trace "engineMoveObject" $ do
     -- Asking the ship's grid about the current position of our object
     let maybePosition = G.reverseLookup objLink (view shipGrid ship)
     case maybePosition of
-        Nothing -> return ()
-        Just position@(x, y) -> do
-            traceShow position $ do
-            let newPosition@(newX, newY) = coordinatesMove direction position
-            traceShow newPosition $ do
-            gameModifyLink shipLink $ shipGrid %~ G.delete x y objLink . G.insert newX newY objLink
+        Nothing -> do
+            trace "wth" $ do
             return ()
+        Just position@(x, y) -> do
+            trace ("Old position: " ++ show position) $ do
+            let newPosition@(newX, newY) = coordinatesMove direction position
+            trace ("New position: " ++ show newPosition) $ do
+            gameModifyLink shipLink $ shipGrid %~ G.delete x y objLink . G.insert newX newY objLink
+            --return ()
 {-
     -- Move the object
     case M.lookup oid objects of

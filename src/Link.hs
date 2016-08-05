@@ -5,6 +5,8 @@
 
 module Link where
 
+import Debug.Trace
+
 import Control.Monad
 import Data.Aeson as J
 import Data.Dynamic
@@ -33,6 +35,11 @@ instance Ord (Link a) where
         b <- fst <$> readIORef refB
         return $ a `compare` b 
 
+instance Show (Link a) where
+    show (MkLink ref) = unsafePerformIO $ do
+        (i, _) <- readIORef ref
+        return $ "{Link #" ++ show i ++ "}"
+
 instance Linked a => FromJSON (Link a) where
     parseJSON (J.Number n) = do
         return $ getLinkId $ truncate n
@@ -48,6 +55,7 @@ refCache = unsafePerformIO (newIORef $ L.newLRU $ Just 1000) -- TODO: option for
 
 createLink :: a -> IO (Link a)
 createLink x = do
+    trace "createLink" $ do
     ref           <- newIORef x
     weakRef       <- mkWeakIORef ref (return ())
     nextCountLink <- MkLink <$> newIORef (0, Nothing)
@@ -58,6 +66,7 @@ createLink x = do
 
 writeLink :: Linked a => Link a -> a -> IO ()
 writeLink link@(MkLink ref) x = do
+    trace "writeLink" $ do
     maybeContent <- readLink link
     case maybeContent of
         Nothing -> return ()
@@ -73,6 +82,7 @@ writeLink link@(MkLink ref) x = do
 
 modifyLink :: Linked a => Link a -> (a -> a) -> IO ()
 modifyLink link@(MkLink ref) f = do
+    trace "modifyLink" $ do
     content <- readLink link
     (_, maybeWeak) <- readIORef ref
     case content of
@@ -89,6 +99,7 @@ modifyLink link@(MkLink ref) f = do
 
 getLinkId :: Linked a => Int -> Link a
 getLinkId n = unsafePerformIO $ do
+    trace "getLinkId" $ do
     links <- readIORef refCache
     let (newLinks, maybeVal) = L.lookup n links
     case maybeVal of
@@ -112,6 +123,7 @@ getLinkId n = unsafePerformIO $ do
 
 readLink :: forall a. Linked a => Link a -> IO (Maybe a)
 readLink (MkLink link) = do
+    trace "readLink" $ do
     -- Read the link unsafe bastraction
     (i, r) <- readIORef link
     case r of
@@ -142,6 +154,7 @@ readLink (MkLink link) = do
     where
         loadFreshLinkId :: Int -> IO (Maybe (Int, Maybe (Weak (IORef a))))
         loadFreshLinkId i = do
+            trace "loadFreshLinkId" $ do
             ok <- doesFileExist filepath
             if ok
             then do
@@ -171,6 +184,7 @@ readLink (MkLink link) = do
 --data Link a = MkLink {-# UNPACK #-} !(IORef (LinkId, Maybe (Weak (IORef a))))
 saveLink :: Linked a => Link a -> IO ()
 saveLink (MkLink ref) = do
+    trace "saveLink" $ do
     (i, mc) <- readIORef ref
     case mc of
         Nothing -> do
@@ -185,7 +199,9 @@ saveLink (MkLink ref) = do
                     let filepath = "data/demo/" ++ show i ++ ".json" -- TODO: This has to be fixed
                     LB.writeFile filepath $ J.encode final
 
+-- TODO and unload them would be neat
 saveAllLinks :: IO ()
 saveAllLinks = do
+    trace "saveAllLinks" $ do
     links <- map snd . L.toList <$> readIORef refCache
     forM_ links $ \link -> snd link

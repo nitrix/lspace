@@ -13,10 +13,10 @@ module Grid
 , range
 , lookup
 , reverseLookup
-
-, idx
 )
 where
+
+import Debug.Trace
 
 import Data.Aeson
 import Data.Aeson.Types
@@ -36,8 +36,8 @@ type Region k = (k, k, k, k)
 type ChunkCoord k = (k, k)
 type Chunk v = V.Vector [v]
 data Grid k v = MkGrid
-    { natural  :: M.Map (ChunkCoord k) (Chunk v)
-    , reversed :: M.Map v (k, k)
+    { natural  :: !(M.Map (ChunkCoord k) (Chunk v))
+    , reversed :: !(M.Map v (k, k))
     }
 
 instance (ToJSON k, ToJSON v, Integral k) => ToJSON (Grid k v) where
@@ -46,7 +46,7 @@ instance (ToJSON k, ToJSON v, Integral k) => ToJSON (Grid k v) where
              $ map (\(x, y, v) -> object ["x" .= x, "y" .= y, "v" .= v])
              $ toList g
 
-instance (FromJSON k, FromJSON v, Show k, Integral k, Ord v) => FromJSON (Grid k v) where
+instance (FromJSON k, FromJSON v, Show k, Integral k, Ord v, Show v) => FromJSON (Grid k v) where
     parseJSON (Array a) = return
                         $ fromList
                         $ catMaybes
@@ -72,7 +72,7 @@ emptyChunk = V.replicate (chunkSize * chunkSize) []
 chunkSize :: Integral k => k
 chunkSize = 25
 
-fromList :: (Integral k, Ord v) => [(k, k, v)] -> Grid k v
+fromList :: (Integral k, Ord v, Show k, Show v) => [(k, k, v)] -> Grid k v
 fromList xs = foldl' (\g (x, y, v) -> insert x y v g) empty xs
 
 toList :: forall k v. Integral k => Grid k v -> [(k, k, v)]
@@ -93,16 +93,16 @@ idx x y = (fromIntegral $ iy * chunkSize + ix)
         ix = x `mod` chunkSize
         iy = y `mod` chunkSize
 
-insert :: (Integral k, Ord v) => k -> k -> v -> Grid k v -> Grid k v
-insert x y v g = MkGrid
+insert :: (Integral k, Ord v, Show k, Show v) => k -> k -> v -> Grid k v -> Grid k v
+insert x y v g = trace ("Inserting at " ++ show x ++ ", " ++ show y) $ MkGrid
     { natural  = M.insertWith (const insertedTo) (coord x y) (insertedTo emptyChunk) (natural g)
-    , reversed = M.insert v (x, y) (reversed g)
+    , reversed = traceShow (M.insert v (x, y) (reversed g)) (M.insert v (x, y) (reversed g))
     }
     where
         insertedTo o = V.unsafeUpd o [(idx x y, [v])]
 
-delete :: (Integral k, Ord v) => k -> k -> v -> Grid k v -> Grid k v
-delete x y v g = MkGrid
+delete :: (Integral k, Ord v, Show k, Show v) => k -> k -> v -> Grid k v -> Grid k v
+delete x y v g = trace ("Deleting at " ++ show x ++ ", " ++ show y) $ MkGrid
     { natural  = M.update (\chunk -> Just $ V.modify go chunk) (coord x y) (natural g)
     , reversed = M.delete v (reversed g)
     }
@@ -112,8 +112,8 @@ delete x y v g = MkGrid
 lookup :: Integral k => k -> k -> Grid k v -> [v]
 lookup x y g = fromMaybe [] $ (\chunk -> chunk V.! idx x y) <$> M.lookup (coord x y) (natural g)
 
-reverseLookup :: Ord v => v -> Grid k v -> Maybe (k, k)
-reverseLookup v g = M.lookup v (reversed g)
+reverseLookup :: (Ord v, Show v, Show k) => v -> Grid k v -> Maybe (k, k)
+reverseLookup v g = trace ("reverseLookup: " ++ show (reversed g)) (M.lookup v (reversed g))
 
 range :: forall k v. Integral k => Region k -> Grid k v -> [(k, k, v)]
 range (lx, ly, hx, hy) g =
