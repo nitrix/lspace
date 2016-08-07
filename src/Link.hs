@@ -197,7 +197,7 @@ saveLink ctx link = do
     where
         filename = ctxJsonStore ctx ++ show (linkId link) ++ ".json"
 
--- TODO: save all links
+-- | Notably saves all links
 saveContext :: Context -> IO ()
 saveContext ctx = do
     cache <- readIORef (ctxCache ctx)
