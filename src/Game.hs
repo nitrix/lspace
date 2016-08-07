@@ -6,12 +6,13 @@ module Game
     ( Game
     , GameState
     , gameCamera
+    , gameEnv
     , gameKeyAlt
     , gameKeyShift
     , gamePlayer
     , gameShips
     , gameUi
-    , gameCreateLink
+--    , gameCreateLink
     , gameModifyLink
     , gameWriteLink
     , gameReadLink
@@ -23,9 +24,11 @@ import Control.Monad.State.Class
 import Control.Monad.Trans
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Reader
 import qualified Data.Aeson as J
 
 import Camera
+import Environment
 import Link
 import Object
 import Ship
@@ -41,7 +44,7 @@ data GameState = MkGameState
     , _gameUi       :: Ui
     }
 
-newtype Game a = Game { unwrapGame :: MaybeT (StateT GameState IO) a }
+newtype Game a = Game { unwrapGame :: EnvironmentT (MaybeT (StateT GameState IO)) a }
     deriving (Functor, Applicative, Monad, MonadState GameState)
 
 -- Lenses
@@ -72,17 +75,29 @@ instance J.FromJSON GameState where
             }
     parseJSON _ = error "Unable to parse Game json"
 
-gameReadLink :: Linked a => Link a -> Game a
-gameReadLink = Game . MaybeT . lift . readLink
+gameEnv :: (Environment -> a) -> Game a
+gameEnv f = Game $ asks f
 
-gameModifyLink :: Linked a => Link a -> (a -> a) -> Game ()
-gameModifyLink link f = Game . MaybeT . lift $ Just <$> modifyLink link f
+gameReadLink :: Linkable a => Link a -> Game a
+gameReadLink link = do
+    ctx <- Game $ asks envContext 
+    Game . lift . MaybeT . lift $ readLink ctx link
 
-gameWriteLink :: Linked a => Link a -> a -> Game ()
-gameWriteLink link x = Game . MaybeT . lift $ Just <$> writeLink link x
+gameModifyLink :: Linkable a => Link a -> (a -> a) -> Game ()
+gameModifyLink link f = do
+    ctx <- Game $ asks envContext 
+    Game . lift . MaybeT . lift $ Just <$> modifyLink ctx link f
 
-gameCreateLink :: a -> Game (Link a)
-gameCreateLink x = Game . MaybeT . lift $ Just <$> createLink x
+gameWriteLink :: Linkable a => Link a -> a -> Game ()
+gameWriteLink link x = do
+    ctx <- Game $ asks envContext 
+    Game . lift . MaybeT . lift $ Just <$> writeLink ctx link x
 
-runGame :: Game a -> GameState -> IO (Maybe a, GameState)
-runGame = runStateT . runMaybeT . unwrapGame
+--gameCreateLink :: a -> Game (Link a)
+--gameCreateLink x = Game . MaybeT . lift $ Just <$> createLink x
+
+runGame :: Environment -> GameState -> Game a -> IO (Maybe a, GameState)
+runGame env gs game = flip runStateT gs
+                    $ runMaybeT
+                    $ flip runReaderT env
+                    $ unwrapGame game

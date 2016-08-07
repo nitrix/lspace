@@ -16,15 +16,15 @@ module Grid
 )
 where
 
-import Debug.Trace
-
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Maybe
 import Data.Foldable (foldl')
--- import Data.Maybe
-import qualified Data.Map as M
 -- import qualified Data.Text as T
+-- import qualified Data.Text.Encoding as T
+-- import qualified Data.ByteString.Lazy as LB
+import qualified Data.Map as M
+import qualified Data.Set as S
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
 import Prelude hiding (lookup)
@@ -35,10 +35,8 @@ import qualified Data.List as L
 type Region k = (k, k, k, k)
 type ChunkCoord k = (k, k)
 type Chunk v = V.Vector [v]
-data Grid k v = MkGrid
-    { natural  :: !(M.Map (ChunkCoord k) (Chunk v))
-    , reversed :: !(M.Map v (k, k))
-    }
+data Grid k v = MkGrid !(M.Map (ChunkCoord k) (Chunk v))
+                       !(M.Map v (S.Set (k, k)))
 
 instance (ToJSON k, ToJSON v, Integral k) => ToJSON (Grid k v) where
     toJSON g = Array
@@ -63,6 +61,9 @@ instance (FromJSON k, FromJSON v, Show k, Integral k, Ord v, Show v) => FromJSON
 instance Show (Grid k v) where
     show = const "{Grid}"
 
+-- instance (Integral k, ToJSON k, ToJSON v) => Show (Grid k v) where
+--    show g = T.unpack $ T.decodeUtf8 $ LB.toStrict $ encode g
+
 empty :: Grid k v
 empty = MkGrid M.empty M.empty
 
@@ -72,11 +73,11 @@ emptyChunk = V.replicate (chunkSize * chunkSize) []
 chunkSize :: Integral k => k
 chunkSize = 25
 
-fromList :: (Integral k, Ord v, Show k, Show v) => [(k, k, v)] -> Grid k v
+fromList :: (Integral k, Ord v) => [(k, k, v)] -> Grid k v
 fromList xs = foldl' (\g (x, y, v) -> insert x y v g) empty xs
 
 toList :: forall k v. Integral k => Grid k v -> [(k, k, v)]
-toList g = concatMap (\(chunkCoord, chunk) -> concatMap (\(i, vs) -> xy chunkCoord i vs) $ zip [0..] $ V.toList chunk) $ M.toList (natural g)
+toList (MkGrid natural _) = concatMap (\(chunkCoord, chunk) -> concatMap (\(i, vs) -> xy chunkCoord i vs) $ zip [0..] $ V.toList chunk) $ M.toList natural
     where
         xy :: ChunkCoord k -> Int -> [v] -> [(k, k, v)]
         xy (cx, cy) i vs = foldl' (\acc v -> (cx * chunkSize + ix, cy * chunkSize + iy, v) : acc) [] vs
@@ -93,32 +94,30 @@ idx x y = (fromIntegral $ iy * chunkSize + ix)
         ix = x `mod` chunkSize
         iy = y `mod` chunkSize
 
-insert :: (Integral k, Ord v, Show k, Show v) => k -> k -> v -> Grid k v -> Grid k v
-insert x y v g = trace ("Inserting at " ++ show x ++ ", " ++ show y) $ MkGrid
-    { natural  = M.insertWith (const insertedTo) (coord x y) (insertedTo emptyChunk) (natural g)
-    , reversed = traceShow (M.insert v (x, y) (reversed g)) (M.insert v (x, y) (reversed g))
-    }
+insert :: (Integral k, Ord v) => k -> k -> v -> Grid k v -> Grid k v
+insert x y v (MkGrid natural reversed) = MkGrid
+    (M.insertWith (const insertedTo) (coord x y) (insertedTo emptyChunk) natural)
+    (M.insertWith S.union v (S.singleton (x, y)) reversed)
     where
         insertedTo o = V.unsafeUpd o [(idx x y, [v])]
 
-delete :: (Integral k, Ord v, Show k, Show v) => k -> k -> v -> Grid k v -> Grid k v
-delete x y v g = trace ("Deleting at " ++ show x ++ ", " ++ show y) $ MkGrid
-    { natural  = M.update (\chunk -> Just $ V.modify go chunk) (coord x y) (natural g)
-    , reversed = M.delete v (reversed g)
-    }
+delete :: (Integral k, Ord v) => k -> k -> v -> Grid k v -> Grid k v
+delete x y v (MkGrid natural reversed) = MkGrid
+    (M.update (\chunk -> Just $ V.modify go chunk) (coord x y) natural)
+    (M.update (\s -> if S.size s == 1 then Nothing else Just (S.delete (x, y) s)) v reversed)
     where
         go vec = VM.modify vec (L.delete v) (idx x y)
 
 lookup :: Integral k => k -> k -> Grid k v -> [v]
-lookup x y g = fromMaybe [] $ (\chunk -> chunk V.! idx x y) <$> M.lookup (coord x y) (natural g)
+lookup x y (MkGrid natural _) = fromMaybe [] $ (\chunk -> chunk V.! idx x y) <$> M.lookup (coord x y) natural
 
-reverseLookup :: (Ord v, Show v, Show k) => v -> Grid k v -> Maybe (k, k)
-reverseLookup v g = trace ("reverseLookup: " ++ show (reversed g)) (M.lookup v (reversed g))
+reverseLookup :: Ord v => v -> Grid k v -> Maybe (k, k)
+reverseLookup v (MkGrid _ reversed) = head . S.toList <$> M.lookup v reversed
 
 range :: forall k v. Integral k => Region k -> Grid k v -> [(k, k, v)]
-range (lx, ly, hx, hy) g =
+range (lx, ly, hx, hy) (MkGrid natural _) =
     foldl
-    (\acc c -> fromMaybe [] (triage . processChunk c <$> M.lookup c (natural g)) ++ acc)
+    (\acc c -> fromMaybe [] (triage . processChunk c <$> M.lookup c natural) ++ acc)
     []
     chunkCoords
     where

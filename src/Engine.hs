@@ -34,20 +34,18 @@ engineInit game = do
     let playerCoord = Nothing
     return $ fromMaybe game ((\coord -> game & gameCamera %~ cameraCenter coord) <$> playerCoord)
 
--- TODO: disgusting environment passed explicitly
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
-engineHandleEvent :: Environment -> Event -> Game Bool
-engineHandleEvent env event = do
+engineHandleEvent :: Event -> Game Bool
+engineHandleEvent event = do
     case eventPayload event of
         KeyboardEvent d      -> engineHandleKeyboardEvent d
-        WindowResizedEvent d -> engineHandleWindowResizedEvent env d
+        WindowResizedEvent d -> engineHandleWindowResizedEvent d
         QuitEvent            -> return True
         _                    -> return False
 
--- TODO: disgusting environment passed explicitly
-engineHandleWindowResizedEvent :: Environment -> WindowResizedEventData -> Game Bool
-engineHandleWindowResizedEvent env wred = do
-    let tileSize = envTileSize env
+engineHandleWindowResizedEvent :: WindowResizedEventData -> Game Bool
+engineHandleWindowResizedEvent wred = do
+    tileSize <- gameEnv envTileSize
     let V2 width height = windowResizedEventSize wred
 
     modify $ gameCamera . cameraWindowSize .~ V2 (fromIntegral width) (fromIntegral height)
@@ -159,19 +157,19 @@ gameMsg fromObj (Just toObj) (msg:msgs) = do
 -}
 
 engineRotateObject :: Link Object -> Direction -> Game ()
-engineRotateObject objLink direction = trace "engineRotateObject" $ do
+engineRotateObject objLink direction = do
     gameModifyLink objLink $ objFacing .~ direction
     -- TODO: Tell the object it got rotated?
 
 engineMoveObject :: Link Object -> Direction -> Game ()
-engineMoveObject objLink direction = trace "engineMoveObject" $ do
+engineMoveObject objLink direction = do
     -- Rotate the object
     engineRotateObject objLink direction
     
     -- Obtaining ship from object
     shipLink <- view objShip <$> gameReadLink objLink
     ship <- gameReadLink shipLink
-    
+
     -- Asking the ship's grid about the current position of our object
     let maybePosition = G.reverseLookup objLink (view shipGrid ship)
     case maybePosition of
@@ -179,34 +177,11 @@ engineMoveObject objLink direction = trace "engineMoveObject" $ do
             trace "wth" $ do
             return ()
         Just position@(x, y) -> do
-            trace ("Old position: " ++ show position) $ do
-            let newPosition@(newX, newY) = coordinatesMove direction position
-            trace ("New position: " ++ show newPosition) $ do
-            gameModifyLink shipLink $ shipGrid %~ G.delete x y objLink . G.insert newX newY objLink
-            --return ()
-{-
-    -- Move the object
-    case M.lookup oid objects of
-        Nothing  -> return ()
-        Just obj -> case M.lookup (objShipId obj) ships of
-            Nothing -> return ()
-            Just ship -> do
-                -- The most important, the previous and new coordinates
-                let (x, y)       = objShipCoordinate obj ^. coordinates
-                let (newX, newY) = coordinateMove direction (objShipCoordinate obj) ^. coordinates
+            let (newX, newY) = coordinatesMove direction position
+            gameModifyLink shipLink $ shipGrid %~ G.insert newX newY objLink . G.delete x y objLink
 
-                -- Calculate what the new grid and ship would look like
-                let newGrid = G.insert newX newY oid $ G.delete x y oid (ship ^. shipGrid)
-                let newShip = shipGrid .~ newGrid $ ship
-                let newObj  = obj { objShipCoordinate = coordinate newX newY }
-
-                -- Update the object while also paying attention to collisions
-                let objsAtNewLocation = catMaybes $ flip M.lookup objects <$> G.lookup newX newY (ship ^. shipGrid)
-                when (not $ any objSolid objsAtNewLocation) $ do
-                    modify $ gameWorld . worldShips   %~ M.insert (objShipId newObj) newShip
-                    modify $ gameWorld . worldObjects %~ M.insert oid newObj
-                    gameMsg Nothing (Just oid) [MovedMsg direction]
--}
+    -- TODO: Add collision detection
+    -- Notify the object that its been rotated?
 
 engineLoadGame :: String -> IO GameState
 engineLoadGame name = do 

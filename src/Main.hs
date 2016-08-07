@@ -14,7 +14,7 @@ import Renderer    (renderGame)
 import Cache       (defaultCache)
 import Environment (Environment(..), EnvironmentT)
 import Game        (GameState, runGame)
-import Link        (saveAllLinks)
+import Link        (initContext, saveContext)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
@@ -37,8 +37,9 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     present renderer
     showWindow window
 
-    -- Create cache
+    -- Create cache and relational context
     cacheRef <- newIORef defaultCache
+    context  <- initContext (Just 1000) "data/demo/"
     
     -- Load game
     game <- engineLoadGame "demo"
@@ -46,6 +47,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     -- Main loop
     runReaderT (engineInit game >>= mainLoop) $ MkEnvironment
         { envCacheRef = cacheRef
+        , envContext  = context
         , envFont     = font
         , envRenderer = renderer
         , envTileset  = tileset
@@ -55,7 +57,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     
     -- Cleanup cache
     writeIORef cacheRef defaultCache
-    saveAllLinks
+    saveContext context
 
     -- Cleanup
     Ttf.closeFont font
@@ -74,8 +76,7 @@ mainLoop game = do
     events <- (:) <$> waitEvent <*> pollEvents
 
     -- As an optimisation, prevent chocking by processing all the queued up events at once
-    -- (shouldHalts, newGame) <- lift $ runStateT (traverse (engineHandleEvent env) events) game
-    (shouldHalts, newGame) <- lift $ runGame (traverse (engineHandleEvent env) events) game
+    (shouldHalts, newGame) <- lift $ runGame env game $ traverse engineHandleEvent events
 
     -- Then render the new game state
     renderGame newGame
