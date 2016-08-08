@@ -75,6 +75,12 @@ instance J.FromJSON GameState where
             }
     parseJSON _ = error "Unable to parse Game json"
 
+instance J.ToJSON GameState where
+    toJSON gs = J.object
+        [ "player" J..= _gamePlayer gs
+        , "ships"  J..= _gameShips gs
+        ]
+
 gameEnv :: (Environment -> a) -> Game a
 gameEnv f = Game $ asks f
 

@@ -2,14 +2,11 @@ module Engine
     ( engineHandleEvent
     , engineHandleKeyboardEvent
     , engineInit
-    , engineLoadGame
     ) where
 
 import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
-import qualified Data.Aeson as J
-import qualified Data.ByteString.Lazy as BL
 import Data.Maybe
 import Linear (V2(V2))
 import SDL
@@ -178,8 +175,3 @@ engineMoveObject objLink direction = do
 
     -- TODO: Add collision detection
     -- Notify the object that its been rotated?
-
-engineLoadGame :: String -> IO GameState
-engineLoadGame name = do 
-    json <- BL.readFile $ "data/" ++ name ++ "/" ++ "game.json"
-    return $ fromJust $ J.decode json

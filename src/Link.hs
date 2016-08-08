@@ -8,6 +8,7 @@ module Link
     , initContext
     , saveContext
 
+    , defaultLink
     , readLink
     , writeLink
     , modifyLink
@@ -67,6 +68,10 @@ initContext :: Maybe Integer -> FilePath -> IO Context
 initContext maybeLimit jsonStore = do
     cache <- newIORef (L.newLRU maybeLimit)
     return $ MkContext cache jsonStore
+
+-- | Default link
+defaultLink :: Link a
+defaultLink = restoreLink 0
 
 -- | This creates an unresolved link, any LinkId is therefore valid and doesn't require IO.
 restoreLink :: LinkId -> Link a
@@ -182,7 +187,9 @@ fixLink ctx link = do
 -- | Helper function to load values from disk
 -- TODO: Ideally the filename needs to be customizable based on context
 loadVal :: Linkable a => Context -> LinkId -> IO (Maybe a)
-loadVal ctx lid = decode . LB.fromStrict <$> B.readFile filename
+loadVal ctx lid = do
+    putStrLn ("Loading link #" ++ show lid)
+    decode . LB.fromStrict <$> B.readFile filename
     where
         filename = ctxJsonStore ctx ++ show lid ++ ".json"
 
@@ -190,6 +197,7 @@ loadVal ctx lid = decode . LB.fromStrict <$> B.readFile filename
 -- TODO: Ideally the filename needs to be customizable based on context
 saveLink :: Linkable a => Context -> Link a -> IO ()
 saveLink ctx link = do
+    putStrLn ("Saving link #" ++ show (linkId link))
     maybeVal <- readLink ctx link
     case maybeVal of
         Nothing -> return ()

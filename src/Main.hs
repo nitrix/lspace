@@ -9,12 +9,12 @@ import SDL
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
 
-import Engine      (engineHandleEvent, engineInit, engineLoadGame)
+import Engine      (engineHandleEvent, engineInit)
 import Renderer    (renderGame)
 import Cache       (defaultCache)
 import Environment (Environment(..), EnvironmentT)
 import Game        (GameState, runGame)
-import Link        (initContext, saveContext)
+import Link        (initContext, saveContext, readLink, defaultLink)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
@@ -42,7 +42,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     context  <- initContext (Just 1000) "data/demo/"
     
     -- Load game
-    game <- engineLoadGame "demo"
+    game <- fromJust <$> readLink context defaultLink
 
     -- Main loop
     runReaderT (engineInit game >>= mainLoop) $ MkEnvironment
