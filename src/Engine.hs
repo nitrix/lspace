@@ -5,8 +5,6 @@ module Engine
     , engineLoadGame
     ) where
 
-import Debug.Trace
-    
 import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
@@ -173,9 +171,7 @@ engineMoveObject objLink direction = do
     -- Asking the ship's grid about the current position of our object
     let maybePosition = G.reverseLookup objLink (view shipGrid ship)
     case maybePosition of
-        Nothing -> do
-            trace "wth" $ do
-            return ()
+        Nothing -> return ()
         Just position@(x, y) -> do
             let (newX, newY) = coordinatesMove direction position
             gameModifyLink shipLink $ shipGrid %~ G.insert newX newY objLink . G.delete x y objLink
