@@ -43,7 +43,6 @@ executable lspace
                      , Game
                      , Grid
                      , Link
-                     , Message
                      , Object
                      , Renderer
                      , Ship

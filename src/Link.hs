@@ -12,6 +12,7 @@ module Link
     , readLink
     , writeLink
     , modifyLink
+    , restoreLink
     )
     where
 
@@ -39,7 +40,6 @@ data LinkCacheWrapper = MkLinkCacheWrapper
 data Link a = MkLink
     { linkId  :: LinkId
     , linkRef :: LinkRef a
-    -- , linkUid :: UUID   TODO
     }
 
 data Context = MkContext
@@ -142,7 +142,7 @@ readLink ctx link = do
                             val <- readIORef refVal
                             return $ Just val
 
--- | TODO: This function loads a value in cache and create a healthy resolved link to the cache entry.
+-- | This function loads a value in cache and create a healthy resolved link to the cache entry.
 fixLink :: Linkable a => Context -> Link a -> IO (Maybe a)
 fixLink ctx link = do
     cache <- readIORef (ctxCache ctx)
@@ -185,7 +185,6 @@ fixLink ctx link = do
                     return newMaybeVal
 
 -- | Helper function to load values from disk
--- TODO: Ideally the filename needs to be customizable based on context
 loadVal :: Linkable a => Context -> LinkId -> IO (Maybe a)
 loadVal ctx lid = do
     putStrLn ("Loading link #" ++ show lid)
@@ -194,7 +193,6 @@ loadVal ctx lid = do
         filename = ctxJsonStore ctx ++ show lid ++ ".json"
 
 -- | Helper function to save a link to disk.
--- TODO: Ideally the filename needs to be customizable based on context
 saveLink :: Linkable a => Context -> Link a -> IO ()
 saveLink ctx link = do
     putStrLn ("Saving link #" ++ show (linkId link))

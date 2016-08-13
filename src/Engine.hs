@@ -96,8 +96,9 @@ engineHandleBareKeycode keycode = do
         _              -> modify $ id
     return False
 
---engineAddObject :: Object -> Coordinate -> Game ()
---engineAddObject _ _ = return ()
+-- engineAddObject :: Link Object -> Coordinate -> Game ()
+-- engineAddObject objLink coord = return ()
+
 {-
 gameAdd obj coord = do
     (cx, cy)   <- gets $ view $ gameCamera . cameraCoordinate . coordinates
@@ -135,26 +136,9 @@ gameAdd obj coord = do
         (x, y) = view coordinates coord
 -}
 
---engineMsg :: Maybe (Link Object) -> Maybe (Link Object) -> [Message] -> Game ()
---engineMsg _ _ _ = return ()
-{-
-gameMsg _ _ [] = return ()
-gameMsg _ Nothing _ = return () -- Replies to non-objects, e.g. direct calls to gameMove
-gameMsg fromObj (Just toObj) (msg:msgs) = do
-    case toObj of
-        Nothing -> return ()
-        Just t  -> do
-            -- trace ("Sending msg `" ++ show msg ++ "` to object #" ++ show toOid) $ do
-            let (responses, newToObj) = runState (objMsg t msg) t
-            modify $ gameWorld . worldObjects %~ M.insert toOid newToObj
-            gameMsg (Just toOid) fromOid responses
-    gameMsg fromOid (Just toOid) msgs
--}
-
 engineRotateObject :: Link Object -> Direction -> Game ()
 engineRotateObject objLink direction = do
     gameModifyLink objLink $ objFacing .~ direction
-    -- TODO: Tell the object it got rotated?
 
 engineMoveObject :: Link Object -> Direction -> Game ()
 engineMoveObject objLink direction = do
@@ -171,7 +155,15 @@ engineMoveObject objLink direction = do
         Nothing -> return ()
         Just position@(x, y) -> do
             let (newX, newY) = coordinatesMove direction position
-            gameModifyLink shipLink $ shipGrid %~ G.insert newX newY objLink . G.delete x y objLink
-
-    -- TODO: Add collision detection
-    -- Notify the object that its been rotated?
+            let (worldNewX, worldNewY) = (ship ^. shipCoordinate . coordinateX + newX, ship ^. shipCoordinate . coordinateY + newY)
+    
+            -- Collision detection of native objects at the target location
+            shipLinks <- gets (view gameShips)
+            ships     <- mapM gameReadLink shipLinks
+            natives   <- mapM gameReadLink $ concat $ mapM (\s ->
+                            let (innerX, innerY) = (worldNewX - s ^. shipCoordinate . coordinateX, worldNewY - s ^. shipCoordinate . coordinateY) in
+                            G.lookup innerX innerY $ view shipGrid s
+                        ) ships
+            when (all (not . objSolid) natives) $ do
+                -- Moving our object
+                gameModifyLink shipLink $ shipGrid %~ G.insert newX newY objLink . G.delete x y objLink

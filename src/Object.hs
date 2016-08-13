@@ -16,7 +16,6 @@ data ObjectCommon = MkObjectCommon
     { _objFacing :: Direction
     , _objMass   :: Int
     , _objShip   :: Link (Ship Int Object)
-    , _objSolid  :: Bool
     } deriving (Generic, Eq, Ord)
 
 data Object = MkObject ObjectCommon ObjectInfo deriving (Generic, Eq, Ord)
@@ -64,7 +63,7 @@ instance Show Object where
 
 objSprite :: Object -> Sprite
 objSprite (MkObject _ (ObjectBox box)) = case _boxState box of
-    BoxClosed -> sprite 0 0 ZOnGround
+    BoxClosed -> sprite 0 2 ZOnGround
 objSprite (MkObject _ ObjectFloor) = sprite 4 1 ZGround
 objSprite (MkObject _ ObjectPlant) = sprite 0 1 ZOnGround
 objSprite (MkObject common (ObjectPlayer _)) = case _objFacing common of
@@ -75,3 +74,7 @@ objSprite (MkObject common (ObjectPlayer _)) = case _objFacing common of
 objSprite (MkObject _ (ObjectWall w)) = case _wallType w of
     WallTypeHorizontal -> sprite 5 2 ZGround
 objSprite _ = defaultSprite
+
+objSolid :: Object -> Bool
+objSolid (MkObject _ (ObjectBox (MkBox BoxClosed))) = True
+objSolid _ = False

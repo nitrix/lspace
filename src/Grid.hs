@@ -99,7 +99,7 @@ insert x y v (MkGrid natural reversed) = MkGrid
     (M.insertWith (const insertedTo) (coord x y) (insertedTo emptyChunk) natural)
     (M.insertWith S.union v (S.singleton (x, y)) reversed)
     where
-        insertedTo o = V.unsafeUpd o [(idx x y, [v])]
+        insertedTo o = V.unsafeUpd o [(idx x y, v : V.unsafeIndex o (idx x y))]
 
 delete :: (Integral k, Ord v) => k -> k -> v -> Grid k v -> Grid k v
 delete x y v (MkGrid natural reversed) = MkGrid
