@@ -164,6 +164,7 @@ engineMoveObject objLink direction = do
                             let (innerX, innerY) = (worldNewX - s ^. shipCoordinate . coordinateX, worldNewY - s ^. shipCoordinate . coordinateY) in
                             G.lookup innerX innerY $ view shipGrid s
                         ) ships
+
+            -- Allow moving the object when there's no collisions detected
             when (all (not . objSolid) natives) $ do
-                -- Moving our object
                 gameModifyLink shipLink $ shipGrid %~ G.insert newX newY objLink . G.delete x y objLink
