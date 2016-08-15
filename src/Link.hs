@@ -21,8 +21,8 @@ import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as B
 import qualified Data.Cache.LRU as L
 import Data.Dynamic
+import Data.Foldable
 import Data.IORef
-import Data.Maybe
 import System.Mem.Weak
 import System.IO.Unsafe
 
@@ -180,7 +180,7 @@ fixLink ctx link = do
                                                       newCache
 
                     modifyIORef' (ctxCache ctx) (const newNewCache)
-                    fromMaybe (return ()) $ lcwSaveLink . snd <$> maybeDropped
+                    fold $ lcwSaveLink . snd <$> maybeDropped
 
                     return newMaybeVal
 
