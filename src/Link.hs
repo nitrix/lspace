@@ -23,6 +23,7 @@ import qualified Data.Cache.LRU as L
 import Data.Dynamic
 import Data.Foldable
 import Data.IORef
+import qualified Data.Text as T
 import System.Mem.Weak
 import System.IO.Unsafe
 
@@ -57,11 +58,15 @@ instance Show (Link a) where
     show (MkLink i _) = "{Link #" ++ show i ++ "}"
 
 instance Linkable a => FromJSON (Link a) where
-    parseJSON (Number n) = return . restoreLink . truncate $ n
+    parseJSON (String i) = return . restoreLink . read . T.unpack $ i
     parseJSON _ = error "Unable to parse Link json"
 
 instance ToJSON (Link a) where
-    toJSON (MkLink i _) = Number $ fromIntegral i
+    toJSON (MkLink i _) = String . T.pack . show $ i
+
+-- TODO: Functor, Applicative, Monad instances of `Relational` newtype,
+-- then give it a MonadRelational and allow it to be newtypederived for Game.
+-- This might prompt a huge refactor of the functions below.
 
 -- | Initializes a context for link isolation and preservation.
 initContext :: Maybe Integer -> FilePath -> IO Context
