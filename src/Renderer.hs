@@ -63,7 +63,6 @@ subRenderUi game = do
                     let dst = Rectangle (P $ V2 0 (height - surfaceHeight - (row * 15))) (V2 surfaceWidth surfaceHeight)
                     copyEx renderer texture Nothing (Just dst) 0 Nothing (V2 False False)
                     destroyTexture texture
-                    freeSurface surface
             -- _ -> return []
     where
         V2 _ height = game ^. gameCamera . cameraWindowSize
