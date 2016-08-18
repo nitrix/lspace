@@ -6,6 +6,7 @@ module Renderer
 
 import Control.Lens
 import Control.Monad.Reader
+import Control.Monad.State
 import Data.IORef
 import Data.List
 import Data.Maybe
@@ -13,7 +14,7 @@ import qualified Data.Vector.Storable as VS
 import Foreign.C.Types
 import Linear (V2(V2), V4(V4))
 import Linear.Affine (Point(P))
-import SDL
+import SDL hiding (get)
 import qualified SDL.Raw.Types as Srt
 import qualified SDL.TTF as Ttf
 import System.Random
@@ -21,6 +22,7 @@ import System.Random
 import Cache
 import Camera
 import Coordinate
+import Core
 import Environment
 import qualified Grid as G
 import Link
@@ -30,8 +32,9 @@ import Game
 import Ui
 import Ui.Menu
 
-renderGame :: GameState -> EnvironmentT IO ()
-renderGame game = do
+renderGame :: Core ()
+renderGame = do
+    -- Information needed to render
     renderer <- asks envRenderer
 
     -- Let's prepare a new fresh screen
@@ -39,18 +42,22 @@ renderGame game = do
     clear renderer
 
     -- Render various things
-    subRenderVoid game
-    subRenderWorld game
-    subRenderUi game
+    subRenderVoid
+    subRenderWorld
+    subRenderUi
 
     -- Present to the screen
     present renderer
 
-subRenderUi :: GameState -> EnvironmentT IO ()
-subRenderUi game = do
+subRenderUi :: Core ()
+subRenderUi = do
     -- Information needed to render
     renderer    <- asks envRenderer
     font        <- asks envFont
+    game        <- get
+    
+    -- TODO: fix me
+    let (V2 _ height) = game ^. gameCamera . cameraWindowSize
     
     forM_ (game ^. gameUi . uiVisible) $ \modalType -> do
         case modalType of
@@ -64,21 +71,27 @@ subRenderUi game = do
                     copyEx renderer texture Nothing (Just dst) 0 Nothing (V2 False False)
                     destroyTexture texture
             -- _ -> return []
-    where
-        V2 _ height = game ^. gameCamera . cameraWindowSize
 
-subRenderWorld :: GameState -> EnvironmentT IO ()
-subRenderWorld game = do
+subRenderWorld :: Core ()
+subRenderWorld = do
     -- Information needed to render
     renderer        <- asks envRenderer
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
     ctx             <- asks envContext
+    game            <- get
     
-    ships <- lift $ catMaybes <$> mapM (readLink ctx) shipLinks
+    -- TODO: fix me
+    let cameraX   = game ^. gameCamera . cameraCoordinate . coordinateX
+    let cameraY   = game ^. gameCamera . cameraCoordinate . coordinateY
+    let viewport  = game ^. gameCamera . cameraViewport
+    let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
+    let shipLinks = game ^. gameShips
+    
+    ships <- liftIO $ catMaybes <$> mapM (readLink ctx) shipLinks
 
     -- TODO: Abandon hopes whoever wants to update this monster
-    things <- catMaybes . concat <$> (forM ships $ \ship -> do
+    things <- liftIO $ catMaybes . concat <$> (forM ships $ \ship -> do
         let (scx, scy) = view (H.shipCoordinate . coordinates) ship
         let grid       = view H.shipGrid ship
         let range      = ( cameraX - scx
@@ -88,24 +101,9 @@ subRenderWorld game = do
                          )
         
         forM (G.range range grid) $ \(x, y, v) -> do
-            rv <- lift $ readLink ctx v
+            rv <- readLink ctx v
             return $ (\o -> (coordinate (scx+x) (scy+y), o)) <$> rv
         )
-
-    {-
-    let things = concat $
-                 map (\s -> let sc = view H.shipCoordinate s in
-                    map (\(x, y, o) ->
-                        (coordinate (view coordinateX sc + x) (view coordinateY sc + y), o)
-                    ) $ map _ $
-                    G.range (
-                        cameraX - view coordinateX sc,
-                        cameraY - view coordinateY sc,
-                        (cameraX - view coordinateX sc) + (cameraCoordMaxX - cameraX),
-                        (cameraY - view coordinateY sc) + (cameraCoordMaxY - cameraY)
-                    ) (view H.shipGrid s)
-                 ) ships :: [(Coordinate, Object)]
-    -}
 
     -- Collect renderables, because of zIndex
     -- TODO: We might have to take "things" large than is visible on the screen if we have very large
@@ -129,26 +127,24 @@ subRenderWorld game = do
     -- Render!
     forM_ (sortOn (\(_,_,a) -> a) renderables) $ \(src, dst, _) -> do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
-    
-    where
-        (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
-        viewport  = game ^. gameCamera . cameraViewport
-        cameraX   = game ^. gameCamera . cameraCoordinate . coordinateX
-        cameraY   = game ^. gameCamera . cameraCoordinate . coordinateY
-        shipLinks = game ^. gameShips
 
-subRenderVoid :: GameState -> EnvironmentT IO ()
-subRenderVoid game = do
+subRenderVoid :: Core ()
+subRenderVoid = do
     renderer <- asks envRenderer
     cacheRef <- asks envCacheRef
-    cache    <- lift $ readIORef cacheRef
+    cache    <- liftIO $ readIORef cacheRef
+    game     <- get
+
+    -- TODO: ugly
+    let (V2 width height) = game ^. gameCamera . cameraWindowSize
+    let nicerCopy lyr rdr tx ty = copy rdr lyr Nothing $ Just $ Rectangle (P $ V2 tx ty) (V2 width height)
 
     case view cacheStars cache of
         [] -> do
-            layers <- replicateM 5 $ do
-                gx <- lift newStdGen
+            layers <- replicateM 5 $ liftIO $ do
+                gx <- newStdGen
                 let pointsx = randomRs (0, width) gx
-                gy <- lift newStdGen
+                gy <- newStdGen
                 let pointsy = randomRs (0, height) gy
                 let points = map (P . uncurry V2) $ zip pointsx pointsy
                 let dark   = VS.fromList $ take 700 points
@@ -170,7 +166,7 @@ subRenderVoid game = do
                 rendererRenderTarget renderer $= Nothing
                 copy renderer layer Nothing Nothing
                 return layer
-            lift $ modifyIORef cacheRef $ cacheStars .~ layers
+            liftIO $ modifyIORef cacheRef $ cacheStars .~ layers
         layers -> do
             forM_ (zip layers [1..]) $ \(layer, n) -> do
                 let x = negate (fromIntegral $ view (gameCamera.cameraCoordinate.coordinateX) game) `div` n `mod` width
@@ -186,6 +182,3 @@ subRenderVoid game = do
                 nicerCopy layer renderer (x+width) (y-height) -- top-right
                 nicerCopy layer renderer (x-width) (y+height) -- bottom-left
                 nicerCopy layer renderer (x+width) (y+height) -- bottom-right
-    where
-        V2 width height = game ^. gameCamera . cameraWindowSize
-        nicerCopy lyr rdr tx ty = copy rdr lyr Nothing $ Just $ Rectangle (P $ V2 tx ty) (V2 width height)

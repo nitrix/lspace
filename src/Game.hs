@@ -26,6 +26,7 @@ import Control.Monad.Trans.State
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Reader
 import qualified Data.Aeson as J
+import Data.Foldable
 
 import Camera
 import Environment
