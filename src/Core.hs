@@ -16,7 +16,7 @@ import Game
 newtype Core a = Core { unwrapCore :: EnvironmentT (MaybeT (StateT GameState IO)) a }
     deriving (Functor, Applicative, Monad, MonadState GameState, MonadReader Environment, MonadIO)
 
-runCore :: Monoid a => Core a -> GameState -> Environment -> IO a
+runCore :: Core () -> GameState -> Environment -> IO ()
 runCore core gs env = fmap (fold . fst)
                     $ flip runStateT gs
                     $ runMaybeT
