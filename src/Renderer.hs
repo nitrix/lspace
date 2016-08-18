@@ -9,7 +9,6 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Data.IORef
 import Data.List
-import Data.Maybe
 import qualified Data.Vector.Storable as VS
 import Foreign.C.Types
 import Linear (V2(V2), V4(V4))
@@ -25,7 +24,6 @@ import Coordinate
 import Core
 import Environment
 import qualified Grid as G
-import Link
 import Object
 import qualified Ship as H
 import Game
@@ -78,7 +76,6 @@ subRenderWorld = do
     renderer        <- asks envRenderer
     tileset         <- asks envTileset
     tileSize        <- asks envTileSize
-    ctx             <- asks envContext
     game            <- get
     
     -- TODO: fix me
@@ -88,10 +85,10 @@ subRenderWorld = do
     let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
     let shipLinks = game ^. gameShips
     
-    ships <- liftIO $ catMaybes <$> mapM (readLink ctx) shipLinks
+    ships <- embedGame $ mapM gameReadLink shipLinks
 
     -- TODO: Abandon hopes whoever wants to update this monster
-    things <- liftIO $ catMaybes . concat <$> (forM ships $ \ship -> do
+    things <- concat <$> (forM ships $ \ship -> do
         let (scx, scy) = view (H.shipCoordinate . coordinates) ship
         let grid       = view H.shipGrid ship
         let range      = ( cameraX - scx
@@ -101,8 +98,8 @@ subRenderWorld = do
                          )
         
         forM (G.range range grid) $ \(x, y, v) -> do
-            rv <- readLink ctx v
-            return $ (\o -> (coordinate (scx+x) (scy+y), o)) <$> rv
+            rv <- embedGame $ gameReadLink v
+            return $ (\o -> (coordinate (scx+x) (scy+y), o)) $ rv
         )
 
     -- Collect renderables, because of zIndex

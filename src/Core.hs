@@ -23,17 +23,5 @@ runCore core gs env = fmap (fold . fst)
                     $ flip runReaderT env
                     $ unwrapCore core
 
-embedGame :: Monoid a => Game a -> Core a
-embedGame game = do
-    -- Obtain the Game's environment and game state
-    env <- ask
-    gs  <- get
-
-    -- As an optimisation, prevent chocking by processing all the queued up events at once
-    (maybeShouldHalts, newGs) <- liftIO $ runGame env gs game
-    
-    -- Transfer the Game GameState to Core GameState
-    put newGs
-
-    -- Give the result of the first computation
-    return $ fold maybeShouldHalts
+embedGame :: Game a -> Core a
+embedGame game = Core $ ReaderT $ \env -> MaybeT $ StateT $ \gs -> liftIO $ runGame env gs game
