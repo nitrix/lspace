@@ -6,6 +6,7 @@ module Link
 
     , Context
     , initContext
+    , flushContext
     , saveContext
 
     , defaultLink
@@ -110,7 +111,7 @@ createLink ctx x = do
     
     -- TODO: instead of this, we could manually add it to the cache and fix the link, to not touch the disk
     saveLink ctx link
-    fixLink ctx link
+    _ <- fixLink ctx link
     
     return link
 
@@ -261,3 +262,8 @@ saveContext :: Context -> IO ()
 saveContext ctx = do
     cache <- readIORef (ctxCache ctx)
     mapM_ (lcwSaveLink . snd) (L.toList cache)
+
+flushContext :: Context -> IO ()
+flushContext ctx = do
+    size <- L.maxSize <$> readIORef (ctxCache ctx)
+    writeIORef (ctxCache ctx) (L.newLRU size)

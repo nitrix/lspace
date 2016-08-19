@@ -11,7 +11,7 @@ import Cache       (defaultCache)
 import Core        (Core, runCore, embedGame)
 import Engine      (engineHandleEvent)
 import Environment (Environment(..))
-import Link        (initContext, saveContext, readLink, defaultLink)
+import Link        (initContext, saveContext, flushContext, readLink, defaultLink)
 import Game        (saveGame)
 import Renderer    (renderGame)
 
@@ -57,6 +57,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     -- Cleanup cache
     writeIORef cacheRef defaultCache
     saveContext context
+    flushContext context
 
     -- Cleanup
     Ttf.closeFont font
