@@ -14,7 +14,7 @@ import Renderer    (renderGame)
 import Cache       (defaultCache)
 import Environment (Environment(..), EnvironmentT)
 import Game        (GameState, runGame)
-import Link        (initContext, saveContext, readLink, defaultLink)
+import Link        (initContext, saveContext, readLink, writeLink, defaultLink)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
@@ -54,7 +54,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
         , envTileSize = 32
         , envWindow   = window
         }
-    
+        
     -- Cleanup cache
     writeIORef cacheRef defaultCache
     saveContext context
@@ -82,4 +82,6 @@ mainLoop game = do
     renderGame newGame
 
     -- Continue doing it over and over again
-    unless (or $ catMaybes $ sequence shouldHalts) (mainLoop newGame)
+    if (or $ catMaybes $ sequence shouldHalts)
+    then mainLoop newGame
+    else gameWriteLink defaultLink newGame

@@ -10,10 +10,12 @@ module Link
 
     , defaultLink
     , createLink
+    , destroyLink
+    , restoreLink
+        
     , readLink
     , writeLink
     , modifyLink
-    , restoreLink
     )
     where
 
@@ -28,6 +30,8 @@ import Data.IORef
 import Data.Maybe
 import qualified Data.Text as T
 import System.Mem.Weak
+import System.Directory
+import System.IO.Error
 import System.IO.Unsafe
 
 type Linkable a = (Typeable a, FromJSON a, ToJSON a)
@@ -83,7 +87,7 @@ defaultLink :: Link a
 defaultLink = restoreLink 1
 
 -- | Linkify something
-createLink :: Context -> a -> IO (Link a)
+createLink :: Linkable a => Context -> a -> IO (Link a)
 createLink ctx x = do
     refVal     <- newIORef x
     weakRefVal <- mkWeakIORef refVal (return ())
@@ -93,14 +97,30 @@ createLink ctx x = do
     case maybeLid of
         Just _ -> modifyLink ctx (ctxNextLinkId ctx) (+1)
         Nothing -> do
+            -- TODO review this case here, when there's no next id
             lidVal     <- newIORef 2
             weakLidVal <- mkWeakIORef lidVal (return ())
             writeIORef (linkRef $ ctxNextLinkId ctx) (Just weakLidVal)
             saveLink ctx (ctxNextLinkId ctx)
             void $ fixLink ctx (ctxNextLinkId ctx)
     
-    return $ MkLink (fromMaybe 1 maybeLid) ref
+    let link = MkLink (fromMaybe 1 maybeLid) ref
+    
+    -- TODO: instead of this, we could manually add it to the cache and fix the link, to not touch the disk
+    saveLink ctx link
+    fixLink ctx link
+    
+    return link
 
+-- | Destroy a link
+destroyLink :: Context -> Link a -> IO ()
+destroyLink ctx link = do
+    modifyIORef' (ctxCache ctx) $ \cache -> fst (L.delete (linkId link) cache)
+    removeFile filename
+    writeIORef (linkRef link) Nothing
+    where
+        filename = ctxJsonStore ctx ++ show (linkId link) ++ ".json"
+    
 -- | This creates an unresolved link, any LinkId is therefore valid and doesn't require IO.
 restoreLink :: LinkId -> Link a
 restoreLink lid = unsafePerformIO $ do -- Yes, I know what I'm doing.
@@ -217,7 +237,7 @@ loadVal :: Linkable a => Context -> LinkId -> IO (Maybe a)
 loadVal ctx lid = do
     -- TODO: ignore io exceptions
     putStrLn ("Loading link #" ++ show lid)
-    decode . LB.fromStrict <$> B.readFile filename
+    decode . LB.fromStrict <$> catchIOError (B.readFile filename) (const $ return B.empty)
     where
         filename = ctxJsonStore ctx ++ show lid ++ ".json"
 
@@ -226,6 +246,7 @@ saveLink :: Linkable a => Context -> Link a -> IO ()
 saveLink ctx link = do
     putStrLn ("Saving link #" ++ show (linkId link))
     -- TODO: ignore io exceptions
+    -- TODO: also create directory automatically if missing
     maybeVal <- readLink ctx link
     case maybeVal of
         Nothing -> return ()

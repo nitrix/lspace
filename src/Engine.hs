@@ -9,7 +9,6 @@ import Control.Monad.Reader
 import Control.Monad.State as S
 import Data.List
 import Data.Maybe
-import Debug.Trace
 import Linear (V2(V2))
 import SDL
 
@@ -109,24 +108,22 @@ engineAddObject objLink coord = do
 
     nearbyUniqueShipLinks <- nub <$> (fmap (view objShip) <$> mapM gameReadLink nearbyObjectLinks)
     
-    let (worldX, worldY) = view coordinates coord
+    -- let (worldX, worldY) = view coordinates coord
     
+    -- TODO: those are still being implemented
     case nearbyUniqueShipLinks of
         [] -> do
-            trace "Nothing around" $ do
-            let ship = defaultShip & shipCoordinate .~ coord
+            let ship = defaultShip & shipCoordinate .~ coord & shipGrid %~ G.insert 0 0 objLink
             newShipLink <- gameCreateLink ship
             gameModifyLink objLink $ objShip .~ newShipLink
-            gameModifyLink newShipLink $ shipGrid %~ G.insert 0 0 objLink
             modify $ gameShips %~ (newShipLink:)
-        x:[] -> do
-            trace "One thing around" $ do
-            s <- gameReadLink x
-            let (innerX, innerY) = (worldX - s ^. shipCoordinate . coordinateX, worldY - s ^. shipCoordinate . coordinateY)
-            gameModifyLink objLink $ objShip .~ x
-            gameModifyLink x $ shipGrid %~ G.insert innerX innerY objLink
-        x:xs -> do
-            trace "Many around" $ do
+        _:[] -> do
+            return () -- TODO
+            --s <- gameReadLink x
+            --let (innerX, innerY) = (worldX - s ^. shipCoordinate . coordinateX, worldY - s ^. shipCoordinate . coordinateY)
+            --gameModifyLink objLink $ objShip .~ x
+            --gameModifyLink x $ shipGrid %~ G.insert innerX innerY objLink
+        _:_ -> do
             return () -- TODO
     
     return ()
@@ -135,43 +132,12 @@ engineRemoveObject :: Link Object -> Game ()
 engineRemoveObject objLink = do
     shipLink <- view objShip <$> gameReadLink objLink
     gameModifyLink shipLink $ shipGrid %~ G.reverseDelete objLink
-
-{-
-gameAdd obj coord = do
-    (cx, cy)   <- gets $ view $ gameCamera . cameraCoordinate . coordinates
-    ships      <- gets $ view $ gameWorld . worldShips
     
-    -- Find things at the given location
-    let findThings s = G.lookup (x + cx - view (shipCoordinate . coordinateX) s)
-                                (y + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
-                       G.lookup (x + 1 + cx - view (shipCoordinate . coordinateX) s)
-                                (y + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
-                       G.lookup (x + 1 + cx - view (shipCoordinate . coordinateX) s)
-                                (y + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
-                       G.lookup (x + cx - view (shipCoordinate . coordinateX) s)
-                                (y + 1 + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
-                       G.lookup (x + cx - view (shipCoordinate . coordinateX) s)
-                                (y + 1 + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s)
-                     :: [Object]
-
-    let things = fmap findThings <$> zip ships ships :: [(Ship, [Object])]
-    let nonEmptyThings = filter ((/= 0) . length . snd) things
-    let newShip = defaultShip & shipMass .~ (objMass obj) & shipCoordinate .~ coord
-
-    -- Determine if it's an existing ship or if we should create one
-    let newShips = case nonEmptyThings of
-                [] -> newShip : ships
-                sl -> foldr _ [] sl
-                      -- grid insert object, change mass ship
-                      -- let (gx, gy) = view (shipCoordinate . coordinates) ship in (head s, x + cx - sx, y + cy - sy)
-                      -- let newObj = obj { objShipCoordinate = coordinate gx gy }
-
-
-    -- Save the modified/new ship & object
-    modify $ gameWorld . worldShips .~ newShips
-    where
-        (x, y) = view coordinates coord
--}
+    -- If the ship is now empty, then no point in keeping it.
+    ship <- gameReadLink shipLink
+    when (null $ G.toList $ view shipGrid ship) $ do
+        gameDestroyLink shipLink
+        modify $ gameShips %~ delete shipLink -- TODO: could be more efficient, O(n) when lot of ships
 
 engineRotateObject :: Link Object -> Direction -> Game ()
 engineRotateObject objLink direction = do
@@ -206,26 +172,18 @@ engineObjectLocation objLink = do
             
 engineMoveObject :: Link Object -> Direction -> Game ()
 engineMoveObject objLink direction = do
-    trace "engineMoveObject" $ do
-    
     -- Rotate the object
     engineRotateObject objLink direction
     
-    trace "Moar" $ do
-
     -- Asking the ship's grid about the current position of our object
     newLocation <- coordinateMove direction <$> engineObjectLocation objLink
-    
-    trace "Even moar" $ do
-    
-    traceShow newLocation $ do
     
     -- We're going to perform collision detection of native objects at the target location
     natives <- mapM gameReadLink =<< engineObjectsAtLocation newLocation
     
-    trace "Too moar" $ do
-    
     -- Allow moving the object only when there's no collisions detected
     when (all (not . objSolid) natives) $ do
+        -- TODO: if the object is in a ship with a single object, then use a better strategy to avoid
+        -- creating and destroying ships.
         engineRemoveObject objLink
         engineAddObject objLink newLocation
