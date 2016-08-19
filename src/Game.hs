@@ -17,13 +17,14 @@ module Game
     , gameModifyLink
     , gameWriteLink
     , gameReadLink
+    , saveGame
     , runGame
     ) where
 
 import Control.Lens
 import Control.Monad.State.Class
 import Control.Monad.Trans
-import Control.Monad.Trans.State
+import Control.Monad.Trans.State hiding (get)
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Reader
 import qualified Data.Aeson as J
@@ -115,3 +116,6 @@ runGame env gs game = flip runStateT gs
                     $ runMaybeT
                     $ flip runReaderT env
                     $ unwrapGame game
+
+saveGame :: Game ()
+saveGame = get >>= gameWriteLink defaultLink

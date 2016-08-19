@@ -1,7 +1,7 @@
 module Engine
     ( engineHandleEvent
     , engineHandleKeyboardEvent
-    , engineInit
+    -- , engineInit
     ) where
 
 import Control.Lens
@@ -24,11 +24,13 @@ import Ui
 import Ui.Menu
 
 -- TODO: that looks way too disgutsting for what it does
+{-
 engineInit :: GameState -> ReaderT Environment IO GameState
 engineInit game = do
     -- let playerCoord = sysWorldCoordObjectId (view gameWorld newGame) (view gamePlayer newGame)
     let playerCoord = Nothing
     return $ fromMaybe game ((\coord -> game & gameCamera %~ cameraCenter coord) <$> playerCoord)
+-}
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> Game Bool

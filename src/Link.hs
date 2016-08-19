@@ -34,6 +34,8 @@ import System.Directory
 import System.IO.Error
 import System.IO.Unsafe
 
+-- TODO: instead of IO a, please use MonadIO m => m a
+
 type Linkable a = (Typeable a, FromJSON a, ToJSON a)
 
 type LinkId = Integer

@@ -1,20 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Concurrent
-import Control.Monad
-import Control.Monad.Reader
 import Data.IORef
 import Data.Maybe
-import SDL
+import SDL hiding (get)
 import qualified SDL.Image as Img
 import qualified SDL.TTF as Ttf
 
-import Engine      (engineHandleEvent, engineInit)
-import Renderer    (renderGame)
 import Cache       (defaultCache)
-import Environment (Environment(..), EnvironmentT)
-import Game        (GameState, runGame)
-import Link        (initContext, saveContext, readLink, writeLink, defaultLink)
+import Core        (Core, runCore, embedGame)
+import Engine      (engineHandleEvent)
+import Environment (Environment(..))
+import Link        (initContext, saveContext, readLink, defaultLink)
+import Game        (saveGame)
+import Renderer    (renderGame)
 
 main :: IO ()
 main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound thread is for ekg on ghci
@@ -41,11 +40,11 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     cacheRef <- newIORef defaultCache
     context  <- initContext (Just 1000) "data/demo/"
     
-    -- Load game
-    game <- fromJust <$> readLink context defaultLink
+    -- Load game state
+    gs <- fromJust <$> readLink context defaultLink
 
     -- Main loop
-    runReaderT (engineInit game >>= mainLoop) $ MkEnvironment
+    runCore mainLoop gs $ MkEnvironment
         { envCacheRef = cacheRef
         , envContext  = context
         , envFont     = font
@@ -68,20 +67,18 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     quit
 
 -- Main loop
-mainLoop :: GameState -> EnvironmentT IO ()
-mainLoop game = do
-    env <- ask -- TODO: this is ugly
-
+mainLoop :: Core ()
+mainLoop = do
     -- Waiting for events; those can only be called in the same thread that set up the video mode
     events <- (:) <$> waitEvent <*> pollEvents
 
     -- As an optimisation, prevent chocking by processing all the queued up events at once
-    (shouldHalts, newGame) <- lift $ runGame env game $ traverse engineHandleEvent events
-
-    -- Then render the new game state
-    renderGame newGame
+    shouldHalts <- embedGame $ traverse engineHandleEvent events
+    
+    -- Then render the game
+    renderGame
 
     -- Continue doing it over and over again
-    if (or $ catMaybes $ sequence shouldHalts)
-    then mainLoop newGame
-    else gameWriteLink defaultLink newGame
+    if or shouldHalts
+    then embedGame saveGame
+    else mainLoop
