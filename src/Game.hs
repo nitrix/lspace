@@ -12,7 +12,7 @@ module Game
     , gamePlayer
     , gameShips
     , gameUi
---    , gameCreateLink
+    , gameCreateLink
     , gameModifyLink
     , gameWriteLink
     , gameReadLink
@@ -88,7 +88,12 @@ gameReadLink :: Linkable a => Link a -> Game a
 gameReadLink link = do
     ctx <- Game $ asks envContext 
     Game . lift . MaybeT . lift $ readLink ctx link
-
+    
+gameCreateLink :: a -> Game (Link a)
+gameCreateLink x = do
+    ctx <- Game $ asks envContext 
+    Game . lift . MaybeT . lift $ Just <$> createLink ctx x
+    
 gameModifyLink :: Linkable a => Link a -> (a -> a) -> Game ()
 gameModifyLink link f = do
     ctx <- Game $ asks envContext 
@@ -98,9 +103,6 @@ gameWriteLink :: Linkable a => Link a -> a -> Game ()
 gameWriteLink link x = do
     ctx <- Game $ asks envContext 
     Game . lift . MaybeT . lift $ Just <$> writeLink ctx link x
-
---gameCreateLink :: a -> Game (Link a)
---gameCreateLink x = Game . MaybeT . lift $ Just <$> createLink x
 
 runGame :: Environment -> GameState -> Game a -> IO (Maybe a, GameState)
 runGame env gs game = flip runStateT gs

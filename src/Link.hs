@@ -9,6 +9,7 @@ module Link
     , saveContext
 
     , defaultLink
+    , createLink
     , readLink
     , writeLink
     , modifyLink
@@ -16,6 +17,7 @@ module Link
     )
     where
 
+import Control.Monad
 import Data.Aeson
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as B
@@ -23,6 +25,7 @@ import qualified Data.Cache.LRU as L
 import Data.Dynamic
 import Data.Foldable
 import Data.IORef
+import Data.Maybe
 import qualified Data.Text as T
 import System.Mem.Weak
 import System.IO.Unsafe
@@ -44,8 +47,9 @@ data Link a = MkLink
     }
 
 data Context = MkContext
-    { ctxCache     :: IORef LinkCache
-    , ctxJsonStore :: FilePath
+    { ctxCache      :: IORef LinkCache
+    , ctxJsonStore  :: FilePath
+    , ctxNextLinkId :: Link LinkId
     }
 
 instance Eq (Link a) where
@@ -72,11 +76,30 @@ instance ToJSON (Link a) where
 initContext :: Maybe Integer -> FilePath -> IO Context
 initContext maybeLimit jsonStore = do
     cache <- newIORef (L.newLRU maybeLimit)
-    return $ MkContext cache jsonStore
+    return $ MkContext cache jsonStore (restoreLink 0)
 
 -- | Default link
 defaultLink :: Link a
-defaultLink = restoreLink 0
+defaultLink = restoreLink 1
+
+-- | Linkify something
+createLink :: Context -> a -> IO (Link a)
+createLink ctx x = do
+    refVal     <- newIORef x
+    weakRefVal <- mkWeakIORef refVal (return ())
+    ref        <- newIORef $ Just weakRefVal
+    maybeLid   <- readLink ctx (ctxNextLinkId ctx)
+    
+    case maybeLid of
+        Just _ -> modifyLink ctx (ctxNextLinkId ctx) (+1)
+        Nothing -> do
+            lidVal     <- newIORef 2
+            weakLidVal <- mkWeakIORef lidVal (return ())
+            writeIORef (linkRef $ ctxNextLinkId ctx) (Just weakLidVal)
+            saveLink ctx (ctxNextLinkId ctx)
+            void $ fixLink ctx (ctxNextLinkId ctx)
+    
+    return $ MkLink (fromMaybe 1 maybeLid) ref
 
 -- | This creates an unresolved link, any LinkId is therefore valid and doesn't require IO.
 restoreLink :: LinkId -> Link a
@@ -167,7 +190,7 @@ fixLink ctx link = do
                     writeIORef (linkRef link) (Just newWeakRefVal)
                     readLink ctx link
         
-        Nothing -> do 
+        Nothing -> do
             newMaybeVal <- loadVal ctx (linkId link)
             case newMaybeVal of
                 -- Unable to load the value
@@ -192,6 +215,7 @@ fixLink ctx link = do
 -- | Helper function to load values from disk
 loadVal :: Linkable a => Context -> LinkId -> IO (Maybe a)
 loadVal ctx lid = do
+    -- TODO: ignore io exceptions
     putStrLn ("Loading link #" ++ show lid)
     decode . LB.fromStrict <$> B.readFile filename
     where
@@ -201,6 +225,7 @@ loadVal ctx lid = do
 saveLink :: Linkable a => Context -> Link a -> IO ()
 saveLink ctx link = do
     putStrLn ("Saving link #" ++ show (linkId link))
+    -- TODO: ignore io exceptions
     maybeVal <- readLink ctx link
     case maybeVal of
         Nothing -> return ()

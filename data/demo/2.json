@@ -1,1 +1,1 @@
-[{"_objFacing":"South","_objMass":1,"_objShip":"1"},{"tag":"ObjectPlayer","contents":{"_playerHealth":100}}]
+{"mass":1,"dimension":[1,1],"velocity":[0,0],"coordinate":"P (V2 2 2)","grid":[{"x":1,"v":"4","y":0}, {"x":0,"v":"3","y":0}]}
