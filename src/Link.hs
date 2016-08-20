@@ -6,7 +6,6 @@ module Link
 
     , Context
     , initContext
-    , flushContext
     , saveContext
 
     , defaultLink
@@ -120,7 +119,7 @@ destroyLink :: Context -> Link a -> IO ()
 destroyLink ctx link = do
     modifyIORef' (ctxCache ctx) $ \cache -> fst (L.delete (linkId link) cache)
     removeFile filename
-    writeIORef (linkRef link) Nothing
+    modifyIORef' (linkRef link) (const Nothing)
     where
         filename = ctxJsonStore ctx ++ show (linkId link) ++ ".json"
     
@@ -260,10 +259,6 @@ saveLink ctx link = do
 -- | Notably saves all links
 saveContext :: Context -> IO ()
 saveContext ctx = do
+    putStrLn "Saving context"
     cache <- readIORef (ctxCache ctx)
     mapM_ (lcwSaveLink . snd) (L.toList cache)
-
-flushContext :: Context -> IO ()
-flushContext ctx = do
-    size <- L.maxSize <$> readIORef (ctxCache ctx)
-    writeIORef (ctxCache ctx) (L.newLRU size)
