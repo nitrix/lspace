@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Concurrent
+import Control.Monad
 import Data.IORef
 import Data.Maybe
 import SDL hiding (get)
@@ -11,8 +12,7 @@ import Cache       (defaultCache)
 import Core        (Core, runCore, embedGame)
 import Engine      (engineHandleEvent)
 import Environment (Environment(..))
-import Link        (initContext, saveContext, flushContext, readLink, defaultLink)
-import Game        (saveGame)
+import Link        (initContext, saveContext, flushContext, readLink, writeLink, defaultLink)
 import Renderer    (renderGame)
 
 main :: IO ()
@@ -44,7 +44,7 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     gs <- fromJust <$> readLink context defaultLink
 
     -- Main loop
-    runCore mainLoop gs $ MkEnvironment
+    ngs <- runCore mainLoop gs $ MkEnvironment
         { envCacheRef = cacheRef
         , envContext  = context
         , envFont     = font
@@ -53,6 +53,9 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
         , envTileSize = 32
         , envWindow   = window
         }
+
+    -- Save game state
+    writeLink context defaultLink ngs
         
     -- Cleanup cache
     writeIORef cacheRef defaultCache
@@ -80,6 +83,4 @@ mainLoop = do
     renderGame
 
     -- Continue doing it over and over again
-    if or shouldHalts
-    then embedGame saveGame
-    else mainLoop
+    unless (or shouldHalts) mainLoop

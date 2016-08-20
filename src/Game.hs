@@ -17,7 +17,6 @@ module Game
     , gameModifyLink
     , gameWriteLink
     , gameReadLink
-    , saveGame
     , runGame
     ) where
 
@@ -116,6 +115,3 @@ runGame env gs game = flip runStateT gs
                     $ runMaybeT
                     $ flip runReaderT env
                     $ unwrapGame game
-
-saveGame :: Game ()
-saveGame = get >>= gameWriteLink defaultLink
