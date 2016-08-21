@@ -23,15 +23,6 @@ import Region
 import Ui
 import Ui.Menu
 
--- TODO: that looks way too disgutsting for what it does
-{-
-engineInit :: GameState -> ReaderT Environment IO GameState
-engineInit game = do
-    -- let playerCoord = sysWorldCoordObjectId (view gameWorld newGame) (view gamePlayer newGame)
-    let playerCoord = Nothing
-    return $ fromMaybe game ((\coord -> game & gameCamera %~ cameraCenter coord) <$> playerCoord)
--}
-
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> Game Bool
 engineHandleEvent event = do
@@ -87,13 +78,15 @@ engineHandleBareKeycode keycode = do
         KeycodeS       -> if shift then engineRotateObject player South else engineMoveObject player South
         KeycodeA       -> if shift then engineRotateObject player West  else engineMoveObject player West
         KeycodeD       -> if shift then engineRotateObject player East  else engineMoveObject player East
+        -- TODO: zoom levels with caching
         -- KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
         -- KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
         KeycodeUp      -> modify $ gameCamera %~ cameraMove North
         KeycodeDown    -> modify $ gameCamera %~ cameraMove South
         KeycodeRight   -> modify $ gameCamera %~ cameraMove East
         KeycodeLeft    -> modify $ gameCamera %~ cameraMove West
-        KeycodeY       -> modify $ id -- gameCamera %~ (fromMaybe id (cameraTogglePinned <$> sysWorldCoordObjectId world player)) -- TODO: eeeww
+        -- TODO: toggling centered camera and/or camera following when moving near edges
+        -- KeycodeY       -> modify $ id -- gameCamera %~ (fromMaybe id (cameraTogglePinned <$> sysWorldCoordObjectId world player)) -- TODO: eeeww
         KeycodeE       -> modify $ gameUi       %~ uiMenuSwitch UiMenuMain
         KeycodeEscape  -> modify $ gameUi       %~ uiMenuClear
         _              -> modify $ id
@@ -110,7 +103,7 @@ engineAddObject objLink coord = do
 
     nearbyUniqueRegionLinks <- nub <$> (fmap (view objRegion) <$> mapM gameReadLink nearbyObjectLinks)
     
-    -- let (worldX, worldY) = view coordinates coord
+    let (worldX, worldY) = view coordinates coord
     
     -- TODO: those are still being implemented
     case nearbyUniqueRegionLinks of
@@ -119,14 +112,14 @@ engineAddObject objLink coord = do
             newRegionLink <- gameCreateLink region
             gameModifyLink objLink $ objRegion .~ newRegionLink
             modify $ gameRegions %~ (newRegionLink:)
-        _:[] -> do
-            return () -- TODO
-            --s <- gameReadLink x
-            --let (innerX, innerY) = (worldX - s ^. regionCoordinate . coordinateX, worldY - s ^. regionCoordinate . coordinateY)
-            --gameModifyLink objLink $ objShip .~ x
-            --gameModifyLink x $ regionGrid %~ G.insert innerX innerY objLink
+        r:[] -> do
+            region <- gameReadLink r
+            let (innerX, innerY) = (worldX - region ^. regionCoordinate . coordinateX, worldY - region ^. regionCoordinate . coordinateY)
+            gameModifyLink objLink $ objRegion .~ r
+            gameModifyLink r $ regionGrid %~ G.insert innerX innerY objLink
+            -- TODO: there's a lot of ship-to/from-world coordinate conversion; I think all this stuff should move to Coordinate
         _:_ -> do
-            return () -- TODO
+            return () -- TODO: engineMergeRegion + add our object to that
     
     return ()
 
@@ -185,18 +178,20 @@ engineMoveObject objLink direction = do
     
     -- Allow moving the object only when there's no collisions detected
     when (all (not . objSolid) natives) $ do
-        -- TODO: if the object is in a region with a single object, then use a better strategy to avoid
-        -- creating and destroying regions.
         regionLink <- view objRegion <$> gameReadLink objLink
         region     <- gameReadLink regionLink
-        if (length (G.toList $ view regionGrid region) > 1)
-        then do
+
+        -- If the object is the only one in its region, then move the whole region, otherwise, move the object
+        if (length (G.toList $ view regionGrid region) == 1)
+        then 
+            engineMoveRegion regionLink direction
+        else do
             engineRemoveObject objLink
             engineAddObject objLink newLocation
-        else
-            engineMoveRegion regionLink direction
 
 engineMoveRegion :: Link (Region Object) -> Direction -> Game ()
 engineMoveRegion regionLink direction = do
-    -- TODO: collision check?
+    -- TODO: collision check; maybe even triggering explosions or something?
     gameModifyLink regionLink $ regionCoordinate %~ coordinateMove direction
+
+    -- TODO: when a ship moves, next to / on top of, another ship, should they merge?
