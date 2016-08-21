@@ -12,6 +12,7 @@ module Coordinate
     , coordinateX
     , coordinateY
     , defaultCoordinate
+    , Metric
     ) where
 
 import Control.Lens (Lens', lens, (%~), (&), view, set, (.~))
@@ -20,6 +21,9 @@ import qualified Data.Text as T
 import Linear (V2(V2), _x, _y)
 import Linear.Affine (Point(P))
 import Prelude
+
+-- This is to eventually ease the transition to an infinite world if needed
+type Metric = Int
 
 data Direction = North
                | East
@@ -41,18 +45,18 @@ instance FromJSON Coordinate where
     parseJSON (J.String s) = return $ Coordinate $ read $ T.unpack s
     parseJSON _ = error "Unable to parse JSON for Coordinate"
 
-newtype Coordinate = Coordinate { getCoordinate :: Point V2 Int } deriving (Eq, Ord, Show, Read)
+newtype Coordinate = Coordinate { getCoordinate :: Point V2 Metric } deriving (Eq, Ord, Show, Read)
 
 -- Lenses
-coordinateX :: Lens' Coordinate Int
-coordinateY :: Lens' Coordinate Int
-coordinates :: Lens' Coordinate (Int, Int)
+coordinateX :: Lens' Coordinate Metric
+coordinateY :: Lens' Coordinate Metric
+coordinates :: Lens' Coordinate (Metric, Metric)
 coordinateX = lens (view _x . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _x .~ z)
 coordinateY = lens (view _y . getCoordinate) (\s z -> Coordinate $ getCoordinate s & _y .~ z)
 coordinates = lens (\c -> (view coordinateX c, view coordinateY c)) (\s c -> s & set coordinateX (fst c)
                                                                                & set coordinateY (snd c))
 -- | Simplified Coordinate constructor
-coordinate :: Int -> Int -> Coordinate
+coordinate :: Metric -> Metric -> Coordinate
 coordinate x y = Coordinate $ P $ V2 x y
 
 -- | Compute a new coordinate relative to an existing coordinate in a given direction
@@ -62,7 +66,7 @@ coordinateMove South = coordinateY %~ (+1)
 coordinateMove West  = coordinateX %~ subtract 1
 coordinateMove East  = coordinateX %~ (+1)
 
-coordinatesMove :: Direction -> (Int, Int) -> (Int, Int)
+coordinatesMove :: Direction -> (Metric, Metric) -> (Metric, Metric)
 coordinatesMove direction (x, y) = view coordinates $ coordinateMove direction (coordinate x y)
 
 -- | Center point

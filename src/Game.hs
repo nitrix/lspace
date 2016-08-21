@@ -10,7 +10,7 @@ module Game
     , gameKeyAlt
     , gameKeyShift
     , gamePlayer
-    , gameShips
+    , gameRegions
     , gameUi
     , gameCreateLink
     , gameDestroyLink
@@ -29,10 +29,11 @@ import Control.Monad.Trans.Reader
 import qualified Data.Aeson as J
 
 import Camera
+import Coordinate
 import Environment
 import Link
 import Object
-import Ship
+import Region
 import Ui
 
 -- | Contains the state of the engine (things that will change over time)
@@ -41,7 +42,7 @@ data GameState = MkGameState
     , _gameKeyAlt   :: Bool
     , _gameKeyShift :: Bool
     , _gamePlayer   :: Link Object
-    , _gameShips    :: [Link (Ship Int Object)]
+    , _gameRegions  :: [Link (Region Metric Object)]
     , _gameUi       :: Ui
     }
 
@@ -53,33 +54,33 @@ gameCamera   :: Lens' GameState Camera
 gameKeyAlt   :: Lens' GameState Bool
 gameKeyShift :: Lens' GameState Bool
 gamePlayer   :: Lens' GameState (Link Object)
-gameShips    :: Lens' GameState [Link (Ship Int Object)]
+gameRegions  :: Lens' GameState [Link (Region Metric Object)]
 gameUi       :: Lens' GameState Ui
 gameCamera   = lens _gameCamera   (\s x -> s { _gameCamera   = x })
 gameKeyAlt   = lens _gameKeyAlt   (\s x -> s { _gameKeyAlt   = x })
 gameKeyShift = lens _gameKeyShift (\s x -> s { _gameKeyShift = x })
 gamePlayer   = lens _gamePlayer   (\s x -> s { _gamePlayer   = x })
-gameShips    = lens _gameShips    (\s x -> s { _gameShips    = x })
+gameRegions  = lens _gameRegions  (\s x -> s { _gameRegions  = x })
 gameUi       = lens _gameUi       (\s x -> s { _gameUi       = x })
 
 instance J.FromJSON GameState where    
     parseJSON (J.Object o) = do
-        player <- o J..: "player"
-        ships  <- o J..: "ships"
+        player  <- o J..: "player"
+        regions <- o J..: "regions"
         return $ MkGameState
             { _gameCamera   = defaultCamera
             , _gameKeyAlt   = False
             , _gameKeyShift = False
             , _gamePlayer   = player
-            , _gameShips    = ships
+            , _gameRegions  = regions
             , _gameUi       = defaultUi
             }
     parseJSON _ = error "Unable to parse Game json"
 
 instance J.ToJSON GameState where
     toJSON gs = J.object
-        [ "player" J..= _gamePlayer gs
-        , "ships"  J..= _gameShips gs
+        [ "player"  J..= _gamePlayer gs
+        , "regions" J..= _gameRegions gs
         ]
 
 gameEnv :: (Environment -> a) -> Game a

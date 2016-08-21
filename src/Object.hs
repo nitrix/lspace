@@ -9,13 +9,13 @@ import GHC.Generics
 import Control.Lens
 import Coordinate
 import Link
-import Ship
+import Region
 import Sprite
 
 data ObjectCommon = MkObjectCommon
     { _objFacing :: Direction
     , _objMass   :: Int
-    , _objShip   :: Link (Ship Int Object)
+    , _objRegion :: Link (Region Metric Object)
     } deriving (Generic, Eq, Ord)
 
 data Object = MkObject ObjectCommon ObjectInfo deriving (Generic, Eq, Ord)
@@ -27,8 +27,8 @@ data ObjectInfo = ObjectBox    Box
                 | ObjectUnknown
                 deriving (Generic, Eq, Ord)
 
-objShip :: Lens' Object (Link (Ship Int Object))
-objShip = lens (\(MkObject common _) -> _objShip common) (\(MkObject common info) x -> MkObject common { _objShip = x } info)
+objRegion :: Lens' Object (Link (Region Metric Object))
+objRegion = lens (\(MkObject common _) -> _objRegion common) (\(MkObject common info) x -> MkObject common { _objRegion = x } info)
 
 objFacing :: Lens' Object Direction
 objFacing = lens (\(MkObject common _) -> _objFacing common) (\(MkObject common info) x -> MkObject common { _objFacing = x } info)

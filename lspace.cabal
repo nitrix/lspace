@@ -44,8 +44,8 @@ executable lspace
                      , Grid
                      , Link
                      , Object
+                     , Region
                      , Renderer
-                     , Ship
                      , Sprite
                      , Ui
                      , Ui.Menu
