@@ -187,10 +187,16 @@ engineMoveObject objLink direction = do
     when (all (not . objSolid) natives) $ do
         -- TODO: if the object is in a region with a single object, then use a better strategy to avoid
         -- creating and destroying regions.
-        engineRemoveObject objLink
-        engineAddObject objLink newLocation
+        regionLink <- view objRegion <$> gameReadLink objLink
+        region     <- gameReadLink regionLink
+        if (length (G.toList $ view regionGrid region) > 1)
+        then do
+            engineRemoveObject objLink
+            engineAddObject objLink newLocation
+        else
+            engineMoveRegion regionLink direction
 
-engineMoveRegion :: Link (Region Metric (Link Object)) -> Direction -> Game ()
+engineMoveRegion :: Link (Region Object) -> Direction -> Game ()
 engineMoveRegion regionLink direction = do
     -- TODO: collision check?
     gameModifyLink regionLink $ regionCoordinate %~ coordinateMove direction

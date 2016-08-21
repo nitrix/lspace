@@ -29,7 +29,6 @@ import Control.Monad.Trans.Reader
 import qualified Data.Aeson as J
 
 import Camera
-import Coordinate
 import Environment
 import Link
 import Object
@@ -42,7 +41,7 @@ data GameState = MkGameState
     , _gameKeyAlt   :: Bool
     , _gameKeyShift :: Bool
     , _gamePlayer   :: Link Object
-    , _gameRegions  :: [Link (Region Metric Object)]
+    , _gameRegions  :: [Link (Region Object)]
     , _gameUi       :: Ui
     }
 
@@ -54,7 +53,7 @@ gameCamera   :: Lens' GameState Camera
 gameKeyAlt   :: Lens' GameState Bool
 gameKeyShift :: Lens' GameState Bool
 gamePlayer   :: Lens' GameState (Link Object)
-gameRegions  :: Lens' GameState [Link (Region Metric Object)]
+gameRegions  :: Lens' GameState [Link (Region Object)]
 gameUi       :: Lens' GameState Ui
 gameCamera   = lens _gameCamera   (\s x -> s { _gameCamera   = x })
 gameKeyAlt   = lens _gameKeyAlt   (\s x -> s { _gameKeyAlt   = x })

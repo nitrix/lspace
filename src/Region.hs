@@ -12,15 +12,15 @@ import qualified Grid as G
 import Coordinate
 import Link
 
-data Region k v = MkRegion
+data Region v = MkRegion
     { _regionCoordinate :: Coordinate
-    , _regionDimension  :: (k, k)
-    , _regionGrid       :: G.Grid k (Link v)
-    , _regionMass       :: k
-    , _regionVelocity   :: (k, k)
+    , _regionDimension  :: (Metric, Metric)
+    , _regionGrid       :: G.Grid Metric (Link v)
+    , _regionMass       :: Metric
+    , _regionVelocity   :: (Metric, Metric)
     } deriving (Show, Generic)
 
-defaultRegion :: Num k => Region k v
+defaultRegion :: Region v
 defaultRegion = MkRegion
     { _regionCoordinate = coordinate 0 0
     , _regionDimension  = (0, 0)
@@ -29,7 +29,7 @@ defaultRegion = MkRegion
     , _regionVelocity   = (0, 0)
     }
 
-instance (Linkable v, FromJSON k, Show k, Integral k, Ord (Link v), Show (Link v)) => FromJSON (Region k v) where
+instance Linkable v => FromJSON (Region v) where
     parseJSON (Object o) = do
         rCoord     <- o .: "coordinate"
         rDimension <- o .: "dimension"
@@ -45,7 +45,7 @@ instance (Linkable v, FromJSON k, Show k, Integral k, Ord (Link v), Show (Link v
             }
     parseJSON _ = error "Unable to parse Region json"
 
-instance (ToJSON k, Integral k) => ToJSON (Region k v) where
+instance ToJSON (Region v) where
     toJSON s = object
         [ "coordinate" .= _regionCoordinate s
         , "grid"       .= _regionGrid s
@@ -54,9 +54,9 @@ instance (ToJSON k, Integral k) => ToJSON (Region k v) where
         , "dimension"  .= _regionDimension s
         ]
 
-regionGrid       :: Lens' (Region k v) (G.Grid k (Link v))
-regionCoordinate :: Lens' (Region k v) Coordinate
-regionMass       :: Lens' (Region k v) k
+regionGrid       :: Lens' (Region v) (G.Grid Metric (Link v))
+regionCoordinate :: Lens' (Region v) Coordinate
+regionMass       :: Lens' (Region v) Metric
 regionGrid       = lens _regionGrid       (\s x -> s { _regionGrid       = x })
 regionCoordinate = lens _regionCoordinate (\s x -> s { _regionCoordinate = x })
 regionMass       = lens _regionMass       (\s x -> s { _regionMass       = x })

@@ -15,7 +15,7 @@ import Sprite
 data ObjectCommon = MkObjectCommon
     { _objFacing :: Direction
     , _objMass   :: Int
-    , _objRegion :: Link (Region Metric Object)
+    , _objRegion :: Link (Region Object)
     } deriving (Generic, Eq, Ord)
 
 data Object = MkObject ObjectCommon ObjectInfo deriving (Generic, Eq, Ord)
@@ -27,7 +27,7 @@ data ObjectInfo = ObjectBox    Box
                 | ObjectUnknown
                 deriving (Generic, Eq, Ord)
 
-objRegion :: Lens' Object (Link (Region Metric Object))
+objRegion :: Lens' Object (Link (Region Object))
 objRegion = lens (\(MkObject common _) -> _objRegion common) (\(MkObject common info) x -> MkObject common { _objRegion = x } info)
 
 objFacing :: Lens' Object Direction
