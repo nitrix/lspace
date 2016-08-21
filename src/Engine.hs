@@ -23,6 +23,8 @@ import Region
 import Ui
 import Ui.Menu
 
+import Debug.Trace
+
 -- TODO: that looks way too disgutsting for what it does
 {-
 engineInit :: GameState -> ReaderT Environment IO GameState
@@ -179,9 +181,11 @@ engineMoveObject objLink direction = do
     
     -- Asking the region's grid about the current position of our object
     newLocation <- coordinateMove direction <$> engineObjectLocation objLink
+    trace ("newLocation: " ++ show newLocation) $ do
     
     -- We're going to perform collision detection of native objects at the target location
     natives <- mapM gameReadLink =<< engineObjectsAtLocation newLocation
+    trace ("natives: " ++ show natives) $ do
     
     -- Allow moving the object only when there's no collisions detected
     when (all (not . objSolid) natives) $ do
