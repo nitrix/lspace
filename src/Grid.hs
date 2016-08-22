@@ -12,6 +12,7 @@ module Grid
 , delete
 , range
 , lookup
+, reverseDelete
 , reverseLookup
 )
 where
@@ -107,6 +108,9 @@ delete x y v (MkGrid natural reversed) = MkGrid
     (M.update (\s -> if S.size s == 1 then Nothing else Just (S.delete (x, y) s)) v reversed)
     where
         go vec = VM.modify vec (L.delete v) (idx x y)
+
+reverseDelete :: (Ord v, Integral k) => v -> Grid k v -> Grid k v
+reverseDelete v g = fromMaybe g $ (\(x, y) -> delete x y v g) <$> reverseLookup v g
 
 lookup :: Integral k => k -> k -> Grid k v -> [v]
 lookup x y (MkGrid natural _) = fromMaybe [] $ (\chunk -> chunk V.! idx x y) <$> M.lookup (coord x y) natural

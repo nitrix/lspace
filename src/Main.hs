@@ -12,7 +12,7 @@ import Cache       (defaultCache)
 import Core        (Core, runCore, embedGame)
 import Engine      (engineHandleEvent)
 import Environment (Environment(..))
-import Link        (initContext, saveContext, readLink, defaultLink)
+import Link        (initContext, saveContext, readLink, writeLink, defaultLink)
 import Renderer    (renderGame)
 
 main :: IO ()
@@ -40,11 +40,11 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
     cacheRef <- newIORef defaultCache
     context  <- initContext (Just 1000) "data/demo/"
     
-    -- Load game state
+    -- TODO: (nothing) Load game state
     gs <- fromJust <$> readLink context defaultLink
 
     -- Main loop
-    runCore mainLoop gs $ MkEnvironment
+    ngs <- runCore mainLoop gs $ MkEnvironment
         { envCacheRef = cacheRef
         , envContext  = context
         , envFont     = font
@@ -53,7 +53,10 @@ main = runInBoundThread $ Ttf.withInit $ do -- ^ TODO: GHC bug #11682 the bound 
         , envTileSize = 32
         , envWindow   = window
         }
-    
+
+    -- Save game state
+    writeLink context defaultLink ngs
+        
     -- Cleanup cache
     writeIORef cacheRef defaultCache
     saveContext context

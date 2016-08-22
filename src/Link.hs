@@ -9,13 +9,17 @@ module Link
     , saveContext
 
     , defaultLink
+    , createLink
+    , destroyLink
+    , restoreLink
+        
     , readLink
     , writeLink
     , modifyLink
-    , restoreLink
     )
     where
 
+import Control.Monad
 import Data.Aeson
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as B
@@ -23,8 +27,11 @@ import qualified Data.Cache.LRU as L
 import Data.Dynamic
 import Data.Foldable
 import Data.IORef
+import Data.Maybe
 import qualified Data.Text as T
 import System.Mem.Weak
+import System.Directory
+import System.IO.Error
 import System.IO.Unsafe
 
 -- TODO: instead of IO a, please use MonadIO m => m a
@@ -46,8 +53,9 @@ data Link a = MkLink
     }
 
 data Context = MkContext
-    { ctxCache     :: IORef LinkCache
-    , ctxJsonStore :: FilePath
+    { ctxCache      :: IORef LinkCache
+    , ctxJsonStore  :: FilePath
+    , ctxNextLinkId :: Link LinkId
     }
 
 instance Eq (Link a) where
@@ -74,12 +82,47 @@ instance ToJSON (Link a) where
 initContext :: Maybe Integer -> FilePath -> IO Context
 initContext maybeLimit jsonStore = do
     cache <- newIORef (L.newLRU maybeLimit)
-    return $ MkContext cache jsonStore
+    return $ MkContext cache jsonStore (restoreLink 0)
 
 -- | Default link
 defaultLink :: Link a
-defaultLink = restoreLink 0
+defaultLink = restoreLink 1
 
+-- | Linkify something
+createLink :: Linkable a => Context -> a -> IO (Link a)
+createLink ctx x = do
+    refVal     <- newIORef x
+    weakRefVal <- mkWeakIORef refVal (return ())
+    ref        <- newIORef $ Just weakRefVal
+    maybeLid   <- readLink ctx (ctxNextLinkId ctx)
+    
+    case maybeLid of
+        Just _ -> modifyLink ctx (ctxNextLinkId ctx) (+1)
+        Nothing -> do
+            -- TODO review this case here, when there's no next id
+            lidVal     <- newIORef 2
+            weakLidVal <- mkWeakIORef lidVal (return ())
+            writeIORef (linkRef $ ctxNextLinkId ctx) (Just weakLidVal)
+            saveLink ctx (ctxNextLinkId ctx)
+            void $ fixLink ctx (ctxNextLinkId ctx)
+    
+    let link = MkLink (fromMaybe 1 maybeLid) ref
+    
+    -- TODO: instead of this, we could manually add it to the cache and fix the link, to not touch the disk
+    saveLink ctx link
+    _ <- fixLink ctx link
+    
+    return link
+
+-- | Destroy a link
+destroyLink :: Context -> Link a -> IO ()
+destroyLink ctx link = do
+    modifyIORef' (ctxCache ctx) $ \cache -> fst (L.delete (linkId link) cache)
+    removeFile filename
+    modifyIORef' (linkRef link) (const Nothing)
+    where
+        filename = ctxJsonStore ctx ++ show (linkId link) ++ ".json"
+    
 -- | This creates an unresolved link, any LinkId is therefore valid and doesn't require IO.
 restoreLink :: LinkId -> Link a
 restoreLink lid = unsafePerformIO $ do -- Yes, I know what I'm doing.
@@ -169,7 +212,7 @@ fixLink ctx link = do
                     writeIORef (linkRef link) (Just newWeakRefVal)
                     readLink ctx link
         
-        Nothing -> do 
+        Nothing -> do
             newMaybeVal <- loadVal ctx (linkId link)
             case newMaybeVal of
                 -- Unable to load the value
@@ -194,8 +237,9 @@ fixLink ctx link = do
 -- | Helper function to load values from disk
 loadVal :: Linkable a => Context -> LinkId -> IO (Maybe a)
 loadVal ctx lid = do
+    -- TODO: ignore io exceptions
     putStrLn ("Loading link #" ++ show lid)
-    decode . LB.fromStrict <$> B.readFile filename
+    decode . LB.fromStrict <$> catchIOError (B.readFile filename) (const $ return B.empty)
     where
         filename = ctxJsonStore ctx ++ show lid ++ ".json"
 
@@ -203,6 +247,8 @@ loadVal ctx lid = do
 saveLink :: Linkable a => Context -> Link a -> IO ()
 saveLink ctx link = do
     putStrLn ("Saving link #" ++ show (linkId link))
+    -- TODO: ignore io exceptions
+    -- TODO: also create directory automatically if missing
     maybeVal <- readLink ctx link
     case maybeVal of
         Nothing -> return ()
@@ -213,5 +259,6 @@ saveLink ctx link = do
 -- | Notably saves all links
 saveContext :: Context -> IO ()
 saveContext ctx = do
+    putStrLn "Saving context"
     cache <- readIORef (ctxCache ctx)
     mapM_ (lcwSaveLink . snd) (L.toList cache)

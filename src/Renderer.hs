@@ -25,7 +25,7 @@ import Core
 import Environment
 import qualified Grid as G
 import Object
-import qualified Ship as H
+import qualified Region as R
 import Game
 import Ui
 import Ui.Menu
@@ -79,18 +79,18 @@ subRenderWorld = do
     game            <- get
     
     -- TODO: fix me
-    let cameraX   = game ^. gameCamera . cameraCoordinate . coordinateX
-    let cameraY   = game ^. gameCamera . cameraCoordinate . coordinateY
-    let viewport  = game ^. gameCamera . cameraViewport
+    let cameraX     = game ^. gameCamera . cameraCoordinate . coordinateX
+    let cameraY     = game ^. gameCamera . cameraCoordinate . coordinateY
+    let viewport    = game ^. gameCamera . cameraViewport
+    let regionLinks = game ^. gameRegions
     let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
-    let shipLinks = game ^. gameShips
     
-    ships <- embedGame $ mapM gameReadLink shipLinks
+    regions <- embedGame $ mapM gameReadLink regionLinks
 
     -- TODO: Abandon hopes whoever wants to update this monster
-    things <- concat <$> (forM ships $ \ship -> do
-        let (scx, scy) = view (H.shipCoordinate . coordinates) ship
-        let grid       = view H.shipGrid ship
+    things <- concat <$> (forM regions $ \region -> do
+        let (scx, scy) = view (R.regionCoordinate . coordinates) region
+        let grid       = view R.regionGrid region
         let range      = ( cameraX - scx
                          , cameraY - scy
                          , (cameraX - scx) + (cameraCoordMaxX - cameraX)

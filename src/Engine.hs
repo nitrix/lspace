@@ -7,6 +7,7 @@ module Engine
 import Control.Lens
 import Control.Monad.Reader
 import Control.Monad.State as S
+import Data.List
 import Data.Maybe
 import Linear (V2(V2))
 import SDL
@@ -18,18 +19,9 @@ import Game
 import qualified Grid as G
 import Link
 import Object
-import Ship
+import Region
 import Ui
 import Ui.Menu
-
--- TODO: that looks way too disgutsting for what it does
-{-
-engineInit :: GameState -> ReaderT Environment IO GameState
-engineInit game = do
-    -- let playerCoord = sysWorldCoordObjectId (view gameWorld newGame) (view gamePlayer newGame)
-    let playerCoord = Nothing
-    return $ fromMaybe game ((\coord -> game & gameCamera %~ cameraCenter coord) <$> playerCoord)
--}
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> Game Bool
@@ -86,87 +78,120 @@ engineHandleBareKeycode keycode = do
         KeycodeS       -> if shift then engineRotateObject player South else engineMoveObject player South
         KeycodeA       -> if shift then engineRotateObject player West  else engineMoveObject player West
         KeycodeD       -> if shift then engineRotateObject player East  else engineMoveObject player East
+        -- TODO: zoom levels with caching
         -- KeycodeKPPlus  -> modify $ gameCamera %~ cameraZoom (subtract 1)
         -- KeycodeKPMinus -> modify $ gameCamera %~ cameraZoom (+1)
         KeycodeUp      -> modify $ gameCamera %~ cameraMove North
         KeycodeDown    -> modify $ gameCamera %~ cameraMove South
         KeycodeRight   -> modify $ gameCamera %~ cameraMove East
         KeycodeLeft    -> modify $ gameCamera %~ cameraMove West
-        KeycodeY       -> modify $ id -- gameCamera %~ (fromMaybe id (cameraTogglePinned <$> sysWorldCoordObjectId world player)) -- TODO: eeeww
+        -- TODO: toggling centered camera and/or camera following when moving near edges
+        -- KeycodeY       -> modify $ id -- gameCamera %~ (fromMaybe id (cameraTogglePinned <$> sysWorldCoordObjectId world player)) -- TODO: eeeww
         KeycodeE       -> modify $ gameUi       %~ uiMenuSwitch UiMenuMain
         KeycodeEscape  -> modify $ gameUi       %~ uiMenuClear
         _              -> modify $ id
     return False
 
--- engineAddObject :: Link Object -> Coordinate -> Game ()
--- engineAddObject objLink coord = return ()
+engineAddObject :: Link Object -> Coordinate -> Game ()
+engineAddObject objLink coord = do
+    nearbyObjectLinks <- concat <$> mapM engineObjectsAtLocation
+        [ coordinateMove North coord
+        , coordinateMove East coord
+        , coordinateMove South coord
+        , coordinateMove West coord
+        ]
 
-{-
-gameAdd obj coord = do
-    (cx, cy)   <- gets $ view $ gameCamera . cameraCoordinate . coordinates
-    ships      <- gets $ view $ gameWorld . worldShips
+    nearbyUniqueRegionLinks <- nub <$> (fmap (view objRegion) <$> mapM gameReadLink nearbyObjectLinks)
     
-    -- Find things at the given location
-    let findThings s = G.lookup (x + cx - view (shipCoordinate . coordinateX) s)
-                                (y + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
-                       G.lookup (x + 1 + cx - view (shipCoordinate . coordinateX) s)
-                                (y + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
-                       G.lookup (x + 1 + cx - view (shipCoordinate . coordinateX) s)
-                                (y + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
-                       G.lookup (x + cx - view (shipCoordinate . coordinateX) s)
-                                (y + 1 + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s) ++
-                       G.lookup (x + cx - view (shipCoordinate . coordinateX) s)
-                                (y + 1 + cy - view (shipCoordinate . coordinateY) s) (view shipGrid s)
-                     :: [Object]
+    let (worldX, worldY) = view coordinates coord
+    
+    -- TODO: those are still being implemented
+    case nearbyUniqueRegionLinks of
+        [] -> do
+            let region = defaultRegion & regionCoordinate .~ coord & regionGrid %~ G.insert 0 0 objLink
+            newRegionLink <- gameCreateLink region
+            gameModifyLink objLink $ objRegion .~ newRegionLink
+            modify $ gameRegions %~ (newRegionLink:)
+        r:[] -> do
+            region <- gameReadLink r
+            let (innerX, innerY) = (worldX - region ^. regionCoordinate . coordinateX, worldY - region ^. regionCoordinate . coordinateY)
+            gameModifyLink objLink $ objRegion .~ r
+            gameModifyLink r $ regionGrid %~ G.insert innerX innerY objLink
+            -- TODO: there's a lot of ship-to/from-world coordinate conversion; I think all this stuff should move to Coordinate
+        _:_ -> do
+            return () -- TODO: engineMergeRegion + add our object to that
+    
+    return ()
 
-    let things = fmap findThings <$> zip ships ships :: [(Ship, [Object])]
-    let nonEmptyThings = filter ((/= 0) . length . snd) things
-    let newShip = defaultShip & shipMass .~ (objMass obj) & shipCoordinate .~ coord
-
-    -- Determine if it's an existing ship or if we should create one
-    let newShips = case nonEmptyThings of
-                [] -> newShip : ships
-                sl -> foldr _ [] sl
-                      -- grid insert object, change mass ship
-                      -- let (gx, gy) = view (shipCoordinate . coordinates) ship in (head s, x + cx - sx, y + cy - sy)
-                      -- let newObj = obj { objShipCoordinate = coordinate gx gy }
-
-
-    -- Save the modified/new ship & object
-    modify $ gameWorld . worldShips .~ newShips
-    where
-        (x, y) = view coordinates coord
--}
+engineRemoveObject :: Link Object -> Game ()
+engineRemoveObject objLink = do
+    regionLink <- view objRegion <$> gameReadLink objLink
+    gameModifyLink regionLink $ regionGrid %~ G.reverseDelete objLink
+    
+    -- If the region is now empty, then no point in keeping it.
+    region <- gameReadLink regionLink
+    when (null $ G.toList $ view regionGrid region) $ do
+        gameDestroyLink regionLink
+        modify $ gameRegions %~ delete regionLink -- TODO: could be more efficient, O(n) when lot of regions
 
 engineRotateObject :: Link Object -> Direction -> Game ()
 engineRotateObject objLink direction = do
     gameModifyLink objLink $ objFacing .~ direction
 
+engineObjectsAtLocation :: Coordinate -> Game [Link Object]
+engineObjectsAtLocation coord = do
+    regionLinks <- gets (view gameRegions)
+    regions     <- mapM gameReadLink regionLinks
+
+    fmap concat <$> forM regions $ \s -> do
+        let (innerX, innerY) = (worldX - s ^. regionCoordinate . coordinateX, worldY - s ^. regionCoordinate . coordinateY)
+        return $ G.lookup innerX innerY $ view regionGrid s
+        
+    where
+        (worldX, worldY) = view coordinates coord
+
+-- Unless Ship is broken or we're looking at the wrong region for our object,
+-- it should always be able to get the coordinate of the object.
+-- Thus, I decided to reflect this in the type and provide defaultCoordinate as an absolute emergency.
+-- It simplifies code that uses engineObjectLocation a whole lot.
+engineObjectLocation :: Link Object -> Game Coordinate
+engineObjectLocation objLink = do
+    regionLink <- view objRegion <$> gameReadLink objLink
+    region     <- gameReadLink regionLink
+    
+    let (x, y) = view coordinates $ fromMaybe defaultCoordinate
+                                  $ uncurry coordinate <$> G.reverseLookup objLink (view regionGrid region)
+                                  
+    return $ coordinate (region ^. regionCoordinate . coordinateX + x)
+                        (region ^. regionCoordinate . coordinateY + y)
+            
 engineMoveObject :: Link Object -> Direction -> Game ()
 engineMoveObject objLink direction = do
     -- Rotate the object
     engineRotateObject objLink direction
     
-    -- Obtaining ship from object
-    shipLink <- view objShip <$> gameReadLink objLink
-    ship <- gameReadLink shipLink
-
-    -- Asking the ship's grid about the current position of our object
-    let maybePosition = G.reverseLookup objLink (view shipGrid ship)
-    case maybePosition of
-        Nothing -> return ()
-        Just position@(x, y) -> do
-            let (newX, newY) = coordinatesMove direction position
-            let (worldNewX, worldNewY) = (ship ^. shipCoordinate . coordinateX + newX, ship ^. shipCoordinate . coordinateY + newY)
+    -- Asking the region's grid about the current position of our object
+    newLocation <- coordinateMove direction <$> engineObjectLocation objLink
     
-            -- Collision detection of native objects at the target location
-            shipLinks <- gets (view gameShips)
-            ships     <- mapM gameReadLink shipLinks
-            natives   <- mapM gameReadLink $ concat $ mapM (\s ->
-                            let (innerX, innerY) = (worldNewX - s ^. shipCoordinate . coordinateX, worldNewY - s ^. shipCoordinate . coordinateY) in
-                            G.lookup innerX innerY $ view shipGrid s
-                        ) ships
+    -- We're going to perform collision detection of native objects at the target location
+    natives <- mapM gameReadLink =<< engineObjectsAtLocation newLocation
+    
+    -- Allow moving the object only when there's no collisions detected
+    when (all (not . objSolid) natives) $ do
+        regionLink <- view objRegion <$> gameReadLink objLink
+        region     <- gameReadLink regionLink
 
-            -- Allow moving the object when there's no collisions detected
-            when (all (not . objSolid) natives) $ do
-                gameModifyLink shipLink $ shipGrid %~ G.insert newX newY objLink . G.delete x y objLink
+        -- If the object is the only one in its region, then move the whole region, otherwise, move the object
+        if (length (G.toList $ view regionGrid region) == 1)
+        then 
+            engineMoveRegion regionLink direction
+        else do
+            engineRemoveObject objLink
+            engineAddObject objLink newLocation
+
+engineMoveRegion :: Link (Region Object) -> Direction -> Game ()
+engineMoveRegion regionLink direction = do
+    -- TODO: collision check; maybe even triggering explosions or something?
+    gameModifyLink regionLink $ regionCoordinate %~ coordinateMove direction
+
+    -- TODO: when a ship moves, next to / on top of, another ship, should they merge?
