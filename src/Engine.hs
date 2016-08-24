@@ -1,7 +1,6 @@
 module Engine
     ( engineHandleEvent
     , engineHandleKeyboardEvent
-    -- , engineInit
     ) where
 
 import Control.Lens
@@ -49,14 +48,15 @@ engineHandleKeyboardEvent :: KeyboardEventData -> Game Bool
 engineHandleKeyboardEvent ked = do
     -- Modifier keys
     case keycode of
-        KeycodeLShift -> modify $ gameKeyShift .~ (keymotion == Pressed)    
-        KeycodeRShift -> modify $ gameKeyShift .~ (keymotion == Pressed)    
-        KeycodeLAlt   -> modify $ gameKeyAlt   .~ (keymotion == Pressed)    
-        KeycodeRAlt   -> modify $ gameKeyAlt   .~ (keymotion == Pressed)    
+        KeycodeLShift -> modify $ gameKeyShift .~ (keymotion == Pressed)
+        KeycodeRShift -> modify $ gameKeyShift .~ (keymotion == Pressed)
+        KeycodeLAlt   -> modify $ gameKeyAlt   .~ (keymotion == Pressed)
+        KeycodeRAlt   -> modify $ gameKeyAlt   .~ (keymotion == Pressed)
         _             -> return ()
 
     -- Bare keys
     if (keymotion == Pressed) then do
+        -- TODO: I don't like that part
         (newKeycode, shouldHalt) <- uiMenuInterceptKeycode keycode
         if shouldHalt
         then return True
@@ -194,4 +194,4 @@ engineMoveRegion regionLink direction = do
     -- TODO: collision check; maybe even triggering explosions or something?
     gameModifyLink regionLink $ regionCoordinate %~ coordinateMove direction
 
-    -- TODO: when a ship moves, next to / on top of, another ship, should they merge?
+    -- TODO: when a ship moves, next to / on top of, another ship, should they merge / check docking ports are aligned?

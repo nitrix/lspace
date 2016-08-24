@@ -1,5 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 
+-- TODO: Maybe use TVar instead of IORef to allow concurrency ?
+
 module Link
     ( Link
     , Linkable
