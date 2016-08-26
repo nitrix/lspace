@@ -119,6 +119,8 @@ engineAddObject objLink coord = do
             gameModifyLink r $ regionGrid %~ G.insert innerX innerY objLink
             -- TODO: there's a lot of ship-to/from-world coordinate conversion; I think all this stuff should move to Coordinate
         _:_ -> do
+            -- TODO: If our object is solid, then it's enough to connect to the ships and merge them.
+            -- Otherwise, same as the [] case.
             return () -- TODO: engineMergeRegion + add our object to that
     
     return ()
@@ -127,6 +129,8 @@ engineRemoveObject :: Link Object -> Game ()
 engineRemoveObject objLink = do
     regionLink <- view objRegion <$> gameReadLink objLink
     gameModifyLink regionLink $ regionGrid %~ G.reverseDelete objLink
+    
+    -- TODO: detect if the object removed was holding two different parts of the ship and should become ships of their own
     
     -- If the region is now empty, then no point in keeping it.
     region <- gameReadLink regionLink
