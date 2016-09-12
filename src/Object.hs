@@ -61,6 +61,16 @@ instance J.ToJSON WallType
 instance Show Object where
     show _ = "{Object}"
 
+defaultObjectCommon :: ObjectCommon
+defaultObjectCommon = MkObjectCommon
+    { _objFacing = South
+    , _objMass   = 1
+    , _objRegion = invalidLink
+    }
+    
+defaultBox :: Object
+defaultBox = MkObject defaultObjectCommon (ObjectBox $ MkBox { _boxState = BoxClosed })
+
 objSprite :: Object -> Sprite
 objSprite (MkObject _ (ObjectBox box)) = case _boxState box of
     BoxClosed -> sprite 0 2 ZOnGround

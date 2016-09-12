@@ -13,7 +13,9 @@ import Data.List
 import SDL.Input.Keyboard.Codes
 
 import Game
+import Object
 import Ui
+import World
 
 -- | Clear all visible menus from a Ui.
 uiMenuClear :: Ui -> Ui
@@ -27,7 +29,7 @@ uiMenuSwitch tm ui = uiMenuClear ui & uiVisible %~ (MkUiTypeMenu tm:)
 uiMenuOptions :: UiTypeMenu -> [String]
 uiMenuOptions tm = case tm of
     UiMenuMain ->
-        [ "[b] Build menu (soon)"
+        [ "[b] Build menu"
         , "[x] Destroy mode (soon)"
         , "[i] Inventory (soon)"
         , "[q] Quit"
@@ -38,27 +40,28 @@ uiMenuOptions tm = case tm of
         ]
     UiMenuBuild ->
         [ "[b] Box"
-        , "[f] Floor"
-        , "[p] Plant"
-        , "[w] Wall"
+        , "[f] Floor (soon)"
+        , "[p] Plant (soon)"
+        , "[w] Wall (soon)"
         ]
 
 uiMenuInterceptKeycode :: Keycode -> Game (Keycode, Bool)
 uiMenuInterceptKeycode keycode = do
     modals <- S.gets $ view (gameUi . uiVisible)
+    player <- S.gets $ view gamePlayer
     
     results <- forM modals $ \modal -> do
         case modal of
             MkUiTypeMenu UiMenuBuild ->
                 case keycode of
-                    KeycodeB -> ignore -- action $ gameAdd (boxObject defaultObject defaultBox) (coordinate 0 1)
+                    KeycodeB -> action $ gameCreateLink defaultBox >>= worldAtObjectAddObject player
                     KeycodeF -> ignore -- action $ sysWorldAddObjectAtPlayer $ floorObject defaultObject defaultFloor
                     KeycodeP -> ignore -- action $ sysWorldAddObjectAtPlayer $ plantObject defaultObject defaultPlant
                     KeycodeW -> ignore -- action $ sysWorldAddObjectAtPlayer $ wallObject defaultObject defaultWall
                     _        -> ignore
             MkUiTypeMenu UiMenuMain ->
                 case keycode of
-                    KeycodeB -> ignore -- switch UiMenuBuild
+                    KeycodeB -> switch UiMenuBuild
                     KeycodeQ -> switch UiMenuQuitConfirm
                     _        -> ignore
             MkUiTypeMenu UiMenuQuitConfirm ->
@@ -73,8 +76,8 @@ uiMenuInterceptKeycode keycode = do
 
     where
         -- Trusty convenient helpers to give the intercepted keycode the desired behavior
-        terminate    = return (KeycodeUnknown, True)                                   :: Game (Keycode, Bool)
-        ignore       = return (keycode, False)                                         :: Game (Keycode, Bool)
-        -- action f  = f >> clear                                                      :: Game (Keycode, Bool)
-        switch tm    = (KeycodeUnknown, False) <$ (modify $ gameUi %~ uiMenuSwitch tm) :: Game (Keycode, Bool)
-        -- clear     = (KeycodeUnknown, False) <$ (modify $ gameUi %~ uiMenuClear)     :: Game (Keycode, Bool)
+        terminate = return (KeycodeUnknown, True)                                   :: Game (Keycode, Bool)
+        ignore    = return (keycode, False)                                         :: Game (Keycode, Bool)
+        action f  = f >> clear                                                      :: Game (Keycode, Bool)
+        switch tm = (KeycodeUnknown, False) <$ (modify $ gameUi %~ uiMenuSwitch tm) :: Game (Keycode, Bool)
+        clear     = (KeycodeUnknown, False) <$ (modify $ gameUi %~ uiMenuClear)     :: Game (Keycode, Bool)

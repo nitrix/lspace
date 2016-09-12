@@ -11,6 +11,7 @@ module Link
     , saveContext
 
     , defaultLink
+    , invalidLink
     , createLink
     , destroyLink
     , restoreLink
@@ -89,6 +90,10 @@ initContext maybeLimit jsonStore = do
 -- | Default link
 defaultLink :: Link a
 defaultLink = restoreLink 1
+
+-- | Invalid link
+invalidLink :: Link a
+invalidLink = restoreLink (-1)
 
 -- | Linkify something
 createLink :: Linkable a => Context -> a -> IO (Link a)

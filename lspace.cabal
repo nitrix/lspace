@@ -49,3 +49,4 @@ executable lspace
                      , Sprite
                      , Ui
                      , Ui.Menu
+                     , World
