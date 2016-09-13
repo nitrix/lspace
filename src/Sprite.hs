@@ -14,7 +14,7 @@ import GHC.Generics
 import Coordinate
 
 type Sprite = [SpritePart]
-type SpritePart = (Coordinate, Coordinate, ZIndex)
+type SpritePart = (RelativeCoordinate, RelativeCoordinate, ZIndex)
 
 data ZIndex = ZGround
             | ZOnGround

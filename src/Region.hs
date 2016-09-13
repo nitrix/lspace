@@ -13,11 +13,11 @@ import Coordinate
 import Link
 
 data Region v = MkRegion
-    { _regionCoordinate :: Coordinate
-    , _regionDimension  :: (Metric, Metric)
-    , _regionGrid       :: G.Grid Metric (Link v)
-    , _regionMass       :: Metric
-    , _regionVelocity   :: (Metric, Metric)
+    { _regionCoordinate :: WorldCoordinate
+    , _regionDimension  :: (Int, Int)
+    , _regionGrid       :: G.Grid Int (Link v)
+    , _regionMass       :: Int
+    , _regionVelocity   :: (Int, Int)
     } deriving (Show, Generic)
 
 defaultRegion :: Region v
@@ -54,9 +54,9 @@ instance ToJSON (Region v) where
         , "dimension"  .= _regionDimension s
         ]
 
-regionGrid       :: Lens' (Region v) (G.Grid Metric (Link v))
-regionCoordinate :: Lens' (Region v) Coordinate
-regionMass       :: Lens' (Region v) Metric
+regionGrid       :: Lens' (Region v) (G.Grid Int (Link v))
+regionCoordinate :: Lens' (Region v) WorldCoordinate
+regionMass       :: Lens' (Region v) Int
 regionGrid       = lens _regionGrid       (\s x -> s { _regionGrid       = x })
 regionCoordinate = lens _regionCoordinate (\s x -> s { _regionCoordinate = x })
 regionMass       = lens _regionMass       (\s x -> s { _regionMass       = x })

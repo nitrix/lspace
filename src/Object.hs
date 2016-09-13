@@ -13,9 +13,10 @@ import Region
 import Sprite
 
 data ObjectCommon = MkObjectCommon
-    { _objFacing :: Direction
-    , _objMass   :: Int
-    , _objRegion :: Link (Region Object)
+    { _objFacing     :: Direction
+    , _objMass       :: Int
+    , _objRegion     :: Link (Region Object)
+    , _objCoordinate :: RegionCoordinate
     } deriving (Generic, Eq, Ord)
 
 data Object = MkObject ObjectCommon ObjectInfo deriving (Generic, Eq, Ord)
@@ -26,6 +27,9 @@ data ObjectInfo = ObjectBox    Box
                 | ObjectWall   Wall
                 | ObjectUnknown
                 deriving (Generic, Eq, Ord)
+
+objCoordinate :: Lens' Object RegionCoordinate
+objCoordinate = lens (\(MkObject common _) -> _objCoordinate common) (\(MkObject common info) x -> MkObject common { _objCoordinate = x } info)
 
 objRegion :: Lens' Object (Link (Region Object))
 objRegion = lens (\(MkObject common _) -> _objRegion common) (\(MkObject common info) x -> MkObject common { _objRegion = x } info)
@@ -63,9 +67,10 @@ instance Show Object where
 
 defaultObjectCommon :: ObjectCommon
 defaultObjectCommon = MkObjectCommon
-    { _objFacing = South
-    , _objMass   = 1
-    , _objRegion = invalidLink
+    { _objFacing     = South
+    , _objMass       = 1
+    , _objRegion     = invalidLink
+    , _objCoordinate = coordinate 0 0
     }
     
 defaultBox :: Object

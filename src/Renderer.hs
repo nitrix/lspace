@@ -83,7 +83,7 @@ subRenderWorld = do
     let cameraY     = game ^. gameCamera . cameraCoordinate . coordinateY
     let viewport    = game ^. gameCamera . cameraViewport
     let regionLinks = game ^. gameRegions
-    let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + viewport
+    let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + (V2 fromIntegral fromIntegral <*> viewport)
     
     regions <- embedGame $ mapM gameReadLink regionLinks
 
@@ -91,15 +91,15 @@ subRenderWorld = do
     things <- concat <$> (forM regions $ \region -> do
         let (scx, scy) = view (R.regionCoordinate . coordinates) region
         let grid       = view R.regionGrid region
-        let range      = ( cameraX - scx
-                         , cameraY - scy
-                         , (cameraX - scx) + (cameraCoordMaxX - cameraX)
-                         , (cameraY - scy) + (cameraCoordMaxY - cameraY)
+        let range      = ( fromIntegral $ cameraX - scx
+                         , fromIntegral $ cameraY - scy
+                         , fromIntegral $ (cameraX - scx) + (cameraCoordMaxX - cameraX)
+                         , fromIntegral $ (cameraY - scy) + (cameraCoordMaxY - cameraY)
                          )
         
         forM (G.range range grid) $ \(x, y, v) -> do
             rv <- embedGame $ gameReadLink v
-            return $ (\o -> (coordinate (scx+x) (scy+y), o)) $ rv
+            return $ (\o -> (coordinate (scx + fromIntegral x) (scy + fromIntegral y), o)) $ rv
         )
 
     -- Collect renderables, because of zIndex

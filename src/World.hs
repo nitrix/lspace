@@ -14,15 +14,18 @@ import Region
 
 worldAtObjectAddObject :: Link Object -> Link Object -> Game ()
 worldAtObjectAddObject targetLink whatLink = do
+    return ()
+    {-
     target <- gameReadLink targetLink
     region <- gameReadLink (view objRegion target)
     
     let grid = view regionGrid region
     case G.reverseLookup whatLink grid of
-        Just (x, y) -> worldAddObject whatLink (coordinate x y)
+        Just (x, y) -> worldAddObject whatLink (coordinate x y) -- TODO: needs to be world coord, not region coord
         Nothing     -> return ()
+    -}
 
-worldAddObject :: Link Object -> Coordinate -> Game ()
+worldAddObject :: Num a => Link Object -> WorldCoordinate -> Game ()
 worldAddObject objLink coord = do
     nearbyObjectLinks <- concat <$> mapM worldObjectsAtLocation
         [ coordinateMove North coord
@@ -45,7 +48,9 @@ worldAddObject objLink coord = do
             modify $ gameRegions %~ (newRegionLink:)
         r:[] -> do
             region <- gameReadLink r
-            let (innerX, innerY) = (worldX - region ^. regionCoordinate . coordinateX, worldY - region ^. regionCoordinate . coordinateY)
+            let (innerX, innerY) = ( fromIntegral $ worldX - region ^. regionCoordinate . coordinateX
+                                   , fromIntegral $ worldY - region ^. regionCoordinate . coordinateY
+                                   )
             gameModifyLink objLink $ objRegion .~ r
             gameModifyLink r $ regionGrid %~ G.insert innerX innerY objLink
             -- TODO: there's a lot of ship-to/from-world coordinate conversion; I think all this stuff should move to Coordinate
@@ -58,8 +63,10 @@ worldAddObject objLink coord = do
 
 worldRemoveObject :: Link Object -> Game ()
 worldRemoveObject objLink = do
-    regionLink <- view objRegion <$> gameReadLink objLink
-    gameModifyLink regionLink $ regionGrid %~ G.reverseDelete objLink
+    regionLink <- view objRegion                     <$> gameReadLink objLink
+    (x, y)     <- view (objCoordinate . coordinates) <$> gameReadLink objLink
+    
+    gameModifyLink regionLink $ regionGrid %~ G.delete x y objLink
     
     -- TODO: detect if the object removed was holding two different parts of the ship and should become ships of their own
     
@@ -73,13 +80,15 @@ worldRotateObject :: Link Object -> Direction -> Game ()
 worldRotateObject objLink direction = do
     gameModifyLink objLink $ objFacing .~ direction
 
-worldObjectsAtLocation :: Coordinate -> Game [Link Object]
+worldObjectsAtLocation :: WorldCoordinate -> Game [Link Object]
 worldObjectsAtLocation coord = do
     regionLinks <- gets (view gameRegions)
     regions     <- mapM gameReadLink regionLinks
 
     fmap concat <$> forM regions $ \s -> do
-        let (innerX, innerY) = (worldX - s ^. regionCoordinate . coordinateX, worldY - s ^. regionCoordinate . coordinateY)
+        let (innerX, innerY) = ( fromIntegral $ worldX - s ^. regionCoordinate . coordinateX
+                               , fromIntegral $ worldY - s ^. regionCoordinate . coordinateY
+                               )
         return $ G.lookup innerX innerY $ view regionGrid s
         
     where
@@ -89,16 +98,16 @@ worldObjectsAtLocation coord = do
 -- it should always be able to get the coordinate of the object.
 -- Thus, I decided to reflect this in the type and provide defaultCoordinate as an absolute emergency.
 -- It simplifies code that uses worldObjectLocation a whole lot.
-worldObjectLocation :: Link Object -> Game Coordinate
+worldObjectLocation :: Link Object -> Game WorldCoordinate
 worldObjectLocation objLink = do
     regionLink <- view objRegion <$> gameReadLink objLink
     region     <- gameReadLink regionLink
+    coord      <- view objCoordinate <$> gameReadLink objLink
     
-    let (x, y) = view coordinates $ fromMaybe defaultCoordinate
-                                  $ uncurry coordinate <$> G.reverseLookup objLink (view regionGrid region)
+    let (x, y) = view coordinates coord
                                   
-    return $ coordinate (region ^. regionCoordinate . coordinateX + x)
-                        (region ^. regionCoordinate . coordinateY + y)
+    return $ coordinate ((region ^. regionCoordinate . coordinateX) + (fromIntegral x))
+                        ((region ^. regionCoordinate . coordinateY) + (fromIntegral y))
             
 worldMoveObject :: Link Object -> Direction -> Game ()
 worldMoveObject objLink direction = do

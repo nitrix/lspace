@@ -246,7 +246,12 @@ loadVal :: Linkable a => Context -> LinkId -> IO (Maybe a)
 loadVal ctx lid = do
     -- TODO: ignore io exceptions
     putStrLn ("Loading link #" ++ show lid)
-    decode . LB.fromStrict <$> catchIOError (B.readFile filename) (const $ return B.empty)
+    result <- eitherDecode' . LB.fromStrict <$> catchIOError (B.readFile filename) (const $ return B.empty)
+    case result of
+        Right x -> return $ Just x
+        Left x -> do
+            putStrLn ("Failed to decode #" ++ show lid ++ " with error: " ++ x)
+            return Nothing
     where
         filename = ctxJsonStore ctx ++ show lid ++ ".json"
 

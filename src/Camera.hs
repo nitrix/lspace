@@ -6,10 +6,10 @@ module Camera
     , cameraViewport
     , cameraWindowSize
     -- Functions
-    , cameraAuto
-    , cameraCenter
+    -- , cameraAuto
+    -- , cameraCenter
     , cameraMove
-    , cameraTogglePinned
+    -- , cameraTogglePinned
     , defaultCamera
     ) where
 
@@ -23,7 +23,7 @@ import Coordinate
 -- | Top view camera onto the world (2 axis).
 -- The user can move this freely or it might temporarily be locked on the player.
 data Camera = MkCamera
-    { _cameraCoordinate :: Coordinate
+    { _cameraCoordinate :: WorldCoordinate
     , _cameraPinned     :: Bool
     , _cameraViewport   :: V2 Int
     , _cameraWindowSize :: V2 CInt
@@ -39,7 +39,7 @@ defaultCamera = MkCamera
     }
 
 -- Lenses
-cameraCoordinate :: Lens' Camera Coordinate
+cameraCoordinate :: Lens' Camera WorldCoordinate
 cameraPinned     :: Lens' Camera Bool
 cameraViewport   :: Lens' Camera (V2 Int)
 cameraWindowSize :: Lens' Camera (V2 CInt)
@@ -56,11 +56,12 @@ cameraMove West  = cameraCoordinate . coordinateX %~ subtract 1
 cameraMove East  = cameraCoordinate . coordinateX %~ (+1)
 
 -- TODO: needs a serious refactoring
-cameraAuto :: Coordinate -> Camera -> Camera
+{-
+cameraAuto :: WorldCoordinate -> Camera -> Camera
 cameraAuto coord c = if c ^. cameraPinned then cameraCenter coord c else cameraBound coord c
 
-cameraBound :: Coordinate -> Camera -> Camera
-cameraBound coord c = let (P (V2 x y)) = getCoordinate coord in c &~ do
+cameraBound :: WorldCoordinate -> Camera -> Camera
+cameraBound coord c = let (x, y) = view coordinates coord in c &~ do
     cameraCoordinate .= coordinate (min minCameraX (x-padding)) (min minCameraY (y-padding))
     cameraCoordinate %= (\(P (V2 cx cy)) -> if x >= cx+maxCameraX-1-padding
                                             then coordinate (x-maxCameraX+1+padding) cy
@@ -75,11 +76,11 @@ cameraBound coord c = let (P (V2 x y)) = getCoordinate coord in c &~ do
         maxCameraX = fromIntegral $ c ^. cameraViewport . _x
         maxCameraY = fromIntegral $ c ^. cameraViewport . _y
 
--- TODO: needs a refactoring
-cameraCenter :: Coordinate -> Camera -> Camera
+cameraCenter :: WorldCoordinate -> Camera -> Camera
 cameraCenter coord c = c &~ do
     cameraCoordinate . coordinateX .= view coordinateX coord - (fromIntegral $ view (cameraViewport . _x) c `div` 2)
     cameraCoordinate . coordinateY .= view coordinateY coord - (fromIntegral $ view (cameraViewport . _y) c `div` 2)
 
-cameraTogglePinned :: Coordinate -> Camera -> Camera
+cameraTogglePinned :: WorldCoordinate -> Camera -> Camera
 cameraTogglePinned coord c = c & cameraPinned %~ not & cameraAuto coord
+-}
