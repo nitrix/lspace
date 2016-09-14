@@ -5,7 +5,6 @@ import Control.Monad.Reader
 import Control.Monad.State as S
 import Coordinate
 import Data.List
-import Data.Maybe
 import Game
 import qualified Grid as G
 import Link
@@ -13,7 +12,7 @@ import Object
 import Region
 
 worldAtObjectAddObject :: Link Object -> Link Object -> Game ()
-worldAtObjectAddObject targetLink whatLink = do
+worldAtObjectAddObject _ _ = do
     return ()
     {-
     target <- gameReadLink targetLink
@@ -25,7 +24,7 @@ worldAtObjectAddObject targetLink whatLink = do
         Nothing     -> return ()
     -}
 
-worldAddObject :: Num a => Link Object -> WorldCoordinate -> Game ()
+worldAddObject :: Link Object -> WorldCoordinate -> Game ()
 worldAddObject objLink coord = do
     nearbyObjectLinks <- concat <$> mapM worldObjectsAtLocation
         [ coordinateMove North coord
@@ -52,7 +51,9 @@ worldAddObject objLink coord = do
                                    , fromIntegral $ worldY - region ^. regionCoordinate . coordinateY
                                    )
             gameModifyLink objLink $ objRegion .~ r
+            gameModifyLink objLink $ objCoordinate .~ (coordinate innerX innerY)
             gameModifyLink r $ regionGrid %~ G.insert innerX innerY objLink
+            
             -- TODO: there's a lot of ship-to/from-world coordinate conversion; I think all this stuff should move to Coordinate
         _:_ -> do
             -- TODO: If our object is solid, then it's enough to connect to the ships and merge them.
@@ -94,10 +95,6 @@ worldObjectsAtLocation coord = do
     where
         (worldX, worldY) = view coordinates coord
 
--- Unless Ship is broken or we're looking at the wrong region for our object,
--- it should always be able to get the coordinate of the object.
--- Thus, I decided to reflect this in the type and provide defaultCoordinate as an absolute emergency.
--- It simplifies code that uses worldObjectLocation a whole lot.
 worldObjectLocation :: Link Object -> Game WorldCoordinate
 worldObjectLocation objLink = do
     regionLink <- view objRegion <$> gameReadLink objLink
