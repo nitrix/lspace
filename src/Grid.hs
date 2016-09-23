@@ -25,7 +25,7 @@ import Data.Foldable (foldl')
 -- import qualified Data.Text.Encoding as T
 -- import qualified Data.ByteString.Lazy as LB
 import qualified Data.Map as M
-import qualified Data.Set as S
+-- import qualified Data.Set as S
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
 import Prelude hiding (lookup)
@@ -74,7 +74,7 @@ emptyChunk = V.replicate (chunkSize * chunkSize) []
 chunkSize :: Integral k => k
 chunkSize = 25
 
-fromList :: (Integral k, Ord v) => [(k, k, v)] -> Grid k v
+fromList :: Integral k => [(k, k, v)] -> Grid k v
 fromList xs = foldl' (\g (x, y, v) -> insert x y v g) empty xs
 
 toList :: forall k v. Integral k => Grid k v -> [(k, k, v)]
@@ -95,7 +95,7 @@ idx x y = (fromIntegral $ iy * chunkSize + ix)
         ix = x `mod` chunkSize
         iy = y `mod` chunkSize
 
-insert :: (Integral k, Ord v) => k -> k -> v -> Grid k v -> Grid k v
+insert :: Integral k => k -> k -> v -> Grid k v -> Grid k v
 insert x y v (MkGrid natural) = MkGrid
     (M.insertWith (const insertedTo) (coord x y) (insertedTo emptyChunk) natural)
     -- (M.insertWith S.union v (S.singleton (x, y)) reversed)

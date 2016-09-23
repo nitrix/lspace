@@ -15,8 +15,7 @@ module Camera
 
 import Control.Lens
 import Foreign.C.Types
-import Linear (V2(V2), _x, _y)
-import Linear.Affine (Point(P))
+import Linear (V2(V2))
 
 import Coordinate
 

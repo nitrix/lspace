@@ -1,20 +1,76 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Engine
-    ( engineHandleEvent
+    ( Engine
+    , engineHandleEvent
     , engineHandleKeyboardEvent
+    , withEngine
+    
+    , embedGame
+    , loadGame
+    , saveGame
     ) where
 
-import Control.Lens
-import Control.Monad.State as S
+import Control.Lens hiding (Context)
+import Data.IORef
 import Linear (V2(V2))
 import SDL
 
+import Control.Monad.Reader.Class
+import Control.Monad.State.Class
+import Control.Monad.Trans
+import Control.Monad.Trans.State  (StateT(..))
+import Control.Monad.Trans.Maybe  (MaybeT(..))
+import Control.Monad.Trans.Reader (ReaderT(..))
+
+import Cache
 import Coordinate
 import Camera
 import Environment
 import Game
+import Link
 import Ui
 import Ui.Menu
 import World
+
+newtype Engine a = Engine { unwrapEngine :: EnvironmentT (MaybeT (StateT GameState IO)) a }
+    deriving (Functor, Applicative, Monad, MonadState GameState, MonadReader Environment, MonadIO)
+
+withEngine :: Engine () -> String -> Environment -> IO ()
+withEngine engine name env = do
+    -- Loading game
+    (ctx, gs) <- loadGame name
+    
+    -- Create cache
+    cacheRef <- newIORef defaultCache
+    
+    -- Running engine
+    ngs <- fmap snd $ flip runStateT gs
+                    $ runMaybeT
+                    $ flip runReaderT env { envContext = ctx, envCacheRef = cacheRef } -- TODO: move envContext to GameState
+                    $ unwrapEngine engine
+    
+    -- Destroy cache
+    writeIORef cacheRef defaultCache
+    
+    -- Save new game state
+    saveGame ctx ngs
+
+embedGame :: Game a -> Engine a
+embedGame game = Engine $ ReaderT $ \env -> MaybeT $ StateT $ \gs -> liftIO $ runGame env gs game
+
+loadGame :: String -> IO (Context, GameState)
+loadGame name = do
+    ctx <- initContext (Just 1000) ("data/" ++ name ++ "/")
+    gs  <- readLink ctx defaultLink
+    case gs of
+        Just gs' -> return (ctx, gs')
+        Nothing -> error "Unable to load game state"
+
+saveGame :: Context -> GameState -> IO ()
+saveGame ctx gs = do
+    writeLink ctx defaultLink gs
+    saveContext ctx
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> Game Bool

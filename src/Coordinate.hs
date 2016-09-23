@@ -39,7 +39,7 @@ instance FromJSON Direction where
     parseJSON (J.String s) = return $ read $ T.unpack s
     parseJSON _ = error "Unable to parse JSON for Direction"
 
-instance (Num a, Show a) => ToJSON (Coordinate a) where
+instance Show a => ToJSON (Coordinate a) where
     toJSON c = String . T.pack . show $ getCoordinate c
 
 instance (Num a, Read a) => FromJSON (Coordinate a) where

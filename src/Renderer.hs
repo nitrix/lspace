@@ -21,7 +21,7 @@ import System.Random
 import Cache
 import Camera
 import Coordinate
-import Core
+import Engine
 import Environment
 import qualified Grid as G
 import Object
@@ -30,7 +30,7 @@ import Game
 import Ui
 import Ui.Menu
 
-renderGame :: Core ()
+renderGame :: Engine ()
 renderGame = do
     -- Information needed to render
     renderer <- asks envRenderer
@@ -47,7 +47,7 @@ renderGame = do
     -- Present to the screen
     present renderer
 
-subRenderUi :: Core ()
+subRenderUi :: Engine ()
 subRenderUi = do
     -- Information needed to render
     renderer    <- asks envRenderer
@@ -70,7 +70,7 @@ subRenderUi = do
                     destroyTexture texture
             -- _ -> return []
 
-subRenderWorld :: Core ()
+subRenderWorld :: Engine ()
 subRenderWorld = do
     -- Information needed to render
     renderer        <- asks envRenderer
@@ -125,7 +125,7 @@ subRenderWorld = do
     forM_ (sortOn (\(_,_,a) -> a) renderables) $ \(src, dst, _) -> do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
 
-subRenderVoid :: Core ()
+subRenderVoid :: Engine ()
 subRenderVoid = do
     renderer <- asks envRenderer
     cacheRef <- asks envCacheRef

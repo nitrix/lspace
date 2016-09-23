@@ -20,9 +20,9 @@ module Game
     , runGame
     ) where
 
-import Control.Lens
+import Control.Lens hiding (Context)
 import Control.Monad.State.Class
-import Control.Monad.Trans
+import Control.Monad.Except
 import Control.Monad.Trans.State hiding (get)
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Reader
