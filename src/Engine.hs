@@ -12,18 +12,15 @@ module Engine
     ) where
 
 import Control.Lens hiding (Context)
-import Data.IORef
-import Linear (V2(V2))
-import SDL
-
 import Control.Monad.Reader.Class
 import Control.Monad.State.Class
 import Control.Monad.Trans
 import Control.Monad.Trans.State  (StateT(..))
 import Control.Monad.Trans.Maybe  (MaybeT(..))
 import Control.Monad.Trans.Reader (ReaderT(..))
+import Linear (V2(V2))
+import SDL
 
-import Cache
 import Coordinate
 import Camera
 import Environment
@@ -39,38 +36,34 @@ newtype Engine a = Engine { unwrapEngine :: EnvironmentT (MaybeT (StateT GameSta
 withEngine :: Engine () -> String -> Environment -> IO ()
 withEngine engine name env = do
     -- Loading game
-    (ctx, gs) <- loadGame name
-    
-    -- Create cache
-    cacheRef <- newIORef defaultCache
+    gs <- loadGame name
     
     -- Running engine
     ngs <- fmap snd $ flip runStateT gs
                     $ runMaybeT
-                    $ flip runReaderT env { envContext = ctx, envCacheRef = cacheRef } -- TODO: move envContext to GameState
+                    $ flip runReaderT env
                     $ unwrapEngine engine
     
-    -- Destroy cache
-    writeIORef cacheRef defaultCache
-    
     -- Save new game state
-    saveGame ctx ngs
+    saveGame ngs
 
 embedGame :: Game a -> Engine a
 embedGame game = Engine $ ReaderT $ \env -> MaybeT $ StateT $ \gs -> liftIO $ runGame env gs game
 
-loadGame :: String -> IO (Context, GameState)
+loadGame :: String -> IO GameState
 loadGame name = do
     ctx <- initContext (Just 1000) ("data/" ++ name ++ "/")
     gs  <- readLink ctx defaultLink
     case gs of
-        Just gs' -> return (ctx, gs')
-        Nothing -> error "Unable to load game state"
+        Just tgs -> return $ tgs & gameContext .~ ctx 
+        Nothing -> error "Unable to load game state" -- TODO: should create a new game
 
-saveGame :: Context -> GameState -> IO ()
-saveGame ctx gs = do
+saveGame :: GameState -> IO ()
+saveGame gs = do
     writeLink ctx defaultLink gs
     saveContext ctx
+    where
+        ctx = view gameContext gs
 
 -- | This function takes care of all events in the engine and dispatches them to the appropriate handlers.
 engineHandleEvent :: Event -> Game Bool

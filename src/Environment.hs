@@ -10,7 +10,6 @@ import SDL
 import SDL.TTF.FFI (TTFFont)
 
 import Cache
-import Link
 
 -- | Convenience type to express computations that needs the Environment' to do their work
 type EnvironmentT m a = ReaderT Environment m a
@@ -19,7 +18,6 @@ type EnvironmentT m a = ReaderT Environment m a
 data Environment = MkEnvironment
     { envCacheRef  :: IORef Cache
     , envFont      :: TTFFont
-    , envContext   :: Context
     , envRenderer  :: Renderer
     , envTileset   :: Texture
     , envTileSize  :: CInt

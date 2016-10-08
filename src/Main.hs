@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Monad
+import Data.IORef
 import qualified SDL       as Sdl
 import qualified SDL.Image as Img
 import qualified SDL.TTF   as Ttf
 
+import Cache
 import Engine
 import Environment
 import Renderer
@@ -30,15 +32,22 @@ main = do
     Sdl.clear renderer
     Sdl.present renderer
     Sdl.showWindow window
+    
+    -- Create cache
+    cacheRef <- newIORef defaultCache
 
     -- Run the mainLoop engine for the game "demo" with the supplied environment
     withEngine mainLoop "demo" $ MkEnvironment
         { envFont     = font
         , envRenderer = renderer
+        , envCacheRef = cacheRef
         , envTileset  = tileset
         , envTileSize = 32
         , envWindow   = window
         }
+    
+    -- Destroy cache
+    writeIORef cacheRef defaultCache
     
     -- Cleanup
     Ttf.closeFont font

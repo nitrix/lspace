@@ -55,7 +55,7 @@ data Link a = MkLink
     , linkRef :: LinkRef a
     }
 
-data Context = MkContext
+data Context = MkContext -- TODO: needs a better name than that
     { ctxCache      :: IORef LinkCache
     , ctxJsonStore  :: FilePath
     , ctxNextLinkId :: Link LinkId
