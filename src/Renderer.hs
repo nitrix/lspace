@@ -128,7 +128,7 @@ subRenderWorld = do
 subRenderVoid :: Engine ()
 subRenderVoid = do
     renderer <- asks envRenderer
-    cacheRef <- asks envCacheRef
+    cacheRef <- asks envCache
     cache    <- liftIO $ readIORef cacheRef
     game     <- get
 

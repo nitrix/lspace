@@ -16,10 +16,10 @@ type EnvironmentT m a = ReaderT Environment m a
 
 -- | Contains the assets needed to run the game (things that will not change over time)
 data Environment = MkEnvironment
-    { envCacheRef  :: IORef Cache
-    , envFont      :: TTFFont
-    , envRenderer  :: Renderer
-    , envTileset   :: Texture
-    , envTileSize  :: CInt
-    , envWindow    :: Window
+    { envCache    :: IORef Cache
+    , envFont     :: TTFFont
+    , envRenderer :: Renderer
+    , envTileset  :: Texture
+    , envTileSize :: CInt
+    , envWindow   :: Window
     }

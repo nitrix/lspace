@@ -6,11 +6,11 @@ module Ui.Menu
 )
 where
 
-import Control.Monad.State as S
+import Control.Monad.State
 import Control.Lens
 import Data.Biapplicative
 import Data.List
-import SDL.Input.Keyboard.Codes
+import SDL
 
 import Game
 import Object
@@ -23,7 +23,8 @@ uiMenuClear = uiVisible %~ filter (isn't _UiTypeMenu)
 
 -- | Remove currently visible menus and only show the new given one.
 uiMenuSwitch :: UiTypeMenu -> Ui -> Ui
-uiMenuSwitch tm ui = uiMenuClear ui & uiVisible %~ (MkUiTypeMenu tm:)
+uiMenuSwitch tm ui = ui & uiMenuClear
+                        & uiVisible %~ (MkUiTypeMenu tm:)
 
 -- | All menu options
 uiMenuOptions :: UiTypeMenu -> [String]
@@ -47,8 +48,8 @@ uiMenuOptions tm = case tm of
 
 uiMenuInterceptKeycode :: Keycode -> Game (Keycode, Bool)
 uiMenuInterceptKeycode keycode = do
-    modals <- S.gets $ view (gameUi . uiVisible)
-    player <- S.gets $ view gamePlayer
+    modals <- gets $ view (gameUi . uiVisible)
+    player <- gets $ view gamePlayer
     
     results <- forM modals $ \modal -> do
         case modal of
@@ -78,6 +79,6 @@ uiMenuInterceptKeycode keycode = do
         -- Trusty convenient helpers to give the intercepted keycode the desired behavior
         terminate = return (KeycodeUnknown, True)                                   :: Game (Keycode, Bool)
         ignore    = return (keycode, False)                                         :: Game (Keycode, Bool)
-        action f  = f >> clear                                                      :: Game (Keycode, Bool)
+        action f  = f >> clearAll                                                   :: Game (Keycode, Bool)
         switch tm = (KeycodeUnknown, False) <$ (modify $ gameUi %~ uiMenuSwitch tm) :: Game (Keycode, Bool)
-        clear     = (KeycodeUnknown, False) <$ (modify $ gameUi %~ uiMenuClear)     :: Game (Keycode, Bool)
+        clearAll  = (KeycodeUnknown, False) <$ (modify $ gameUi %~ uiMenuClear)     :: Game (Keycode, Bool)
