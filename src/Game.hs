@@ -72,6 +72,7 @@ instance J.FromJSON GameState where
         regions <- o J..: "regions"
         return $ MkGameState
             { _gameCamera   = defaultCamera
+            , _gameContext  = undefined -- TODO for real?
             , _gameKeyAlt   = False
             , _gameKeyShift = False
             , _gamePlayer   = player
