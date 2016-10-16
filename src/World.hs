@@ -12,17 +12,9 @@ import Object
 import Region
 
 worldAtObjectAddObject :: Link Object -> Link Object -> Game ()
-worldAtObjectAddObject _ _ = do
-    return ()
-    {-
-    target <- gameReadLink targetLink
-    region <- gameReadLink (view objRegion target)
-    
-    let grid = view regionGrid region
-    case G.reverseLookup whatLink grid of
-        Just (x, y) -> worldAddObject whatLink (coordinate x y) -- TODO: needs to be world coord, not region coord
-        Nothing     -> return ()
-    -}
+worldAtObjectAddObject targetLink whatLink = do
+    worldCoord <- worldObjectLocation targetLink
+    worldAddObject whatLink worldCoord
 
 worldAddObject :: Link Object -> WorldCoordinate -> Game ()
 worldAddObject objLink coord = do

@@ -12,6 +12,7 @@ import Data.Biapplicative
 import Data.List
 import SDL
 
+import Coordinate
 import Game
 import Object
 import Ui
@@ -31,7 +32,7 @@ uiMenuOptions :: UiTypeMenu -> [String]
 uiMenuOptions tm = case tm of
     UiMenuMain ->
         [ "[b] Build menu"
-        , "[x] Destroy mode (soon)"
+        , "[x] Destroy mode"
         , "[i] Inventory (soon)"
         , "[q] Quit"
         ]
@@ -64,6 +65,11 @@ uiMenuInterceptKeycode keycode = do
                 case keycode of
                     KeycodeB -> switch UiMenuBuild
                     KeycodeQ -> switch UiMenuQuitConfirm
+                    KeycodeX -> action $ do
+                        facing   <- view objFacing <$> gameReadLink player
+                        location <- worldObjectLocation player
+                        objects  <- worldObjectsAtLocation (coordinateMove facing location)
+                        traverse worldRemoveObject objects
                     _        -> ignore
             MkUiTypeMenu UiMenuQuitConfirm ->
                 case keycode of
