@@ -14,6 +14,7 @@ import Sprite
 
 data ObjectCommon = MkObjectCommon
     { _objFacing     :: Direction
+    , _objFloodFill  :: Int
     , _objMass       :: Int
     , _objRegion     :: Link (Region Object)
     , _objCoordinate :: RegionCoordinate
@@ -48,7 +49,20 @@ instance J.FromJSON Box
 instance J.FromJSON BoxState
 instance J.FromJSON Object
 instance J.FromJSON ObjectInfo
-instance J.FromJSON ObjectCommon
+instance J.FromJSON ObjectCommon where
+    parseJSON (J.Object o) = do
+        rFacing     <- o J..: "facing"
+        rMass       <- o J..: "mass"
+        rRegion     <- o J..: "region"
+        rCoordinate <- o J..: "coordinate"
+        return $ defaultObjectCommon
+            { _objCoordinate = rCoordinate
+            , _objFacing     = rFacing
+            , _objMass       = rMass
+            , _objRegion     = rRegion
+            , _objFloodFill  = 0
+            }
+    parseJSON _ = error "Unable to parse ObjectCommon json"
 instance J.FromJSON Player
 instance J.FromJSON Wall
 instance J.FromJSON WallType
@@ -57,7 +71,13 @@ instance J.ToJSON Box
 instance J.ToJSON BoxState
 instance J.ToJSON Object
 instance J.ToJSON ObjectInfo
-instance J.ToJSON ObjectCommon
+instance J.ToJSON ObjectCommon where
+    toJSON obj = J.object
+        [ "coordinate" J..= _objCoordinate obj
+        , "facing"     J..= _objFacing     obj
+        , "mass"       J..= _objMass       obj
+        , "region"     J..= _objRegion     obj
+        ]
 instance J.ToJSON Player
 instance J.ToJSON Wall
 instance J.ToJSON WallType
@@ -68,6 +88,7 @@ instance Show Object where
 defaultObjectCommon :: ObjectCommon
 defaultObjectCommon = MkObjectCommon
     { _objFacing     = South
+    , _objFloodFill  = 0
     , _objMass       = 1
     , _objRegion     = invalidLink
     , _objCoordinate = coordinate 0 0

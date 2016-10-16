@@ -8,7 +8,7 @@ module Sprite
     , spritePart
     ) where
 
-import qualified Data.Aeson as J
+import Data.Aeson
 import GHC.Generics
 
 import Coordinate
@@ -22,8 +22,8 @@ data ZIndex = ZGround
             | ZInAir
             deriving (Eq, Ord, Show, Read, Generic)
 
-instance J.ToJSON ZIndex
-instance J.FromJSON ZIndex
+instance ToJSON ZIndex
+instance FromJSON ZIndex
 
 sprite :: Int -> Int -> ZIndex -> Sprite
 sprite x y z = [spritePart 0 0 x y z]

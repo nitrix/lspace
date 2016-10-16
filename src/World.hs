@@ -66,13 +66,19 @@ worldRemoveObject :: Link Object -> Game ()
 worldRemoveObject objLink = do
     regionLink <- view objRegion                     <$> gameReadLink objLink
     (x, y)     <- view (objCoordinate . coordinates) <$> gameReadLink objLink
+    region     <- gameReadLink regionLink
     
+    -- Delete object from region
     gameModifyLink regionLink $ regionGrid %~ G.delete x y objLink
     
+    -- Detect if we broke the region into two disconnected regions
     -- TODO: detect if the object removed was holding two different parts of the ship and should become ships of their own
+    -- worldFloodFill 1 (x-1, y) region -- left
+    -- worldFloodFill 2 (x, y-1) region -- top
+    -- worldFloodFill 3 (x+1, y) region -- right
+    -- worldFloodFill 4 (x, y+1) region -- bottom
     
-    -- If the region is now empty, then no point in keeping it.
-    region <- gameReadLink regionLink
+    -- If the region is now empty, then there's no point in keeping it.
     when (null $ G.toList $ view regionGrid region) $ do
         gameDestroyLink regionLink
         modify $ gameRegions %~ delete regionLink -- TODO: could be more efficient, O(n) when lot of regions
