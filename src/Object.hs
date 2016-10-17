@@ -14,10 +14,10 @@ import Sprite
 
 data ObjectCommon = MkObjectCommon
     { _objFacing     :: Direction
-    , _objFloodFill  :: Int
     , _objMass       :: Int
     , _objRegion     :: Link (Region Object)
     , _objCoordinate :: RegionCoordinate
+    , _objFloodFill  :: Int
     } deriving (Generic, Eq, Ord)
 
 data Object = MkObject ObjectCommon ObjectInfo deriving (Generic, Eq, Ord)
@@ -37,6 +37,9 @@ objRegion = lens (\(MkObject common _) -> _objRegion common) (\(MkObject common 
 
 objFacing :: Lens' Object Direction
 objFacing = lens (\(MkObject common _) -> _objFacing common) (\(MkObject common info) x -> MkObject common { _objFacing = x } info)
+
+objFloodFill :: Lens' Object Int
+objFloodFill = lens (\(MkObject common _) -> _objFloodFill common) (\(MkObject common info) x -> MkObject common { _objFloodFill = x } info)
 
 data Box    = MkBox    { _boxState     :: BoxState } deriving (Generic, Eq, Ord)
 data Player = MkPlayer { _playerHealth :: Int      } deriving (Generic, Eq, Ord, Show)
@@ -60,7 +63,6 @@ instance J.FromJSON ObjectCommon where
             , _objFacing     = rFacing
             , _objMass       = rMass
             , _objRegion     = rRegion
-            , _objFloodFill  = 0
             }
     parseJSON _ = error "Unable to parse ObjectCommon json"
 instance J.FromJSON Player
@@ -88,9 +90,9 @@ instance Show Object where
 defaultObjectCommon :: ObjectCommon
 defaultObjectCommon = MkObjectCommon
     { _objFacing     = South
-    , _objFloodFill  = 0
     , _objMass       = 1
     , _objRegion     = invalidLink
+    , _objFloodFill  = 0
     , _objCoordinate = coordinate 0 0
     }
     
@@ -111,6 +113,12 @@ objSprite (MkObject _ (ObjectWall w)) = case _wallType w of
     WallTypeHorizontal -> sprite 5 2 ZGround
 objSprite _ = defaultSprite
 
+-- Player collision with it 
 objSolid :: Object -> Bool
 objSolid (MkObject _ (ObjectBox (MkBox BoxClosed))) = True
 objSolid _ = False
+
+-- Is holding a region together into a single component
+objStructural :: Object -> Bool
+objStructural (MkObject _ (ObjectPlayer _)) = False
+objStructural _ = True

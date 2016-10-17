@@ -14,7 +14,9 @@ import SDL
 
 import Coordinate
 import Game
+import qualified Grid as G
 import Object
+import Region
 import Ui
 import World
 
@@ -33,6 +35,8 @@ uiMenuOptions tm = case tm of
     UiMenuMain ->
         [ "[b] Build menu"
         , "[x] Destroy mode"
+        , "[f] Test flood fill"
+        , "[c] Clear flood fill"
         , "[i] Inventory (soon)"
         , "[q] Quit"
         ]
@@ -49,8 +53,9 @@ uiMenuOptions tm = case tm of
 
 uiMenuInterceptKeycode :: Keycode -> Game (Keycode, Bool)
 uiMenuInterceptKeycode keycode = do
-    modals <- gets $ view (gameUi . uiVisible)
-    player <- gets $ view gamePlayer
+    modals  <- gets $ view (gameUi . uiVisible)
+    player  <- gets $ view gamePlayer
+    regions <- gets $ view gameRegions
     
     results <- forM modals $ \modal -> do
         case modal of
@@ -65,6 +70,16 @@ uiMenuInterceptKeycode keycode = do
                 case keycode of
                     KeycodeB -> switch UiMenuBuild
                     KeycodeQ -> switch UiMenuQuitConfirm
+                    KeycodeC -> action $ forM_ regions $ \regionLink -> do
+                        region <- gameReadLink regionLink
+                        forM (G.toList (view regionGrid region)) $ \(_, _, objLink) -> do
+                            gameModifyLink objLink (objFloodFill .~ 0)
+                    KeycodeF -> action $ do
+                        facing     <- view objFacing     <$> gameReadLink player
+                        regionLink <- view objRegion     <$> gameReadLink player
+                        coord      <- view objCoordinate <$> gameReadLink player
+                        region     <- gameReadLink regionLink
+                        worldRegionFloodFill 1 (coordinateMove facing coord) region
                     KeycodeX -> action $ do
                         facing   <- view objFacing <$> gameReadLink player
                         location <- worldObjectLocation player

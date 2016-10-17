@@ -50,6 +50,8 @@ data LinkCacheWrapper = MkLinkCacheWrapper
     , lcwSaveLink :: IO ()
     }
 
+-- TODO: This should contain a linkRead, linkUpdate... to get rid of unsafePerformIO
+-- It should incidentally fix the GHCi reload problems where there's previous references bugging out not being collected
 data Link a = MkLink
     { linkId  :: LinkId
     , linkRef :: LinkRef a
@@ -245,7 +247,7 @@ fixLink ctx link = do
 loadVal :: Linkable a => Context -> LinkId -> IO (Maybe a)
 loadVal ctx lid = do
     -- TODO: ignore io exceptions
-    putStrLn ("Loading link #" ++ show lid)
+    -- putStrLn ("Loading link #" ++ show lid)
     result <- eitherDecode' . LB.fromStrict <$> catchIOError (B.readFile filename) (const $ return B.empty)
     case result of
         Right x -> return $ Just x
@@ -258,7 +260,7 @@ loadVal ctx lid = do
 -- | Helper function to save a link to disk.
 saveLink :: Linkable a => Context -> Link a -> IO ()
 saveLink ctx link = do
-    putStrLn ("Saving link #" ++ show (linkId link))
+    -- putStrLn ("Saving link #" ++ show (linkId link))
     -- TODO: ignore io exceptions
     -- TODO: also create directory automatically if missing
     maybeVal <- readLink ctx link
@@ -271,6 +273,6 @@ saveLink ctx link = do
 -- | Notably saves all links
 saveContext :: Context -> IO ()
 saveContext ctx = do
-    putStrLn "Saving context"
+    -- putStrLn "Saving context"
     cache <- readIORef (ctxCache ctx)
     mapM_ (lcwSaveLink . snd) (L.toList cache)

@@ -23,10 +23,11 @@ import Camera
 import Coordinate
 import Engine
 import Environment
+import Game
 import qualified Grid as G
 import Object
 import qualified Region as R
-import Game
+import Sprite
 import Ui
 import Ui.Menu
 
@@ -106,7 +107,13 @@ subRenderWorld = do
     -- TODO: We might have to take "things" large than is visible on the screen if we have very large
     -- multi-sprite objects that starts glitching the the edges of the screen.
     renderables <- concat <$> (forM things $ \(coord, obj) -> do
-        forM (objSprite obj) $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
+
+        let perimeterSprite = case view objFloodFill obj of
+                                0 -> spritePart 0 0 0 4 ZInAir
+                                _ -> spritePart 0 0 0 3 ZInAir
+
+        let spriteParts = perimeterSprite : objSprite obj
+        forM spriteParts $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
             -- Bunch of positions to calculate
             let srcTileX    = fromIntegral $ coordSpriteTile ^. coordinateX
             let srcTileY    = fromIntegral $ coordSpriteTile ^. coordinateY
@@ -120,7 +127,6 @@ subRenderWorld = do
             let dst = Rectangle (P $ V2 (CInt (dstTileRelX + dstRelX)) (dstTileRelY + dstRelY) * (fromIntegral tileSize)) (fromIntegral tileSize)
             return (Just src, Just dst, zIndex)
         )
-
     -- Render!
     forM_ (sortOn (\(_,_,a) -> a) renderables) $ \(src, dst, _) -> do
         copyEx renderer tileset src dst 0 Nothing (V2 False False)
