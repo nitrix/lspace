@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Game
     ( Game
@@ -47,24 +48,10 @@ data GameState = MkGameState
     , _gameUi       :: Ui
     }
 
+makeLenses ''GameState
+
 newtype Game a = Game { unwrapGame :: EnvironmentT (MaybeT (StateT GameState IO)) a }
     deriving (Functor, Applicative, Monad, MonadState GameState)
-
--- Lenses
-gameCamera   :: Lens' GameState Camera
-gameContext  :: Lens' GameState Context
-gameKeyAlt   :: Lens' GameState Bool
-gameKeyShift :: Lens' GameState Bool
-gamePlayer   :: Lens' GameState (Link Object)
-gameRegions  :: Lens' GameState [Link (Region Object)]
-gameUi       :: Lens' GameState Ui
-gameCamera   = lens _gameCamera   (\s x -> s { _gameCamera   = x })
-gameContext  = lens _gameContext  (\s x -> s { _gameContext  = x })
-gameKeyAlt   = lens _gameKeyAlt   (\s x -> s { _gameKeyAlt   = x })
-gameKeyShift = lens _gameKeyShift (\s x -> s { _gameKeyShift = x })
-gamePlayer   = lens _gamePlayer   (\s x -> s { _gamePlayer   = x })
-gameRegions  = lens _gameRegions  (\s x -> s { _gameRegions  = x })
-gameUi       = lens _gameUi       (\s x -> s { _gameUi       = x })
 
 instance J.FromJSON GameState where    
     parseJSON (J.Object o) = do

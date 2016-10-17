@@ -13,14 +13,9 @@ import GHC.Generics
 
 import Coordinate
 
-type Sprite = [SpritePart]
+type Sprite     = [SpritePart]
 type SpritePart = (RelativeCoordinate, RelativeCoordinate, ZIndex)
-
-data ZIndex = ZGround
-            | ZOnGround
-            | ZOnTop
-            | ZInAir
-            deriving (Eq, Ord, Show, Read, Generic)
+data ZIndex     = ZGround | ZOnGround | ZOnTop | ZInAir deriving (Eq, Ord, Show, Read, Generic)
 
 instance ToJSON ZIndex
 instance FromJSON ZIndex

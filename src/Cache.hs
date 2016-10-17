@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Cache
     ( Cache(..)
     , newCache
@@ -17,6 +19,8 @@ data Cache = MkCache
     _cacheStars  :: [SDL.Texture]
     }
 
+makeLenses ''Cache
+
 newCache :: IO (IORef Cache)
 newCache = newIORef defaultCache
 
@@ -28,8 +32,3 @@ defaultCache = MkCache
 
 destroyCache :: IORef Cache -> IO ()
 destroyCache cache = writeIORef cache defaultCache
-
-cacheStars  :: Lens' Cache [SDL.Texture]
-cacheStars  = lens _cacheStars  (\s x -> s { _cacheStars  = x })
--- cacheChunks :: Lens' Cache (M.Map Coordinate SDL.Texture)
--- cacheChunks = lens _cacheChunks (\s x -> s { _cacheChunks = x })

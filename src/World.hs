@@ -27,7 +27,7 @@ worldAddObject objLink coord = do
         , coordinateMove East coord
         , coordinateMove South coord
         , coordinateMove West coord
-        -- , coord
+        -- , coord TODO: putting objects on top of another when adding them? Could be useful for singleton regions
         ]
 
     nearbyUniqueRegionLinks <- nub <$> (fmap (view objRegion) . filter (objStructural) <$> mapM gameReadLink nearbyObjectLinks)

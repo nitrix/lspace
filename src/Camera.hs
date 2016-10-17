@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Camera
     ( Camera
     -- Lenses
@@ -28,6 +30,8 @@ data Camera = MkCamera
     , _cameraWindowSize :: V2 CInt
     }
 
+makeLenses ''Camera
+
 -- | Default camera at the default coordinate position
 defaultCamera :: Camera
 defaultCamera = MkCamera
@@ -36,16 +40,6 @@ defaultCamera = MkCamera
     , _cameraViewport   = V2 0 0
     , _cameraWindowSize = V2 (CInt 0) (CInt 0)
     }
-
--- Lenses
-cameraCoordinate :: Lens' Camera WorldCoordinate
-cameraPinned     :: Lens' Camera Bool
-cameraViewport   :: Lens' Camera (V2 Int)
-cameraWindowSize :: Lens' Camera (V2 CInt)
-cameraCoordinate = lens _cameraCoordinate (\s x -> s { _cameraCoordinate = x })
-cameraPinned     = lens _cameraPinned     (\s x -> s { _cameraPinned     = x })
-cameraViewport   = lens _cameraViewport   (\s x -> s { _cameraViewport   = x })
-cameraWindowSize = lens _cameraWindowSize (\s x -> s { _cameraWindowSize = x })
 
 -- | Move the camera in a specified Direction
 cameraMove :: Direction -> Camera -> Camera

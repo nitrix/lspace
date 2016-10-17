@@ -22,7 +22,7 @@ import World
 
 -- | Clear all visible menus from a Ui.
 uiMenuClear :: Ui -> Ui
-uiMenuClear = uiVisible %~ filter (isn't _UiTypeMenu)
+uiMenuClear = uiVisible %~ filter (isn't _MkUiTypeMenu)
 
 -- | Remove currently visible menus and only show the new given one.
 uiMenuSwitch :: UiTypeMenu -> Ui -> Ui
@@ -37,7 +37,6 @@ uiMenuOptions tm = case tm of
         , "[x] Destroy mode"
         , "[f] Test flood fill"
         , "[c] Clear flood fill"
-        , "[i] Inventory (soon)"
         , "[q] Quit"
         ]
     UiMenuQuitConfirm ->
@@ -93,7 +92,7 @@ uiMenuInterceptKeycode keycode = do
                     _        -> ignore
             -- _ -> ignore
 
-    -- Fold result tuples by keeping the `min` of all the `fst` and `||` of all the `snd`
+    -- Fold results by keeping the `min` of all the `fst` and `||` of all the `snd`
     return $ foldl' (biliftA2 min (||)) (keycode, False) results
 
     where

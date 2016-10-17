@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Object where
 
@@ -30,16 +31,13 @@ data ObjectInfo = ObjectBox    Box
                 deriving (Generic, Eq, Ord)
 
 objCoordinate :: Lens' Object RegionCoordinate
+objRegion     :: Lens' Object (Link (Region Object))
+objFacing     :: Lens' Object Direction
+objFloodFill  :: Lens' Object Int
 objCoordinate = lens (\(MkObject common _) -> _objCoordinate common) (\(MkObject common info) x -> MkObject common { _objCoordinate = x } info)
-
-objRegion :: Lens' Object (Link (Region Object))
-objRegion = lens (\(MkObject common _) -> _objRegion common) (\(MkObject common info) x -> MkObject common { _objRegion = x } info)
-
-objFacing :: Lens' Object Direction
-objFacing = lens (\(MkObject common _) -> _objFacing common) (\(MkObject common info) x -> MkObject common { _objFacing = x } info)
-
-objFloodFill :: Lens' Object Int
-objFloodFill = lens (\(MkObject common _) -> _objFloodFill common) (\(MkObject common info) x -> MkObject common { _objFloodFill = x } info)
+objRegion     = lens (\(MkObject common _) -> _objRegion common)     (\(MkObject common info) x -> MkObject common { _objRegion     = x } info)
+objFacing     = lens (\(MkObject common _) -> _objFacing common)     (\(MkObject common info) x -> MkObject common { _objFacing     = x } info)
+objFloodFill  = lens (\(MkObject common _) -> _objFloodFill common)  (\(MkObject common info) x -> MkObject common { _objFloodFill  = x } info)
 
 data Box    = MkBox    { _boxState     :: BoxState } deriving (Generic, Eq, Ord)
 data Player = MkPlayer { _playerHealth :: Int      } deriving (Generic, Eq, Ord, Show)

@@ -1,10 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Region where
 
-import Control.Lens (Lens', lens)
+import Control.Lens (makeLenses)
 import GHC.Generics
 import Data.Aeson
 
@@ -20,14 +21,7 @@ data Region v = MkRegion
     , _regionVelocity   :: (Int, Int)
     } deriving (Show, Generic)
 
-defaultRegion :: Region v
-defaultRegion = MkRegion
-    { _regionCoordinate = coordinate 0 0
-    , _regionDimension  = (0, 0)
-    , _regionGrid       = G.empty
-    , _regionMass       = 0
-    , _regionVelocity   = (0, 0)
-    }
+makeLenses ''Region
 
 instance Linkable v => FromJSON (Region v) where
     parseJSON (Object o) = do
@@ -54,9 +48,11 @@ instance ToJSON (Region v) where
         , "dimension"  .= _regionDimension s
         ]
 
-regionGrid       :: Lens' (Region v) (G.Grid Int (Link v))
-regionCoordinate :: Lens' (Region v) WorldCoordinate
-regionMass       :: Lens' (Region v) Int
-regionGrid       = lens _regionGrid       (\s x -> s { _regionGrid       = x })
-regionCoordinate = lens _regionCoordinate (\s x -> s { _regionCoordinate = x })
-regionMass       = lens _regionMass       (\s x -> s { _regionMass       = x })
+defaultRegion :: Region v
+defaultRegion = MkRegion
+    { _regionCoordinate = coordinate 0 0
+    , _regionDimension  = (0, 0)
+    , _regionGrid       = G.empty
+    , _regionMass       = 0
+    , _regionVelocity   = (0, 0)
+    }
