@@ -20,7 +20,6 @@ import Control.Monad.Trans.Maybe  (MaybeT(..))
 import Control.Monad.Trans.Reader (ReaderT(..))
 import Linear (V2(V2))
 import SDL
-import Debug.Trace
 
 import Coordinate
 import Camera
@@ -37,7 +36,6 @@ newtype Engine a = Engine { unwrapEngine :: EnvironmentT (MaybeT (StateT GameSta
 withEngine :: Engine () -> String -> Environment -> IO ()
 withEngine engine name env = do
     -- Loading game
-    trace "Loading game" $ do
     gs <- loadGame name
     
     -- Running engine
@@ -46,7 +44,6 @@ withEngine engine name env = do
                     $ flip runReaderT env
                     $ unwrapEngine engine
     
-    trace "Saving game" $ do
     -- Save new game state
     saveGame ngs
 
