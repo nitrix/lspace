@@ -32,6 +32,7 @@ import Data.Foldable
 import Data.IORef
 import Data.Maybe
 import qualified Data.Text as T
+import System.Mem
 import System.Mem.Weak
 import System.Directory
 import System.IO.Error
@@ -276,3 +277,5 @@ saveContext ctx = do
     -- putStrLn "Saving context"
     cache <- readIORef (ctxCache ctx)
     mapM_ (lcwSaveLink . snd) (L.toList cache)
+    -- TODO: Link is breaking referential transparency. TIL. It needs a good refactoring.
+    performMajorGC

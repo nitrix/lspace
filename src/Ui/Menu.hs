@@ -78,7 +78,7 @@ uiMenuInterceptKeycode keycode = do
                         regionLink <- view objRegion     <$> gameReadLink player
                         coord      <- view objCoordinate <$> gameReadLink player
                         region     <- gameReadLink regionLink
-                        worldRegionFloodFill 1 (coordinateMove facing coord) region
+                        worldRegionFloodFill 5 (coordinateMove facing coord) region (const $ return ())
                     KeycodeX -> action $ do
                         facing   <- view objFacing <$> gameReadLink player
                         location <- worldObjectLocation player

@@ -21,7 +21,6 @@ import Control.Monad.Trans.Reader (ReaderT(..))
 import Linear (V2(V2))
 import SDL
 import Debug.Trace
-import System.Mem
 
 import Coordinate
 import Camera
@@ -50,8 +49,6 @@ withEngine engine name env = do
     trace "Saving game" $ do
     -- Save new game state
     saveGame ngs
-    -- TODO: Crap. Link is breaking referential transparency. TIL. It needs a good refactoring.
-    performMajorGC
 
 embedGame :: Game a -> Engine a
 embedGame game = Engine $ ReaderT $ \env -> MaybeT $ StateT $ \gs -> liftIO $ runGame env gs game

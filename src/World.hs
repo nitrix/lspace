@@ -5,8 +5,6 @@ import Control.Monad.Reader
 import Control.Monad.State as S
 import Data.List
 
-import Debug.Trace
-
 import Coordinate
 import Game
 import qualified Grid as G
@@ -39,19 +37,15 @@ worldAddObject objLink coord = do
     -- let nearbyUniqueRegionLinks' = if fakeR /= invalidLink then nub (fakeR : nearbyUniqueRegionLinks) else nearbyUniqueRegionLinks
     let nearbyUniqueRegionLinks' = nearbyUniqueRegionLinks
 
-    trace ("region links: " ++ show nearbyUniqueRegionLinks') $ do
-    
     -- TODO: those are still being implemented
     case nearbyUniqueRegionLinks' of
         [] -> do
-            trace "New region" $ do
             let region = defaultRegion & regionCoordinate .~ coord & regionGrid %~ G.insert 0 0 objLink
             newRegionLink <- gameCreateLink region
             gameModifyLink objLink $ objRegion .~ newRegionLink
             gameModifyLink objLink $ objCoordinate .~ coordinate 0 0
             modify $ gameRegions %~ (newRegionLink:)
         r:[] -> do
-            trace ("Adding to region #" ++ show r) $ do
             region <- gameReadLink r
             let (innerX, innerY) = ( fromIntegral $ worldX - region ^. regionCoordinate . coordinateX
                                    , fromIntegral $ worldY - region ^. regionCoordinate . coordinateY
@@ -72,19 +66,46 @@ worldRemoveObject :: Link Object -> Game ()
 worldRemoveObject objLink = do
     regionLink <- view objRegion                     <$> gameReadLink objLink
     (x, y)     <- view (objCoordinate . coordinates) <$> gameReadLink objLink
-    region     <- gameReadLink regionLink
-    
-    -- TODO: Detect if we broke the region into two disconnected regions
-    -- let location = coordinate x y
-    -- (Walk only the edges that are perimeter related)
-    -- walkA <- regionPerimeterCheck (coordinateMove East location)  region
-    -- walkB <- regionPerimeterCheck (coordinateMove South location) region
-    -- walkC <- regionPerimeterCheck (coordinateMove West location)  region
-    -- walkD <- regionPerimeterCheck (coordinateMove North location) region
-    -- (The ones that are false are isolated and needs to be marked as a ship)
     
     -- Delete object from region
     gameModifyLink regionLink $ regionGrid %~ G.delete x y objLink
+    
+    -- Read region
+    region <- gameReadLink regionLink
+    
+    -- Flood fill segments
+    let location = coordinate x y
+    let grid     = view regionGrid region
+
+    worldRegionFloodFill 1 (coordinateMove East  location) region (const $ return ())
+    worldRegionFloodFill 2 (coordinateMove South location) region (const $ return ())
+    worldRegionFloodFill 3 (coordinateMove West  location) region (const $ return ())
+    worldRegionFloodFill 4 (coordinateMove North location) region (const $ return ())
+    east  <- nub . map (view objFloodFill) <$> mapM gameReadLink (uncurry G.lookup (view coordinates (coordinateMove East  location)) grid)
+    south <- nub . map (view objFloodFill) <$> mapM gameReadLink (uncurry G.lookup (view coordinates (coordinateMove South location)) grid)
+    west  <- nub . map (view objFloodFill) <$> mapM gameReadLink (uncurry G.lookup (view coordinates (coordinateMove West  location)) grid)
+    north <- nub . map (view objFloodFill) <$> mapM gameReadLink (uncurry G.lookup (view coordinates (coordinateMove North location)) grid)
+    let everyDirection = east ++ south ++ west ++ north
+
+    let changeObjToTheNewRegion newRegionLink thisObjLink = do
+        (thisX, thisY) <- view (objCoordinate . coordinates) <$> gameReadLink thisObjLink
+        gameModifyLink thisObjLink $ objRegion .~ newRegionLink
+        gameModifyLink newRegionLink $ regionGrid %~ G.insert thisX thisY thisObjLink
+        gameModifyLink regionLink $ regionGrid %~ G.delete thisX thisY thisObjLink
+
+    let createShipFromIsolatedRegionInDirection direction = do
+        newRegionLink <- gameCreateLink defaultRegion
+        worldRegionFloodFill 0 (coordinateMove direction location) region (changeObjToTheNewRegion newRegionLink)
+        gameModifyLink newRegionLink $ regionCoordinate .~ view regionCoordinate region
+        modify $ gameRegions %~ (newRegionLink:)
+
+    -- Ignore if we're removing the tip of something, it's always safe
+    when (length everyDirection > 1) $ do
+        -- Create new ships from isolated flood filled region segments
+        when ((==1) . length . filter (==1) $ everyDirection) (createShipFromIsolatedRegionInDirection East)
+        when ((==1) . length . filter (==2) $ everyDirection) (createShipFromIsolatedRegionInDirection South)
+        when ((==1) . length . filter (==3) $ everyDirection) (createShipFromIsolatedRegionInDirection West)
+        when ((==1) . length . filter (==4) $ everyDirection) (createShipFromIsolatedRegionInDirection North)
     
     -- If the region is now empty, then there's no point in keeping it.
     when (null $ G.toList $ view regionGrid region) $ do
@@ -105,7 +126,6 @@ worldObjectsAtLocation coord = do
                                , fromIntegral $ worldY - s ^. regionCoordinate . coordinateY
                                )
         return $ G.lookup innerX innerY $ view regionGrid s
-        
     where
         (worldX, worldY) = view coordinates coord
 
@@ -151,13 +171,16 @@ worldMoveRegion regionLink direction = do
 
     -- TODO: when a ship moves, next to / on top of, another ship, should they merge / check docking ports are aligned?
 
-worldRegionFloodFill :: Int -> RegionCoordinate -> Region Object -> Game ()
-worldRegionFloodFill marker coord region = do
+-- TODO: This should allow you to perform a higher-order transformation to be crazy useful
+worldRegionFloodFill :: Int -> RegionCoordinate -> Region Object -> (Link Object -> Game ()) -> Game ()
+worldRegionFloodFill marker coord region func = do
     structurallySound <- allStructurallySoundAt coord
     if structurallySound
     then do
         -- Flood fill cell
-        mapM_ (flip gameModifyLink (objFloodFill .~ marker)) (uncurry G.lookup (view coordinates coord) (view regionGrid region))
+        forM_ (uncurry G.lookup (view coordinates coord) (view regionGrid region)) $ \objLink -> do
+            func objLink
+            gameModifyLink objLink $ objFloodFill .~ marker
 
         -- Continue for cells not already flood filled
         continueWhenNotFilledAlready North
@@ -170,8 +193,8 @@ worldRegionFloodFill marker coord region = do
         continueWhenNotFilledAlready :: Direction -> Game ()
         continueWhenNotFilledAlready direction = do
             things <- mapM gameReadLink $ uncurry G.lookup (view coordinates (coordinateMove direction coord)) grid
-            when (any ((==0) . view objFloodFill) things) $ do
-                worldRegionFloodFill marker (coordinateMove direction coord) region
+            when (any ((/= marker) . view objFloodFill) things) $ do
+                worldRegionFloodFill marker (coordinateMove direction coord) region func
         allStructurallySoundAt :: RegionCoordinate -> Game Bool
         allStructurallySoundAt loc = (liftM2 (&&) or (not . null)) <$> things
             where
