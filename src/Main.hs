@@ -45,10 +45,10 @@ main = do
         , envTileSize = 32
         , envWindow   = window
         }
-    
+
     -- Destroy cache
     destroyCache cache
-    
+
     -- Cleanup
     Ttf.closeFont font
     Ttf.quit

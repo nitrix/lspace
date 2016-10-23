@@ -97,9 +97,15 @@ defaultObjectCommon = MkObjectCommon
 defaultBox :: Object
 defaultBox = MkObject defaultObjectCommon (ObjectBox $ MkBox { _boxState = BoxClosed })
 
+defaultWall :: Object
+defaultWall = MkObject defaultObjectCommon (ObjectWall $ MkWall { _wallType = WallTypeHorizontal })
+
+defaultFloor :: Object
+defaultFloor = MkObject defaultObjectCommon ObjectFloor
+
 objSprite :: Object -> Sprite
 objSprite (MkObject _ (ObjectBox box)) = case _boxState box of
-    BoxClosed -> sprite 0 2 ZOnGround
+    BoxClosed -> sprite 4 2 ZOnGround
 objSprite (MkObject _ ObjectFloor) = sprite 4 1 ZGround
 objSprite (MkObject _ ObjectPlant) = sprite 0 1 ZOnGround
 objSprite (MkObject common (ObjectPlayer _)) = case _objFacing common of
@@ -108,15 +114,17 @@ objSprite (MkObject common (ObjectPlayer _)) = case _objFacing common of
     West  -> sprite 1 1 ZOnTop
     East  -> sprite 1 3 ZOnTop
 objSprite (MkObject _ (ObjectWall w)) = case _wallType w of
-    WallTypeHorizontal -> sprite 5 2 ZGround
+    WallTypeHorizontal -> sprite 5 1 ZGround
 objSprite _ = defaultSprite
 
 -- Player collision with it 
 objSolid :: Object -> Bool
-objSolid (MkObject _ (ObjectBox (MkBox BoxClosed))) = True
+objSolid (MkObject _ (ObjectBox _)) = True
+objSolid (MkObject _ (ObjectWall _)) = True
 objSolid _ = False
 
 -- Is holding a region together into a single component
 objStructural :: Object -> Bool
-objStructural (MkObject _ (ObjectPlayer _)) = False
-objStructural _ = True
+objStructural (MkObject _ (ObjectWall _)) = True
+objStructural (MkObject _ ObjectFloor) = True
+objStructural _ = False

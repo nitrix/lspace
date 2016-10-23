@@ -27,7 +27,7 @@ import Game
 import qualified Grid as G
 import Object
 import qualified Region as R
-import Sprite
+-- import Sprite
 import Ui
 import Ui.Menu
 
@@ -108,11 +108,14 @@ subRenderWorld = do
     -- multi-sprite objects that starts glitching the the edges of the screen.
     renderables <- concat <$> (forM things $ \(coord, obj) -> do
 
+        {-
         let perimeterSprite = case view objFloodFill obj of
                                 0 -> spritePart 0 0 0 4 ZInAir
                                 _ -> spritePart 0 0 0 3 ZInAir
+        -}
+        -- let spriteParts = perimeterSprite : objSprite obj
+        let spriteParts = objSprite obj
 
-        let spriteParts = perimeterSprite : objSprite obj
         forM spriteParts $ \(coordSpriteRel, coordSpriteTile, zIndex) -> do
             -- Bunch of positions to calculate
             let srcTileX    = fromIntegral $ coordSpriteTile ^. coordinateX

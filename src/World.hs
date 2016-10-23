@@ -20,13 +20,18 @@ worldAtObjectAddObject targetLink whatLink = do
 
 worldAddObject :: Link Object -> WorldCoordinate -> Game ()
 worldAddObject objLink coord = do
-    nearbyObjectLinks <- concat <$> mapM worldObjectsAtLocation
-        [ coordinateMove North coord
-        , coordinateMove East coord
-        , coordinateMove South coord
-        , coordinateMove West coord
-        -- , coord TODO: putting objects on top of another when adding them? Could be useful for singleton regions
-        ]
+    -- When you're a structural object; try to attach to objects on your edges that are structural too
+    -- otherwise, try to attach to structural objects "underneath" you.
+    structural <- objStructural <$> gameReadLink objLink
+    nearbyObjectLinks <- concat <$> mapM worldObjectsAtLocation (
+        if structural
+        then [ coordinateMove North coord
+             , coordinateMove East coord
+             , coordinateMove South coord
+             , coordinateMove West coord
+             ]
+        else [coord]
+        )
 
     nearbyUniqueRegionLinks <- nub <$> (fmap (view objRegion) . filter (objStructural) <$> mapM gameReadLink nearbyObjectLinks)
     
@@ -88,16 +93,16 @@ worldRemoveObject objLink = do
     let everyDirection = east ++ south ++ west ++ north
 
     let changeObjToTheNewRegion newRegionLink thisObjLink = do
-        (thisX, thisY) <- view (objCoordinate . coordinates) <$> gameReadLink thisObjLink
-        gameModifyLink thisObjLink $ objRegion .~ newRegionLink
-        gameModifyLink newRegionLink $ regionGrid %~ G.insert thisX thisY thisObjLink
-        gameModifyLink regionLink $ regionGrid %~ G.delete thisX thisY thisObjLink
+            (thisX, thisY) <- view (objCoordinate . coordinates) <$> gameReadLink thisObjLink
+            gameModifyLink thisObjLink $ objRegion .~ newRegionLink
+            gameModifyLink newRegionLink $ regionGrid %~ G.insert thisX thisY thisObjLink
+            gameModifyLink regionLink $ regionGrid %~ G.delete thisX thisY thisObjLink
 
     let createShipFromIsolatedRegionInDirection direction = do
-        newRegionLink <- gameCreateLink defaultRegion
-        worldRegionFloodFill 0 (coordinateMove direction location) region (changeObjToTheNewRegion newRegionLink)
-        gameModifyLink newRegionLink $ regionCoordinate .~ view regionCoordinate region
-        modify $ gameRegions %~ (newRegionLink:)
+            newRegionLink <- gameCreateLink defaultRegion
+            worldRegionFloodFill 0 (coordinateMove direction location) region (changeObjToTheNewRegion newRegionLink)
+            gameModifyLink newRegionLink $ regionCoordinate .~ view regionCoordinate region
+            modify $ gameRegions %~ (newRegionLink:)
 
     -- Ignore if we're removing the tip of something, it's always safe
     when (length everyDirection > 1) $ do

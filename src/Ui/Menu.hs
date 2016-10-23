@@ -14,9 +14,9 @@ import SDL
 
 import Coordinate
 import Game
-import qualified Grid as G
+-- import qualified Grid as G
 import Object
-import Region
+-- import Region
 import Ui
 import World
 
@@ -34,9 +34,9 @@ uiMenuOptions :: UiTypeMenu -> [String]
 uiMenuOptions tm = case tm of
     UiMenuMain ->
         [ "[b] Build menu"
-        , "[x] Destroy mode"
-        , "[f] Test flood fill"
-        , "[c] Clear flood fill"
+        , "[x] Destroy thing"
+        -- , "[f] Test flood fill"
+        -- , "[c] Clear flood fill"
         , "[q] Quit"
         ]
     UiMenuQuitConfirm ->
@@ -45,40 +45,42 @@ uiMenuOptions tm = case tm of
         ]
     UiMenuBuild ->
         [ "[b] Box"
-        , "[f] Floor (soon)"
-        , "[p] Plant (soon)"
-        , "[w] Wall (soon)"
+        , "[f] Floor"
+        , "[w] Wall"
         ]
 
 uiMenuInterceptKeycode :: Keycode -> Game (Keycode, Bool)
 uiMenuInterceptKeycode keycode = do
     modals  <- gets $ view (gameUi . uiVisible)
     player  <- gets $ view gamePlayer
-    regions <- gets $ view gameRegions
+    -- regions <- gets $ view gameRegions
     
     results <- forM modals $ \modal -> do
         case modal of
             MkUiTypeMenu UiMenuBuild ->
                 case keycode of
-                    KeycodeB -> action $ gameCreateLink defaultBox >>= worldAtObjectAddObject player
-                    KeycodeF -> ignore -- action $ sysWorldAddObjectAtPlayer $ floorObject defaultObject defaultFloor
-                    KeycodeP -> ignore -- action $ sysWorldAddObjectAtPlayer $ plantObject defaultObject defaultPlant
-                    KeycodeW -> ignore -- action $ sysWorldAddObjectAtPlayer $ wallObject defaultObject defaultWall
+                    KeycodeB -> action $ gameCreateLink defaultBox   >>= worldAtObjectAddObject player
+                    KeycodeF -> action $ gameCreateLink defaultFloor >>= worldAtObjectAddObject player
+                    KeycodeW -> action $ gameCreateLink defaultWall  >>= worldAtObjectAddObject player
                     _        -> ignore
             MkUiTypeMenu UiMenuMain ->
                 case keycode of
                     KeycodeB -> switch UiMenuBuild
                     KeycodeQ -> switch UiMenuQuitConfirm
+                    {-
                     KeycodeC -> action $ forM_ regions $ \regionLink -> do
                         region <- gameReadLink regionLink
                         forM (G.toList (view regionGrid region)) $ \(_, _, objLink) -> do
                             gameModifyLink objLink (objFloodFill .~ 0)
+                    -}
+                    {-
                     KeycodeF -> action $ do
                         facing     <- view objFacing     <$> gameReadLink player
                         regionLink <- view objRegion     <$> gameReadLink player
                         coord      <- view objCoordinate <$> gameReadLink player
                         region     <- gameReadLink regionLink
                         worldRegionFloodFill 5 (coordinateMove facing coord) region (const $ return ())
+                    -}
                     KeycodeX -> action $ do
                         facing   <- view objFacing <$> gameReadLink player
                         location <- worldObjectLocation player
