@@ -74,16 +74,15 @@ subRenderUi = do
 subRenderWorld :: Engine ()
 subRenderWorld = do
     -- Information needed to render
-    renderer        <- asks envRenderer
-    tileset         <- asks envTileset
-    tileSize        <- asks envTileSize
-    game            <- get
+    renderer    <- asks envRenderer
+    tileset     <- asks envTileset
+    tileSize    <- asks envTileSize
+    cameraX     <- use $ gameCamera . cameraCoordinate . coordinateX
+    cameraY     <- use $ gameCamera . cameraCoordinate . coordinateY
+    viewport    <- use $ gameCamera . cameraViewport
+    regionLinks <- use gameRegions
     
     -- TODO: fix me
-    let cameraX     = game ^. gameCamera . cameraCoordinate . coordinateX
-    let cameraY     = game ^. gameCamera . cameraCoordinate . coordinateY
-    let viewport    = game ^. gameCamera . cameraViewport
-    let regionLinks = game ^. gameRegions
     let (V2 cameraCoordMaxX cameraCoordMaxY) = V2 cameraX cameraY + (V2 fromIntegral fromIntegral <*> viewport)
     
     regions <- embedGame $ mapM gameReadLink regionLinks
@@ -136,13 +135,14 @@ subRenderWorld = do
 
 subRenderVoid :: Engine ()
 subRenderVoid = do
-    renderer <- asks envRenderer
-    cacheRef <- asks envCache
-    cache    <- liftIO $ readIORef cacheRef
-    game     <- get
+    renderer            <- asks envRenderer
+    cacheRef            <- asks envCache
+    cache               <- liftIO $ readIORef cacheRef
+    (V2 width height)   <- use $ gameCamera . cameraWindowSize
+    theCameraWindowSize <- use $ gameCamera . cameraWindowSize
+    (cameraX, cameraY)  <- use $ gameCamera . cameraCoordinate . coordinates
 
     -- TODO: ugly
-    let (V2 width height) = game ^. gameCamera . cameraWindowSize
     let nicerCopy lyr rdr tx ty = copy rdr lyr Nothing $ Just $ Rectangle (P $ V2 tx ty) (V2 width height)
 
     case view cacheStars cache of
@@ -157,7 +157,7 @@ subRenderVoid = do
                 let normal = VS.fromList $ take 300 points
                 let bright = VS.fromList $ take 50 points
 
-                layer <- createTexture renderer RGBA8888 TextureAccessTarget (game ^. gameCamera . cameraWindowSize)
+                layer <- createTexture renderer RGBA8888 TextureAccessTarget theCameraWindowSize
 
                 rendererRenderTarget renderer $= Just layer
                 rendererDrawColor renderer $= V4 0 0 0 0 -- transparent black
@@ -175,10 +175,8 @@ subRenderVoid = do
             liftIO $ modifyIORef cacheRef $ cacheStars .~ layers
         layers -> do
             forM_ (zip layers [1..]) $ \(layer, n) -> do
-                let x = negate (fromIntegral $ view (gameCamera.cameraCoordinate.coordinateX) game) `div` n `mod` width
-                let y = negate (fromIntegral $ view (gameCamera.cameraCoordinate.coordinateY) game) `div` n `mod` height
-                -- let x = negate (fromIntegral $ view (gameCamera.cameraCoordinate.coordinateX) game) * n `mod` width
-                -- let y = negate (fromIntegral $ view (gameCamera.cameraCoordinate.coordinateY) game) * n `mod` height
+                let x = negate (fromIntegral cameraX) `div` n `mod` width
+                let y = negate (fromIntegral cameraY) `div` n `mod` height
                 nicerCopy layer renderer (x-width) y          -- left
                 nicerCopy layer renderer x         (y-height) -- top
                 nicerCopy layer renderer x         y          -- middle

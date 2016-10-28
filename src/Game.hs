@@ -79,27 +79,27 @@ gameEnv f = Game $ asks f
 
 gameReadLink :: Linkable a => Link a -> Game a
 gameReadLink link = do
-    ctx <- gets (view gameContext)
+    ctx <- use gameContext
     Game . lift . MaybeT . lift $ readLink ctx link
     
 gameCreateLink :: Linkable a => a -> Game (Link a)
 gameCreateLink x = do
-    ctx <- gets (view gameContext)
+    ctx <- use gameContext
     Game . lift . MaybeT . lift $ Just <$> createLink ctx x
     
 gameDestroyLink :: Link a -> Game ()
 gameDestroyLink link = do
-    ctx <- gets (view gameContext)
+    ctx <- use gameContext
     Game . lift . MaybeT . lift $ Just <$> destroyLink ctx link
     
 gameModifyLink :: Linkable a => Link a -> (a -> a) -> Game ()
 gameModifyLink link f = do
-    ctx <- gets (view gameContext)
+    ctx <- use gameContext
     Game . lift . MaybeT . lift $ Just <$> modifyLink ctx link f
 
 gameWriteLink :: Linkable a => Link a -> a -> Game ()
 gameWriteLink link x = do
-    ctx <- gets (view gameContext)
+    ctx <- use gameContext
     Game . lift . MaybeT . lift $ Just <$> writeLink ctx link x
 
 runGame :: Environment -> GameState -> Game a -> IO (Maybe a, GameState)

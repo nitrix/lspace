@@ -123,7 +123,7 @@ worldRotateObject objLink direction = do
 
 worldObjectsAtLocation :: WorldCoordinate -> Game [Link Object]
 worldObjectsAtLocation coord = do
-    regionLinks <- gets (view gameRegions)
+    regionLinks <- use gameRegions
     regions     <- mapM gameReadLink regionLinks
 
     fmap concat <$> forM regions $ \s -> do

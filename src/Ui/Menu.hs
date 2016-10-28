@@ -1,30 +1,28 @@
 module Ui.Menu
-( uiMenuClear
-, uiMenuSwitch
-, uiMenuInterceptKeycode
-, uiMenuOptions
-)
+    ( uiMenuClear
+    , uiMenuSwitch
+    , uiMenuInterceptKeycode
+    , uiMenuOptions
+    )
 where
 
-import Control.Monad.State
 import Control.Lens
+import Control.Monad.State
 import Data.Biapplicative
 import Data.List
 import SDL
 
 import Coordinate
 import Game
--- import qualified Grid as G
 import Object
--- import Region
 import Ui
 import World
 
--- | Clear all visible menus from a Ui.
+-- | Clear all visible menus from a given Ui.
 uiMenuClear :: Ui -> Ui
 uiMenuClear = uiVisible %~ filter (isn't _MkUiTypeMenu)
 
--- | Remove currently visible menus and only show the new given one.
+-- | Hide all menus and only show the chosen one.
 uiMenuSwitch :: UiTypeMenu -> Ui -> Ui
 uiMenuSwitch tm ui = ui & uiMenuClear
                         & uiVisible %~ (MkUiTypeMenu tm:)
@@ -35,8 +33,6 @@ uiMenuOptions tm = case tm of
     UiMenuMain ->
         [ "[b] Build menu"
         , "[x] Destroy thing"
-        -- , "[f] Test flood fill"
-        -- , "[c] Clear flood fill"
         , "[q] Quit"
         ]
     UiMenuQuitConfirm ->
@@ -49,11 +45,11 @@ uiMenuOptions tm = case tm of
         , "[w] Wall"
         ]
 
+-- | Intercepts a Keycode from the engine and affects the game
 uiMenuInterceptKeycode :: Keycode -> Game (Keycode, Bool)
 uiMenuInterceptKeycode keycode = do
-    modals  <- gets $ view (gameUi . uiVisible)
-    player  <- gets $ view gamePlayer
-    -- regions <- gets $ view gameRegions
+    modals <- use $ gameUi . uiVisible
+    player <- use gamePlayer
     
     results <- forM modals $ \modal -> do
         case modal of

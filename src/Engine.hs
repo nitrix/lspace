@@ -114,8 +114,8 @@ engineHandleKeyboardEvent ked = do
 
 engineHandleBareKeycode :: Keycode -> Game Bool
 engineHandleBareKeycode keycode = do
-    player <- gets $ view gamePlayer
-    shift  <- gets $ view gameKeyShift
+    player <- use gamePlayer
+    shift  <- use gameKeyShift
     case keycode of
         KeycodeW       -> if shift then worldRotateObject player North else worldMoveObject player North
         KeycodeS       -> if shift then worldRotateObject player South else worldMoveObject player South
