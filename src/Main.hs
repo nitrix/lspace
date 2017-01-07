@@ -5,12 +5,16 @@ import Engine
 -- import Control.Monad.IO.Class
 
 main :: IO ()
-main = withEngine $ do
-    app <- engineCreateApp "Lonesome Space" ModeFullscreen
-    engineRunApp app [menuScene] render
+main = runApp $ App
+    { appTitle  = "Lonesome Space"
+    , appMode   = Windowed 800 600
+    , appScenes = [menu]
+    , appUpdate = undefined
+    , appRender = undefined
+    }
 
-menuScene :: Scene
-menuScene event = return Continue
-
-render :: Renderer
-render = return ()
+menu :: Scene s
+menu = Scene
+    { sceneUpdate = undefined
+    , sceneRender = undefined
+    }
