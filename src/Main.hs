@@ -1,11 +1,16 @@
 module Main where
 
 import Engine
-import Control.Concurrent
-import Control.Monad.IO.Class
+-- import Control.Concurrent
+-- import Control.Monad.IO.Class
 
 main :: IO ()
 main = withEngine $ do
-    window <- engineCreateWindow "Lonesome Space" WindowFullscreen
-    liftIO $ putStrLn "Hello World!"
-    liftIO $ threadDelay 10000000
+    app <- engineCreateApp "Lonesome Space" ModeFullscreen
+    engineRunApp app [menuScene] render
+
+menuScene :: Scene
+menuScene event = return Continue
+
+render :: Renderer
+render = return ()
