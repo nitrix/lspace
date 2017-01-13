@@ -1,10 +1,6 @@
 module Main where
 
 import Engine
--- import Control.Concurrent
--- import Control.Monad.IO.Class
-
-data GameState = GameState Int
 
 main :: IO ()
 main = runApp $ App
