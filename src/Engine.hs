@@ -34,22 +34,21 @@ newtype Engine a = Engine { _runEngine :: StateT AppState IO a } deriving (Funct
 data Mode = Fullscreen | Windowed Int Int
 
 data Scene = Scene
-    { sceneUpdate :: Event -> Engine ()
+    { sceneUpdate :: Event -> Engine Result
     , sceneRender :: Engine ()
     }
 
-data Result = Continue
+data Result = Success
             | Skip
             | Switch Scene
             | Bring Scene
+            | Destroy
             | Terminate
 
 data App s = App    
     { appTitle  :: String
     , appMode   :: Mode
     , appScenes :: [Scene]
-    , appUpdate :: Event -> Engine Result
-    , appRender :: Engine ()
     }
 
 data AppState 
