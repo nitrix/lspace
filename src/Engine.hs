@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ExistentialQuantification #-}
 
 module Engine
     ( App(..)
@@ -20,34 +21,39 @@ import Control.Monad.State
 import Data.StateVar
 import qualified Data.Text as T
 import Linear
+import Linear.Affine
 import qualified SDL       as Sdl
 import qualified SDL.Image as Img
 import qualified SDL.TTF   as Ttf
 
-data Event = EventUnknown deriving Show
+data Event = EventUnknown
+           | EventMousePosition Int Int
+           deriving Show
 
-newtype Engine s a = Engine { runEngine :: StateT s IO a }
+newtype Engine a = Engine { _runEngine :: StateT AppState IO a } deriving (Functor, Applicative, Monad)
 
 data Mode = Fullscreen | Windowed Int Int
 
-data Scene s = Scene
-    { sceneUpdate :: Event -> Engine s ()
-    , sceneRender :: Engine s ()
+data Scene = Scene
+    { sceneUpdate :: Event -> Engine ()
+    , sceneRender :: Engine ()
     }
 
-data Result s = Continue
-              | Skip
-              | Switch (Scene s)
-              | Bring (Scene s)
-              | Terminate
+data Result = Continue
+            | Skip
+            | Switch Scene
+            | Bring Scene
+            | Terminate
 
 data App s = App    
     { appTitle  :: String
     , appMode   :: Mode
-    , appScenes :: [Scene s]
-    , appUpdate :: Event -> Engine s (Result s)
-    , appRender :: Engine s ()
+    , appScenes :: [Scene]
+    , appUpdate :: Event -> Engine Result
+    , appRender :: Engine ()
     }
+
+data AppState 
 
 runApp :: App s -> IO ()
 runApp app = runInBoundThread $ do
@@ -77,7 +83,7 @@ runApp app = runInBoundThread $ do
     Sdl.present renderer
     Sdl.showWindow window
     
-    mVarEvents <- newEmptyMVar
+    mVarEvent  <- newEmptyMVar
     mVarRedraw <- newEmptyMVar
     mVarLogs   <- newEmptyMVar
     mVarEnd    <- newEmptyMVar
@@ -87,8 +93,8 @@ runApp app = runInBoundThread $ do
     
     -- Events thread
     threadEvents <- forkIO $ forever $ do
-        events <- takeMVar mVarEvents
-        putMVar mVarLogs (show events)
+        event <- takeMVar mVarEvent
+        putMVar mVarLogs (show event)
         -- TODO: do something with events, like passing them to scenes and stuff
         -- engineState <- execStateT (getEngine game) defaultEngineState 
         putMVar mVarRedraw ()
@@ -113,10 +119,10 @@ runApp app = runInBoundThread $ do
         putMVar mVarLogs "Getting events"
         events <- (:) <$> Sdl.waitEvent <*> Sdl.pollEvents
         putMVar mVarLogs "Putting events"
-        -- TODO dengerous, we can skip an important event
-        when (all (/=Sdl.QuitEvent) (map Sdl.eventPayload events)) $ do
-            putMVar mVarEvents [EventUnknown] -- events TODO: convert sdl events to engine events
-            loop
+        shouldHalts <- forM (map Sdl.eventPayload events) $ \event -> do
+            putMVar mVarEvent (convertEvent event)
+            return (event == Sdl.QuitEvent)
+        unless (or shouldHalts) loop
     
     -- Terminate all threads
     putMVar mVarLogs "Killing event thread"
@@ -137,3 +143,7 @@ runApp app = runInBoundThread $ do
     Ttf.quit
     Img.quit
     Sdl.quit
+
+convertEvent :: Sdl.EventPayload -> Event
+convertEvent (Sdl.MouseMotionEvent e) = let (P (V2 x y)) = Sdl.mouseMotionEventPos e in EventMousePosition (fromIntegral x) (fromIntegral y)
+convertEvent _ = EventUnknown
