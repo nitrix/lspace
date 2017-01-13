@@ -12,5 +12,5 @@ main = runApp $ App
 menu :: Scene
 menu = Scene
     { sceneUpdate = const (return Success)
-    , sceneRender = undefined
+    , sceneRender = return ()
     }
