@@ -13,6 +13,7 @@ module Engine
     where
 
 import Control.Concurrent
+import Control.Concurrent.MSampleVar
 import Control.Monad
 import Control.Monad.Fix
 import Control.Monad.IO.Class
@@ -82,25 +83,25 @@ runApp app = runInBoundThread $ do
     Sdl.present renderer
     Sdl.showWindow window
     
-    mVarEvent  <- newEmptyMVar
-    mVarRedraw <- newEmptyMVar
-    mVarLogs   <- newEmptyMVar
-    mVarEnd    <- newEmptyMVar
+    mVarEvent <- newEmptyMVar
+    mVarLogs  <- newEmptyMVar
+    mVarEnd   <- newEmptyMVar
+    svRedraw  <- newEmptySV
     
     -- TODO: Networking thread
     -- TODO: Timers thread
     
     -- Events thread
-    threadEvents <- forkIO $ fix $ \loop -> do
+    void $ forkIO $ fix $ \loop -> do
         event <- takeMVar mVarEvent
         putMVar mVarLogs (show event)
         -- TODO: do something with events, like passing them to scenes and stuff
         -- engineState <- execStateT (getEngine game) defaultEngineState 
-        putMVar mVarRedraw (event == EventQuit)
+        writeSV svRedraw (event == EventQuit) -- Using a sample var (multiple write/overwrite, single read blocking)
         when (event /= EventQuit) loop
     
     -- Logging thread
-    threadLogger <- forkIO $ forever $ do
+    void $ forkIO $ forever $ do
         msg <- takeMVar mVarLogs
         if not . null $ msg
         then putStrLn msg
@@ -108,7 +109,7 @@ runApp app = runInBoundThread $ do
             putMVar mVarEnd ()
 
     -- Window thread
-    threadWindow <- forkIO $ runInBoundThread $ fix $ \loop -> do
+    void $ forkIO $ runInBoundThread $ fix $ \loop -> do
         putMVar mVarLogs "Getting events"
         events <- (:) <$> Sdl.waitEvent <*> Sdl.pollEvents
         putMVar mVarLogs "Putting events"
@@ -119,7 +120,7 @@ runApp app = runInBoundThread $ do
     
     -- Rendering thread
     fix $ \loop -> do
-        stop <- takeMVar mVarRedraw
+        stop <- readSV svRedraw
         when (not stop) $ do
             Sdl.clear renderer
             -- TODO: render view appRender app
