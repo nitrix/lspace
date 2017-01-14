@@ -27,7 +27,8 @@ import qualified SDL.TTF   as Ttf
 
 data Event = EventUnknown
            | EventMousePosition Int Int
-           deriving Show
+           | EventQuit
+           deriving (Show, Eq)
 
 newtype Engine a = Engine { _runEngine :: StateT AppState IO a } deriving (Functor, Applicative, Monad)
 
@@ -90,43 +91,46 @@ runApp app = runInBoundThread $ do
     -- TODO: Timers thread
     
     -- Events thread
-    threadEvents <- forkIO $ forever $ do
+    threadEvents <- forkIO $ fix $ \loop -> do
         event <- takeMVar mVarEvent
         putMVar mVarLogs (show event)
         -- TODO: do something with events, like passing them to scenes and stuff
         -- engineState <- execStateT (getEngine game) defaultEngineState 
-        putMVar mVarRedraw ()
-    
-    -- Rendering thread
-    threadRender <- forkIO $ runInBoundThread $ forever $ do
-        takeMVar mVarRedraw
-        Sdl.clear renderer
-        -- TODO: render view appRender app
-        Sdl.present renderer
+        putMVar mVarRedraw (event == EventQuit)
+        when (event /= EventQuit) loop
     
     -- Logging thread
-    void $ forkIO $ forever $ do
+    threadLogger <- forkIO $ forever $ do
         msg <- takeMVar mVarLogs
         if not . null $ msg
         then putStrLn msg
         else do
             putMVar mVarEnd ()
 
-    -- Window (has to be in bounded main thread)
-    fix $ \loop -> do
+    -- Window thread
+    threadWindow <- forkIO $ runInBoundThread $ fix $ \loop -> do
         putMVar mVarLogs "Getting events"
         events <- (:) <$> Sdl.waitEvent <*> Sdl.pollEvents
         putMVar mVarLogs "Putting events"
         shouldHalts <- forM (map Sdl.eventPayload events) $ \event -> do
             putMVar mVarEvent (convertEvent event)
             return (event == Sdl.QuitEvent)
-        unless (or shouldHalts) loop
+        if (or shouldHalts) then putMVar mVarEvent EventQuit else loop
+    
+    -- Rendering thread
+    fix $ \loop -> do
+        stop <- takeMVar mVarRedraw
+        when (not stop) $ do
+            Sdl.clear renderer
+            -- TODO: render view appRender app
+            Sdl.present renderer
+            loop
     
     -- Terminate all threads
-    putMVar mVarLogs "Killing event thread"
-    void $ forkIO $ killThread threadEvents
-    putMVar mVarLogs "Killing render thread"
-    void $ forkIO $ killThread threadRender
+    -- putMVar mVarLogs "Killing event thread"
+    -- void $ forkIO $ killThread threadEvents
+    -- putMVar mVarLogs "Killing render thread"
+    -- void $ forkIO $ killThread threadRender
     -- The logger thread is a little special because we do not want to lose any logs
     putMVar mVarLogs "Killing logger thread"
     putMVar mVarLogs ""
