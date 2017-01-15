@@ -92,7 +92,7 @@ runApp app = runInBoundThread $ do
     -- TODO: Timers thread
     
     -- Events thread
-    eventThread <- async $ fix $ \loop -> do
+    eventThread <- asyncBound $ fix $ \loop -> do
         event <- takeMVar mVarEvent
         putMVar mVarLogs (show event)
         -- TODO: do something with events, like passing them to scenes and stuff
@@ -101,14 +101,14 @@ runApp app = runInBoundThread $ do
         when (event /= EventQuit) loop
     
     -- Logging thread
-    loggingThread <- async $ fix $ \loop -> do
+    loggingThread <- asyncBound $ fix $ \loop -> do
         msg <- takeMVar mVarLogs
         when (not . null $ msg) $ do
             putStrLn msg
             loop
 
     -- Rendering thread
-    renderThread <- async $ runInBoundThread $ fix $ \loop -> do
+    renderThread <- asyncBound $ fix $ \loop -> do
         stop <- readSV svRedraw -- Waiting here
         when (not stop) $ do
             Sdl.rendererDrawColor renderer $= (V4 0 0 0 0)
@@ -120,14 +120,21 @@ runApp app = runInBoundThread $ do
             loop
     
     -- Window thread
-    runInBoundThread $ fix $ \loop -> do
+    fix $ \loop -> do
+        putStrLn "(1)"
         events <- (:) <$> Sdl.waitEvent <*> Sdl.pollEvents
+        putStrLn "(2)"
         shouldHalts <- forM (map Sdl.eventPayload events) $ \event -> do
+            putStrLn "(3)"
             putMVar mVarEvent (convertEvent event)
+            putStrLn "(4)"
             return (event == Sdl.QuitEvent)
+        putStrLn "(5)"
         if (or shouldHalts) then do
+            putStrLn "(6)"
             putMVar mVarEvent EventQuit
         else do
+            putStrLn "(7)"
             loop
     
     -- Terminate all threads. The order matters because of possible MVar deadlocks.
