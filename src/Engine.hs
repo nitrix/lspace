@@ -13,6 +13,7 @@ module Engine
     where
 
 import Control.Concurrent
+import Control.Concurrent.Async
 import Control.Concurrent.MSampleVar
 import Control.Monad
 import Control.Monad.Fix
@@ -85,14 +86,13 @@ runApp app = runInBoundThread $ do
     
     mVarEvent <- newEmptyMVar
     mVarLogs  <- newEmptyMVar
-    mVarEnd   <- newEmptyMVar
     svRedraw  <- newEmptySV
     
     -- TODO: Networking thread
     -- TODO: Timers thread
     
     -- Events thread
-    void $ forkIO $ fix $ \loop -> do
+    eventThread <- async $ fix $ \loop -> do
         event <- takeMVar mVarEvent
         putMVar mVarLogs (show event)
         -- TODO: do something with events, like passing them to scenes and stuff
@@ -101,42 +101,40 @@ runApp app = runInBoundThread $ do
         when (event /= EventQuit) loop
     
     -- Logging thread
-    void $ forkIO $ forever $ do
+    loggingThread <- async $ fix $ \loop -> do
         msg <- takeMVar mVarLogs
-        if not . null $ msg
-        then putStrLn msg
-        else do
-            putMVar mVarEnd ()
+        when (not . null $ msg) $ do
+            putStrLn msg
+            loop
 
-    -- Window thread
-    void $ forkIO $ runInBoundThread $ fix $ \loop -> do
-        putMVar mVarLogs "Getting events"
-        events <- (:) <$> Sdl.waitEvent <*> Sdl.pollEvents
-        putMVar mVarLogs "Putting events"
-        shouldHalts <- forM (map Sdl.eventPayload events) $ \event -> do
-            putMVar mVarEvent (convertEvent event)
-            return (event == Sdl.QuitEvent)
-        if (or shouldHalts) then putMVar mVarEvent EventQuit else loop
-    
     -- Rendering thread
-    fix $ \loop -> do
-        stop <- readSV svRedraw
+    renderThread <- async $ runInBoundThread $ fix $ \loop -> do
+        stop <- readSV svRedraw -- Waiting here
         when (not stop) $ do
+            Sdl.rendererDrawColor renderer $= (V4 0 0 0 0)
             Sdl.clear renderer
             -- TODO: render view appRender app
+            Sdl.rendererDrawColor renderer $= (V4 255 0 0 0)
+            Sdl.drawPoint renderer (P $ V2 100 100)
             Sdl.present renderer
             loop
     
-    -- Terminate all threads
-    -- putMVar mVarLogs "Killing event thread"
-    -- void $ forkIO $ killThread threadEvents
-    -- putMVar mVarLogs "Killing render thread"
-    -- void $ forkIO $ killThread threadRender
-    -- The logger thread is a little special because we do not want to lose any logs
-    putMVar mVarLogs "Killing logger thread"
-    putMVar mVarLogs ""
-    takeMVar mVarEnd
-    putStrLn "Terminated"
+    -- Window thread
+    runInBoundThread $ fix $ \loop -> do
+        events <- (:) <$> Sdl.waitEvent <*> Sdl.pollEvents
+        shouldHalts <- forM (map Sdl.eventPayload events) $ \event -> do
+            putMVar mVarEvent (convertEvent event)
+            return (event == Sdl.QuitEvent)
+        if (or shouldHalts) then do
+            putMVar mVarEvent EventQuit
+        else do
+            loop
+    
+    -- Terminate all threads. The order matters because of possible MVar deadlocks.
+    void $ waitCatch renderThread
+    void $ waitCatch eventThread
+    putMVar mVarLogs "" -- TODO: This kills the logger thread. It's dirty
+    void $ waitCatch loggingThread
 
     -- Cleanup
     Sdl.destroyWindow window
