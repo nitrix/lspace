@@ -21,11 +21,13 @@ import Control.Monad.IO.Class
 import Control.Monad.State
 import Data.StateVar
 import qualified Data.Text as T
+import Foreign.C.String
 import Linear
 import Linear.Affine
-import qualified SDL       as Sdl
-import qualified SDL.Image as Img
-import qualified SDL.TTF   as Ttf
+import qualified SDL           as Sdl
+import qualified SDL.Raw.Basic as Raw
+import qualified SDL.Image     as Img
+import qualified SDL.TTF       as Ttf
 
 data Event = EventUnknown
            | EventMousePosition Int Int
@@ -104,7 +106,7 @@ runApp app = runInBoundThread $ do
     loggingThread <- asyncBound $ fix $ \loop -> do
         msg <- takeMVar mVarLogs
         when (not . null $ msg) $ do
-            putStrLn msg
+            withCString msg (Raw.log)
             loop
 
     -- Rendering thread
@@ -121,20 +123,13 @@ runApp app = runInBoundThread $ do
     
     -- Window thread
     fix $ \loop -> do
-        putStrLn "(1)"
         events <- (:) <$> Sdl.waitEvent <*> Sdl.pollEvents
-        putStrLn "(2)"
         shouldHalts <- forM (map Sdl.eventPayload events) $ \event -> do
-            putStrLn "(3)"
             putMVar mVarEvent (convertEvent event)
-            putStrLn "(4)"
             return (event == Sdl.QuitEvent)
-        putStrLn "(5)"
         if (or shouldHalts) then do
-            putStrLn "(6)"
             putMVar mVarEvent EventQuit
         else do
-            putStrLn "(7)"
             loop
     
     -- Terminate all threads. The order matters because of possible MVar deadlocks.
