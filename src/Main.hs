@@ -5,7 +5,7 @@ import Engine
 main :: IO ()
 main = runApp $ App
     { appTitle  = "Lonesome Space"
-    , appMode   = Windowed 800 600
+    , appMode   = Fullscreen
     , appScenes = [menu]
     }
 

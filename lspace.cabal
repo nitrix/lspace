@@ -42,10 +42,10 @@ executable lspace
   extra-libraries:     SDL2_image
   ghc-options:         -Wall -threaded -with-rtsopts=-T
   -- ghc-options:         -threaded -with-rtsopts=-T -O -ddump-simpl -ddump-to-file -dsuppress-all
+  other-modules:       Engine
   -- other-modules:  --   Cache
                      -- , Camera
                      -- , Coordinate
-                     -- , Engine
                      -- , Environment
                      -- , Game
                      -- , Grid

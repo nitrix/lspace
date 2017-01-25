@@ -1,4 +1,5 @@
 /.stack-work/
+/dist
 /lspace.prof
 /lspace.prof.html
 *.dump-simpl
