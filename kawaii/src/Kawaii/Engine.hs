@@ -1,16 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
 
-module Engine
-    ( App(..)
-    , Event(..)
-    , Mode(..)
-    , Result(..)
-    , Scene(..)
-    , runApp
-    )
-    where
+module Kawaii.Engine where
 
 import Control.Concurrent
 import Control.Concurrent.Async
@@ -106,7 +96,7 @@ runApp app = runInBoundThread $ do
     loggingThread <- asyncBound $ fix $ \loop -> do
         msg <- takeMVar mVarLogs
         when (not . null $ msg) $ do
-            withCString msg (Raw.log)
+            -- withCString msg (Raw.log)
             loop
 
     -- Rendering thread

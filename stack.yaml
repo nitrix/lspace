@@ -1,6 +1,7 @@
 flags: {}
 packages:
 - '.'
+- kawaii
 - location:
     git: https://github.com/nitrix/sdl2-image
     commit: 93744a9e4d4993ebe49e160b5efc7b072553de4a

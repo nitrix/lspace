@@ -1,6 +1,6 @@
 module Main where
 
-import Engine
+import Kawaii
 
 main :: IO ()
 main = runApp $ App
