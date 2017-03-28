@@ -1,5 +1,6 @@
 module Main where
 
+{-
 import Kawaii
 
 main :: IO ()
@@ -14,3 +15,15 @@ menu = Scene
     { sceneUpdate = const (return Success)
     , sceneRender = return ()
     }
+-}
+
+import Control.Concurrent
+import Kawaii.Core
+-- import Kawaii.Engine -- different engines like SDL or other
+import Relational
+
+main :: IO ()
+main = do
+    putStrLn "Before game"
+    runGame undefined
+    putStrLn "After game"

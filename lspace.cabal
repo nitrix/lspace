@@ -1,5 +1,5 @@
 name:                lspace
-version:             0.0.0.5
+version:             0.0.0.6
 synopsis:            Lonesome Space
 description:         Real-time 2D strategy/sandbox game.
 homepage:            https://github.com/nitrix/lspace
@@ -17,13 +17,17 @@ source-repository head
 
 executable lspace
   main-is:             Main.hs
-  build-depends:       kawaii
-                     , base >= 4.8 && < 4.10
+  build-depends:       base          >= 4.8     && < 4.10
+                     , mtl           >= 2.2.1   && < 2.3.0
+                     , sdl2          >= 2.1.3   && < 2.2.0
+                     , array         >= 0.5.1.1 && < 0.5.8.0
+                     , containers    >= 0.5.7.1 && < 0.5.8.0
+                     , SafeSemaphore >= 0.10.1  && < 0.11.0
   hs-source-dirs:      src
   default-language:    Haskell2010
   ghc-options:         -Wall -threaded -with-rtsopts=-T
   -- ghc-options:         -threaded -with-rtsopts=-T -O -ddump-simpl -ddump-to-file -dsuppress-all
-  other-modules:       Engine
+  -- other-modules:     --  Engine
   -- other-modules:  --   Cache
                      -- , Camera
                      -- , Coordinate
