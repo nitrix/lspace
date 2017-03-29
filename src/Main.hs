@@ -23,7 +23,7 @@ import Kawaii.Core
 import Relational
 
 main :: IO ()
-main = do
-    putStrLn "Before game"
-    runGame undefined
-    putStrLn "After game"
+main = runApp $ App
+    { appTitle = "Lonesome Space"
+    , appMode  = Fullscreen
+    }

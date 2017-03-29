@@ -1,14 +1,17 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- Could be needed to interrupt a thread stuck on a foreign call
 -- https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/ffi-chap.html#interruptible-foreign-calls
 -- Might be in a critical section and leave C in some corrupted state.
 
-module Kawaii.Core where
+module Kawaii.Core
+    ( App(..)
+    , Mode(..)
+    , runApp
+    ) where
 
 import Control.Concurrent
 import Control.Concurrent.MSampleVar
 import Control.Monad.State
+import qualified Data.Text as T
 import Foreign.Storable
 import Foreign.Marshal.Alloc
 -- import Control.Monad.Trans
@@ -21,14 +24,25 @@ newtype Game a = Game { unwrapGame :: StateT GameState IO a }
 data GameState = Gamestate
     { gsTest :: Int
     }
-    
-runGame :: Game () -> IO ()
-runGame _undefined = runInBoundThread $ do
+
+data Mode = Fullscreen | Windowed Int Int
+data App = App   
+    { appTitle  :: String
+    , appMode   :: Mode
+    -- , appScenes :: [Scene]
+    }
+
+runApp :: App -> IO ()
+runApp app = runInBoundThread $ do
     Sdl.initializeAll
-    
+
     -- SDL window and renderer
-    window <- Sdl.createWindow "Lonesome Space" Sdl.defaultWindow
+    window   <- Sdl.createWindow (T.pack $ appTitle app) windowConfig
     renderer <- Sdl.createRenderer window (-1) Sdl.defaultRenderer
+    
+    -- Few SDL settings; this might be a little too arbitrary
+    Sdl.disableScreenSaver
+    Sdl.cursorVisible Sdl.$= False
     
     -- Thread communication
     eventChan   <- newChan
@@ -36,7 +50,7 @@ runGame _undefined = runInBoundThread $ do
     
     -- Threads
     logicThreadId   <- forkOS (logicThread eventChan gameStateSV)
-    renderThreadId  <- forkOS (renderThread gameStateSV)
+    renderThreadId  <- forkOS (renderThread renderer gameStateSV)
     networkThreadId <- forkOS (networkThread eventChan)
     timerThreadId   <- forkOS (timerThread eventChan)
     
@@ -56,7 +70,12 @@ runGame _undefined = runInBoundThread $ do
     
     -- Cleanup
     Sdl.quit
-    
+    where
+        -- TODO: Seems to have a problem with Alt-tab'ing when in fullscreen; to investigate.
+        windowConfig = case appMode app of
+                           Fullscreen   -> Sdl.defaultWindow { Sdl.windowMode = Sdl.FullscreenDesktop }
+                           Windowed w h -> Sdl.defaultWindow { Sdl.windowInitialSize = Sdl.V2 (fromIntegral w) (fromIntegral h) }
+                           
 logicThread :: Chan Event -> MSampleVar GameState -> IO ()
 logicThread eventChan gameStateSV = fix $ \loop -> do
     event <- readChan eventChan
@@ -67,8 +86,11 @@ logicThread eventChan gameStateSV = fix $ \loop -> do
             putStrLn $ takeWhile (/=' ') (show event)
             loop
 
-renderThread :: MSampleVar GameState -> IO ()
-renderThread _ = forever $ do
+renderThread :: Sdl.Renderer -> MSampleVar GameState -> IO ()
+renderThread renderer _ = forever $ do
+    Sdl.rendererDrawColor renderer Sdl.$= Sdl.V4 0 0 0 255
+    Sdl.clear renderer
+    Sdl.present renderer
     threadDelay 1000000
     
 networkThread :: Chan Event -> IO ()
