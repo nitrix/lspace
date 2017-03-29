@@ -9,8 +9,12 @@ module Kawaii.Core where
 import Control.Concurrent
 import Control.Concurrent.MSampleVar
 import Control.Monad.State
+import Foreign.Storable
+import Foreign.Marshal.Alloc
 -- import Control.Monad.Trans
 import qualified SDL as Sdl
+import qualified SDL.Raw.Event as Raw
+import qualified SDL.Raw.Types as Raw
 
 type Event = Sdl.EventPayload -- TODO: temporary
 newtype Game a = Game { unwrapGame :: StateT GameState IO a }
@@ -54,9 +58,14 @@ runGame _undefined = runInBoundThread $ do
     Sdl.quit
     
 logicThread :: Chan Event -> MSampleVar GameState -> IO ()
-logicThread eventChan gameStateSV = forever $ do
+logicThread eventChan gameStateSV = fix $ \loop -> do
     event <- readChan eventChan
-    putStrLn $ takeWhile (/=' ') (show event)
+    case event of
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> pushQuitEvent
+        Sdl.QuitEvent -> return ()
+        _ -> do
+            putStrLn $ takeWhile (/=' ') (show event)
+            loop
 
 renderThread :: MSampleVar GameState -> IO ()
 renderThread _ = forever $ do
@@ -69,3 +78,14 @@ networkThread _ = forever $ do
 timerThread :: Chan Event -> IO ()
 timerThread _ = forever $ do
     threadDelay 1000000
+
+-- Thread-safe, will keep retrying on failures if the event queue is full.
+-- SDL documents that the event is copied into their queue and we can dispose of our pointer immediately after.
+pushQuitEvent :: IO ()
+pushQuitEvent = alloca $ \ptr -> do
+    poke ptr (Raw.QuitEvent 256 0)
+    fix $ \loop -> do
+        code <- Raw.pushEvent ptr
+        when (code < 0) $ do
+            threadDelay 250000
+            loop

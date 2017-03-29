@@ -10,7 +10,7 @@ module Relational
     ) where
 
 import Control.Monad.State
-import Control.Monad.Trans
+-- import Control.Monad.Trans
 import Data.Array.IO
 import Data.Dynamic
 import Data.IORef
@@ -37,13 +37,13 @@ data Storage = Storage
 newCell :: a -> Relational (Cell a)
 newCell val = Relational $ lift $ newIORef val
 
-readCell :: Related a => Cell a -> Relational a
+readCell :: Cell a -> Relational a
 readCell cell = Relational $ lift $ readIORef cell
 
-modifyCell ::  Related a => Cell a -> (a -> a) -> Relational ()
+modifyCell ::  Cell a -> (a -> a) -> Relational ()
 modifyCell cell func = Relational $ lift $ modifyIORef cell func
 
-writeCell :: Related a => Cell a -> a -> Relational ()
+writeCell :: Cell a -> a -> Relational ()
 writeCell cell val = Relational $ lift $ writeIORef cell val
 
 ---- Fancy stuff
@@ -67,7 +67,7 @@ resolveRelation (cacheId, cellId) = do
         fixDynCell dynCell = case fromDynamic dynCell of
             Just cell -> return cell
             Nothing   -> error "Wrong reference type for what is within the cell"
-            
+
 readRelation :: Related a => Relation a -> Relational a
 readRelation = resolveRelation >=> readCell
 
