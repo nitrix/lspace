@@ -36,8 +36,6 @@ data Context = Context
 
 -- type Lens s t a b = forall f. Functor f => (a -> f b) -> s -> f t  where f ~ Relational, a ~ Relation a', b ~ Relation b', s ~ Cell s'
 
-
-
 runRelational :: ContextName -> Relational () -> IO ()
 runRelational contextName (Relational r) = do
     -- TODO: restore our previous nextRelationId from the context

@@ -20,16 +20,13 @@ import qualified SDL.Raw.Event as Raw
 import qualified SDL.Raw.Types as Raw
 
 type Event = Sdl.EventPayload -- TODO: temporary
-newtype Game a = Game { unwrapGame :: StateT GameState IO a }
-data GameState = Gamestate
-    { gsTest :: Int
-    }
+-- newtype Game a = Game (StateT GameState IO a)
+data AppState = AppState
 
 data Mode = Fullscreen | Windowed Int Int
 data App = App   
     { appTitle  :: String
     , appMode   :: Mode
-    -- , appScenes :: [Scene]
     }
 
 runApp :: App -> IO ()
@@ -76,8 +73,8 @@ runApp app = runInBoundThread $ do
                            Fullscreen   -> Sdl.defaultWindow { Sdl.windowMode = Sdl.FullscreenDesktop }
                            Windowed w h -> Sdl.defaultWindow { Sdl.windowInitialSize = Sdl.V2 (fromIntegral w) (fromIntegral h) }
                            
-logicThread :: Chan Event -> MSampleVar GameState -> IO ()
-logicThread eventChan gameStateSV = fix $ \loop -> do
+logicThread :: Chan Event -> MSampleVar AppState -> IO ()
+logicThread eventChan _ = fix $ \loop -> do
     event <- readChan eventChan
     case event of
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> pushQuitEvent
@@ -86,7 +83,7 @@ logicThread eventChan gameStateSV = fix $ \loop -> do
             putStrLn $ takeWhile (/=' ') (show event)
             loop
 
-renderThread :: Sdl.Renderer -> MSampleVar GameState -> IO ()
+renderThread :: Sdl.Renderer -> MSampleVar AppState -> IO ()
 renderThread renderer _ = forever $ do
     Sdl.rendererDrawColor renderer Sdl.$= Sdl.V4 0 0 0 255
     Sdl.clear renderer

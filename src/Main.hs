@@ -28,8 +28,8 @@ menuRender :: Engine ()
 menuRender = return ()
 -}
 
-import Kawaii.Core
--- import Relational
+import Kawaii
+import Relational
 
 main :: IO ()
 main = runApp $ App
