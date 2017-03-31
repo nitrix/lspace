@@ -34,7 +34,7 @@ import Relational
 main :: IO ()
 main = runApp $ App
     { appTitle = "Lonesome Space"
-    , appMode  = Fullscreen
+    , appMode  = Windowed 1024 768
     }
 
 {-
