@@ -37,7 +37,7 @@ runApp :: App -> IO ()
 runApp app = runInBoundThread $ do
     -- We're going to need SDL
     Sdl.initializeAll
-    Mix.openAudio Mix.defaultAudio 1024
+    Mix.openAudio (Mix.Audio 48000 Mix.FormatS16_LSB Mix.Mono) 1024 -- 44100 Hz
 
     -- Workaround the fake and real fullscreen modes not playing nice with Alt-tab
     desktopSize <- Sdl.displayBoundsSize . head <$> Sdl.getDisplays
@@ -54,12 +54,12 @@ runApp app = runInBoundThread $ do
     Sdl.disableScreenSaver
     Sdl.cursorVisible Sdl.$= False
     Sdl.showWindow window
-    Mix.setChannels 20
+    -- Mix.setChannels 8
 
     -- Load music assets
-    tada <- Mix.load "tada.mp3"
+    bell <- Mix.load "bell.wav"
     let audioChunkAssets = M.empty
-                         & M.insert "tada" tada
+                         & M.insert "bell" bell
 
     -- Thread communication
     eventChan   <- newChan
@@ -89,7 +89,7 @@ runApp app = runInBoundThread $ do
     killThread mixerThreadId
 
     -- Cleanup
-    Mix.free tada
+    Mix.free bell
     Mix.closeAudio
     Sdl.quit
 
@@ -99,7 +99,7 @@ logicThread eventChan mixerChan _ = fix $ \loop -> do
     case event of
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> pushQuitEvent
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
-            writeChan mixerChan "tada"
+            writeChan mixerChan "bell"
             loop
         Sdl.QuitEvent -> return ()
         _ -> do
@@ -127,6 +127,7 @@ mixerThread mixerChan chunks = forever $ do
     case M.lookup key chunks of
         Just chunk -> do
             void $ tryJust (\e -> case e of Sdl.SDLCallFailed _ _ _ -> Just undefined; _ -> Nothing) (Mix.play chunk)
+            -- Mix.playMusic {-Mix.Once-} music
         Nothing    -> return ()
 
 -- Thread-safe, will keep retrying on failures if the event queue is full.
