@@ -10,13 +10,16 @@ module Kawaii.Core
 
 import Control.Concurrent
 import Control.Concurrent.MSampleVar
+import Control.Exception
 import Control.Monad.State
+import Data.Function
 import qualified Data.Text as T
+import qualified Data.Map as M
 import Foreign.Storable
 import Foreign.Marshal.Alloc
 -- import Control.Monad.Trans
 import qualified SDL as Sdl
--- import qualified SDL.Mixer as Mix
+import qualified SDL.Mixer as Mix
 import qualified SDL.Raw.Event as Raw
 import qualified SDL.Raw.Types as Raw
 
@@ -34,7 +37,7 @@ runApp :: App -> IO ()
 runApp app = runInBoundThread $ do
     -- We're going to need SDL
     Sdl.initializeAll
-    -- Mix.openAudio Mix.defaultAudio 1024
+    Mix.openAudio Mix.defaultAudio 1024
 
     -- Workaround the fake and real fullscreen modes not playing nice with Alt-tab
     desktopSize <- Sdl.displayBoundsSize . head <$> Sdl.getDisplays
@@ -51,18 +54,24 @@ runApp app = runInBoundThread $ do
     Sdl.disableScreenSaver
     Sdl.cursorVisible Sdl.$= False
     Sdl.showWindow window
+    Mix.setChannels 20
+
+    -- Load music assets
+    tada <- Mix.load "tada.mp3"
+    let audioChunkAssets = M.empty
+                         & M.insert "tada" tada
 
     -- Thread communication
     eventChan   <- newChan
     gameStateSV <- newEmptySV
-    -- mixerChan   <- newChan
+    mixerChan   <- newChan
 
     -- Threads
-    logicThreadId   <- forkOS (logicThread eventChan gameStateSV)
+    logicThreadId   <- forkOS (logicThread eventChan mixerChan gameStateSV)
     renderThreadId  <- forkOS (renderThread renderer gameStateSV)
     networkThreadId <- forkOS (networkThread eventChan)
     timerThreadId   <- forkOS (timerThread eventChan)
-    -- mixerThreadId   <- forkOS (mixerThread mixerChan)
+    mixerThreadId   <- forkOS (mixerThread mixerChan audioChunkAssets)
 
     -- Event handling
     fix $ \loop -> do
@@ -77,16 +86,21 @@ runApp app = runInBoundThread $ do
     killThread renderThreadId
     killThread networkThreadId
     killThread timerThreadId
+    killThread mixerThreadId
 
     -- Cleanup
-    -- Mix.closeAudio
+    Mix.free tada
+    Mix.closeAudio
     Sdl.quit
 
-logicThread :: Chan Event -> MSampleVar AppState -> IO ()
-logicThread eventChan _ = fix $ \loop -> do
+logicThread :: Chan Event -> Chan String -> MSampleVar AppState -> IO ()
+logicThread eventChan mixerChan _ = fix $ \loop -> do
     event <- readChan eventChan
     case event of
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> pushQuitEvent
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
+            writeChan mixerChan "tada"
+            loop
         Sdl.QuitEvent -> return ()
         _ -> do
             putStrLn $ takeWhile (/=' ') (show event)
@@ -107,12 +121,13 @@ timerThread :: Chan Event -> IO ()
 timerThread _ = forever $ do
     threadDelay 1000000
 
-{-
-mixerThread :: Chan String -> IO ()
-mixerThread mixerChan = forever $ do
-    filename <- readChan mixerChan
-    return ()
--}
+mixerThread :: Chan String -> M.Map String Mix.Chunk -> IO ()
+mixerThread mixerChan chunks = forever $ do
+    key <- readChan mixerChan
+    case M.lookup key chunks of
+        Just chunk -> do
+            void $ tryJust (\e -> case e of Sdl.SDLCallFailed _ _ _ -> Just undefined; _ -> Nothing) (Mix.play chunk)
+        Nothing    -> return ()
 
 -- Thread-safe, will keep retrying on failures if the event queue is full.
 -- SDL documents that the event is copied into their queue and we can dispose of our pointer immediately after.
