@@ -157,6 +157,7 @@ gameLogic (Exchange {..}) = do
             if playerMoving player
             then return ()
             else do
+                liftIO $ atomicModifyIORef' playerRef $ \p -> (p { playerMoving = True }, ())
                 maybeAnimationTimer <- do
                     if not (playerAnimating player)
                     then do
@@ -165,7 +166,7 @@ gameLogic (Exchange {..}) = do
                             writeSV gameStateSV gameState
                             player <- readIORef playerRef
                             if playerMoving player || playerMovingDirection player /= Nothing
-                            then return (Sdl.Reschedule 100)
+                            then return (Sdl.Reschedule 75)
                             else return (Sdl.Cancel)
                         return (Just timer)
                     else return Nothing
@@ -183,10 +184,14 @@ gameLogic (Exchange {..}) = do
                                 }, Sdl.Reschedule 25)
                         else (p { playerMoving = False, playerAnimating = False, playerAnimation = let (frames, beginning) = playerAnimation p in (dropWhile (/= beginning) frames, beginning) } , Sdl.Cancel)
                     writeSV gameStateSV gameState
+                    {-
                     when (reschedule == Sdl.Cancel) $ do
                         case maybeAnimationTimer of 
-                            Just animationTimer -> liftIO $ void $ Sdl.removeTimer animationTimer
+                            Just animationTimer -> do
+                                liftIO $ putStrLn "Killing previous animation thread"
+                                liftIO $ void $ Sdl.removeTimer animationTimer
                             Nothing -> return ()
+                    -}
                     return reschedule
             liftIO $ writeSV gameStateSV gameState
             -- --------------------------- End of testing movement --------------------------------
