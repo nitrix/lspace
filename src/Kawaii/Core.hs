@@ -36,7 +36,8 @@ data ObjectPlayer = ObjectPlayer
     , playerOffsetPosition  :: (Int, Int)
     , playerMovingDirection :: Maybe Direction
     , playerMoving          :: Bool
-    , playerAnimationFrame  :: [Int]
+    , playerAnimating       :: Bool
+    , playerAnimation       :: ([Int], Int)
     } deriving (Show)
 
 newtype Game a = Game { unwrapGame :: StateT GameState IO a} deriving (Functor, Applicative, Monad, MonadState GameState, MonadIO)
@@ -93,7 +94,7 @@ runApp app = runInBoundThread $ do
                          & M.insert "bell" bell
     -}
     
-    defaultGameState <- GameState <$> newIORef (ObjectPlayer (0,0) (0,0) Nothing False (cycle [1,3,2,3]))
+    defaultGameState <- GameState <$> newIORef (ObjectPlayer (0,0) (0,0) Nothing False False (cycle [1,3,2,3], 1))
     tileset          <- Img.loadTexture renderer "assets/tileset.png"
     font             <- Ttf.openFont "assets/terminus.ttf" 16
 
@@ -147,18 +148,28 @@ gameLogic (Exchange {..}) = do
     playerRef <- gets gamePlayer
     event <- liftIO (readChan eventChan)
     case event of
+        -- --------------------------- Testing movement --------------------------------
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Released False (Sdl.Keysym Sdl.ScancodeD _ _)) -> do
-            liftIO $ putStrLn "Moving direction = Nothing"
             liftIO $ atomicModifyIORef' playerRef $ \p -> (p { playerMovingDirection = Nothing }, ())
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeD _ _)) -> do
-            liftIO $ putStrLn "Moving direction = Just East"
             liftIO $ atomicModifyIORef' playerRef $ \p -> (p { playerMovingDirection = Just East }, ())
-            -- -----------------------------------------------------------
             player <- liftIO $ readIORef playerRef
             if playerMoving player
             then return ()
             else do
-                liftIO $ putStrLn "Starting movement thread"
+                maybeAnimationTimer <- do
+                    if not (playerAnimating player)
+                    then do
+                        liftIO $ putStrLn "Starting animation thread"
+                        timer <- liftIO $ Sdl.addTimer 0 $ \_ -> do
+                            atomicModifyIORef' playerRef $ \p -> (if playerMoving p || playerMovingDirection p /= Nothing then p { playerAnimation = let (frames, beginning) = playerAnimation p in (drop 1 frames, beginning)} else p, ())
+                            writeSV gameStateSV gameState
+                            player <- readIORef playerRef
+                            if playerMoving player || playerMovingDirection player /= Nothing
+                            then return (Sdl.Reschedule 100)
+                            else return (Sdl.Cancel)
+                        return (Just timer)
+                    else return Nothing
                 liftIO $ void $ Sdl.addTimer 0 $ \_ -> do
                     reschedule <- atomicModifyIORef' playerRef $ \p ->
                         let (offsetX, offsetY) = playerOffsetPosition p in
@@ -166,15 +177,20 @@ gameLogic (Exchange {..}) = do
                         let direction =  playerMovingDirection p in
 
                         if offsetX /= 0 || offsetY /= 0 || direction == Just East
-                        then (p { playerOffsetPosition = (if offsetX == 0 then -32 + 8 else offsetX + 8, offsetY)
+                        then (p { playerOffsetPosition = (if offsetX == 0 then -32 + 4 else offsetX + 4, offsetY)
                                 , playerPosition       = (if offsetX == 0 then x + 1 else x, y)
                                 , playerMoving         = True
+                                , playerAnimating      = True
                                 }, Sdl.Reschedule 50)
-                        else (p { playerMoving = False } , Sdl.Cancel)
+                        else (p { playerMoving = False, playerAnimating = False, playerAnimation = let (frames, beginning) = playerAnimation p in (dropWhile (/= beginning) frames, beginning) } , Sdl.Cancel)
                     writeSV gameStateSV gameState
+                    when (reschedule == Sdl.Cancel) $ do
+                        case maybeAnimationTimer of 
+                            Just animationTimer -> liftIO $ void $ Sdl.removeTimer animationTimer
+                            Nothing -> return ()
                     return reschedule
             liftIO $ writeSV gameStateSV gameState
-            -- -----------------------------------------------------------
+            -- --------------------------- End of testing movement --------------------------------
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> liftIO pushQuitEvent
         -- Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
         --     writeChan mixerChan "bell"
@@ -197,13 +213,8 @@ renderThread (Exchange {..}) texture font = forever $ do
     player <- readIORef (gamePlayer gameState)
     let (x, y) = playerPosition player
     let (offsetX, offsetY) = playerOffsetPosition player
-    let src = case offsetX of t
-                                | t < -32   -> Sdl.V2 1 3
-                                | t < -24   -> Sdl.V2 3 3
-                                | t < -16   -> Sdl.V2 2 3
-                                | t < -8    -> Sdl.V2 3 3
-                                | otherwise -> Sdl.V2 1 3
-
+    -- Testing animation
+    let src = Sdl.V2 (fromIntegral $ head $ fst $ playerAnimation player) 3
     let dst = Sdl.V2 (fromIntegral x) (fromIntegral y)
     let offsetDst = Sdl.V2 (fromIntegral offsetX) (fromIntegral offsetY)
 
