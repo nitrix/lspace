@@ -1,6 +1,3 @@
--- Could be needed to interrupt a thread stuck on a foreign call
--- https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/ffi-chap.html#interruptible-foreign-calls
--- Might be in a critical section and leave C in some corrupted state.
 {-# LANGUAGE RecordWildCards #-}
 
 module Kawaii.Core
