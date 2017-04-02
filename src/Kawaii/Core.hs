@@ -160,7 +160,6 @@ gameLogic (Exchange {..}) = do
                 maybeAnimationTimer <- do
                     if not (playerAnimating player)
                     then do
-                        liftIO $ putStrLn "Starting animation thread"
                         timer <- liftIO $ Sdl.addTimer 0 $ \_ -> do
                             atomicModifyIORef' playerRef $ \p -> (if playerMoving p || playerMovingDirection p /= Nothing then p { playerAnimation = let (frames, beginning) = playerAnimation p in (drop 1 frames, beginning)} else p, ())
                             writeSV gameStateSV gameState
@@ -174,14 +173,14 @@ gameLogic (Exchange {..}) = do
                     reschedule <- atomicModifyIORef' playerRef $ \p ->
                         let (offsetX, offsetY) = playerOffsetPosition p in
                         let (x, y) = playerPosition p in
-                        let direction =  playerMovingDirection p in
+                        let direction = playerMovingDirection p in
 
                         if offsetX /= 0 || offsetY /= 0 || direction == Just East
-                        then (p { playerOffsetPosition = (if offsetX == 0 then -32 + 4 else offsetX + 4, offsetY)
+                        then (p { playerOffsetPosition = (if offsetX == 0 then -32 + 8 else offsetX + 8, offsetY)
                                 , playerPosition       = (if offsetX == 0 then x + 1 else x, y)
                                 , playerMoving         = True
                                 , playerAnimating      = True
-                                }, Sdl.Reschedule 50)
+                                }, Sdl.Reschedule 25)
                         else (p { playerMoving = False, playerAnimating = False, playerAnimation = let (frames, beginning) = playerAnimation p in (dropWhile (/= beginning) frames, beginning) } , Sdl.Cancel)
                     writeSV gameStateSV gameState
                     when (reschedule == Sdl.Cancel) $ do
