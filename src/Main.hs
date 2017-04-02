@@ -35,7 +35,11 @@ main :: IO ()
 main = runApp $ App
     { appTitle = "Lonesome Space"
     , appMode  = Windowed 1024 768
+    , appUis   = [uiMainMenu]
     }
+
+uiMainMenu :: Ui
+uiMainMenu = const $ return Success 
 
 {-
 main :: IO ()

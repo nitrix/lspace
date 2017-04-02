@@ -1,8 +1,10 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Kawaii.Core
     ( App(..)
     , Mode(..)
+    , Result(..)
     , runApp
     ) where
 
@@ -11,30 +13,49 @@ import Control.Concurrent.MSampleVar
 import Control.Exception
 import Control.Monad.Loops
 import Control.Monad.State
-import qualified Data.Text as T
-import qualified Data.Map as M
+import Data.IORef
 import Foreign.Storable
 import Foreign.Marshal.Alloc
-import qualified SDL as Sdl
-import qualified SDL.Mixer as Mix
+
+import qualified Data.Text     as T
+import qualified Data.Map      as M
+import qualified SDL           as Sdl
+import qualified SDL.Image     as Img
+import qualified SDL.Mixer     as Mix
 import qualified SDL.Raw.Event as Raw
 import qualified SDL.Raw.Types as Raw
+import qualified SDL.TTF       as Ttf
+import qualified SDL.TTF.FFI   as Ttf (TTFFont)
 
--- newtype Game a = Game (StateT GameState IO a)
-data GameState -- = AppState
+import Kawaii.Ui
+
+data Direction = North | South | East | West deriving (Eq, Show)
+
+data ObjectPlayer = ObjectPlayer
+    { playerPosition        :: (Integer, Integer)
+    , playerOffsetPosition  :: (Int, Int)
+    , playerMovingDirection :: Maybe Direction
+    , playerMoving          :: Bool
+    , playerAnimationFrame  :: [Int]
+    } deriving (Show)
+
+newtype Game a = Game { unwrapGame :: StateT GameState IO a} deriving (Functor, Applicative, Monad, MonadState GameState, MonadIO)
+data GameState = GameState
+    { gamePlayer :: IORef ObjectPlayer
+    }
 
 data Mode = Fullscreen | Windowed Int Int
 data App = App
     { appTitle  :: String
     , appMode   :: Mode
+    , appUis    :: [Ui]
     }
 
 -- This is meant to be used preferably with the RecordWildCards extension
 data Exchange = Exchange
     { eventChan    :: Chan Sdl.EventPayload
-    , appStateSV   :: MSampleVar GameState
+    , gameStateSV  :: MSampleVar GameState
     , mixerChan    :: Chan String
-    , timerChan    :: Chan ()
     , logicEndMVar :: MVar ()
     , hRenderer    :: Sdl.Renderer
     , audioAssets  :: M.Map String Mix.Chunk
@@ -44,6 +65,8 @@ runApp :: App -> IO ()
 runApp app = runInBoundThread $ do
     -- We're going to need SDL
     Sdl.initializeAll
+    Img.initialize [Img.InitPNG]
+    void Ttf.init
     Mix.openAudio (Mix.Audio 48000 Mix.FormatS16_LSB Mix.Mono) 1024 -- 44100 Hz
 
     -- Workaround the fake and real fullscreen modes not playing nice with Alt-tab
@@ -70,21 +93,23 @@ runApp app = runInBoundThread $ do
                          & M.insert "bell" bell
     -}
     
+    defaultGameState <- GameState <$> newIORef (ObjectPlayer (0,0) (0,0) Nothing False (cycle [1,3,2,3]))
+    tileset          <- Img.loadTexture renderer "assets/tileset.png"
+    font             <- Ttf.openFont "assets/terminus.ttf" 16
+
     -- Thread communication
     exchange@(Exchange {..}) <- Exchange
         <$> newChan       -- Event channel (SDL events to be processed by the logic thread)
         <*> newEmptySV    -- Game state sampling variable (contains a snapshot of the game state to render)
         <*> newChan       -- Mixer channel (how we request things to be played)
-        <*> newChan       -- Timer channel (how we request things to happen in the future)
         <*> newEmptyMVar  -- Logic thread end signal
         <*> pure renderer -- Renderer
         <*> pure M.empty  -- Audio assets
     
     -- Threads
-    logicThreadId   <- forkOS (logicThread exchange)
-    renderThreadId  <- forkOS (renderThread exchange)
+    logicThreadId   <- forkOS (logicThread exchange defaultGameState)
+    renderThreadId  <- forkOS (renderThread exchange tileset font)
     networkThreadId <- forkOS (networkThread exchange)
-    timerThreadId   <- forkOS (timerThread exchange)
     mixerThreadId   <- forkOS (mixerThread exchange)
 
     -- Main thread with event collecting
@@ -100,38 +125,99 @@ runApp app = runInBoundThread $ do
     killThread logicThreadId
     killThread renderThreadId
     killThread networkThreadId
-    killThread timerThreadId
     killThread mixerThreadId
 
     -- Cleanup
     -- Mix.free bell
+    Sdl.destroyTexture tileset
+    Ttf.closeFont font
+    Ttf.quit
     Mix.closeAudio
     Sdl.quit
 
-logicThread :: Exchange -> IO ()
-logicThread (Exchange {..}) = forever $ do
-    event <- readChan eventChan
+logicThread :: Exchange -> GameState -> IO ()
+logicThread exchange@(Exchange {..}) gameState = do
+    newGameState <- execStateT (unwrapGame $ gameLogic exchange) gameState
+    writeSV gameStateSV newGameState
+    logicThread exchange newGameState
+
+gameLogic :: Exchange -> Game ()
+gameLogic (Exchange {..}) = do
+    gameState <- get
+    playerRef <- gets gamePlayer
+    event <- liftIO (readChan eventChan)
     case event of
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> pushQuitEvent
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Released False (Sdl.Keysym Sdl.ScancodeD _ _)) -> do
+            liftIO $ putStrLn "Moving direction = Nothing"
+            liftIO $ atomicModifyIORef' playerRef $ \p -> (p { playerMovingDirection = Nothing }, ())
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeD _ _)) -> do
+            liftIO $ putStrLn "Moving direction = Just East"
+            liftIO $ atomicModifyIORef' playerRef $ \p -> (p { playerMovingDirection = Just East }, ())
+            -- -----------------------------------------------------------
+            player <- liftIO $ readIORef playerRef
+            if playerMoving player
+            then return ()
+            else do
+                liftIO $ putStrLn "Starting movement thread"
+                liftIO $ void $ Sdl.addTimer 0 $ \_ -> do
+                    reschedule <- atomicModifyIORef' playerRef $ \p ->
+                        let (offsetX, offsetY) = playerOffsetPosition p in
+                        let (x, y) = playerPosition p in
+                        let direction =  playerMovingDirection p in
+
+                        if offsetX /= 0 || offsetY /= 0 || direction == Just East
+                        then (p { playerOffsetPosition = (if offsetX == 0 then -32 + 8 else offsetX + 8, offsetY)
+                                , playerPosition       = (if offsetX == 0 then x + 1 else x, y)
+                                , playerMoving         = True
+                                }, Sdl.Reschedule 50)
+                        else (p { playerMoving = False } , Sdl.Cancel)
+                    writeSV gameStateSV gameState
+                    return reschedule
+            liftIO $ writeSV gameStateSV gameState
+            -- -----------------------------------------------------------
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> liftIO pushQuitEvent
         -- Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
         --     writeChan mixerChan "bell"
-        Sdl.QuitEvent -> putMVar logicEndMVar ()
+        Sdl.QuitEvent -> liftIO $ putMVar logicEndMVar ()
         _ -> do
-            putStrLn $ takeWhile (/=' ') (show event)
+            return ()
+            -- liftIO $ putStrLn $ takeWhile (/=' ') (show event)
 
-renderThread :: Exchange -> IO ()
-renderThread (Exchange {..}) = forever $ do
+
+renderThread :: Exchange -> Sdl.Texture -> Ttf.TTFFont  -> IO ()
+renderThread (Exchange {..}) texture font = forever $ do
+    -- Wait for the game state to change
+    gameState <- readSV gameStateSV
+
+    -- Clear the screen
     Sdl.rendererDrawColor hRenderer Sdl.$= Sdl.V4 0 0 0 255
     Sdl.clear hRenderer
+
+    -- Figure out where our lovely test astronaut should go
+    player <- readIORef (gamePlayer gameState)
+    let (x, y) = playerPosition player
+    let (offsetX, offsetY) = playerOffsetPosition player
+    let src = case offsetX of t
+                                | t < -32   -> Sdl.V2 1 3
+                                | t < -24   -> Sdl.V2 3 3
+                                | t < -16   -> Sdl.V2 2 3
+                                | t < -8    -> Sdl.V2 3 3
+                                | otherwise -> Sdl.V2 1 3
+
+    let dst = Sdl.V2 (fromIntegral x) (fromIntegral y)
+    let offsetDst = Sdl.V2 (fromIntegral offsetX) (fromIntegral offsetY)
+
+    -- Draw our lovely test astronaut
+    let tileSize = Sdl.V2 32 32
+    Sdl.copy hRenderer texture
+        (Just $ Sdl.Rectangle (Sdl.P $ tileSize * src) tileSize) -- source
+        (Just $ Sdl.Rectangle (Sdl.P $ tileSize * dst + offsetDst) tileSize) -- destination
+    
+    -- Present the result
     Sdl.present hRenderer
-    threadDelay 1000000
 
 networkThread :: Exchange -> IO ()
 networkThread _ = forever $ do
-    threadDelay 1000000
-
-timerThread :: Exchange -> IO ()
-timerThread _ = forever $ do
     threadDelay 1000000
 
 mixerThread :: Exchange -> IO ()

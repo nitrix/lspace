@@ -29,7 +29,7 @@ instance Store ViaMemory where
                 case fromDynamic found of
                     Just value -> return value
                     Nothing    -> error "The value in memory has the wrong representation for the relation requested"
-            Nothing    -> error "The relation requested was not found in memory"
+            Nothing -> error "The relation requested was not found in memory"
     storeWrite relationId value = do
         modify memoryMapping (M.insert relationId (toDyn value))
 
