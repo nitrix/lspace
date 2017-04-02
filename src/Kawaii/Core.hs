@@ -34,13 +34,13 @@ data App = App
 
 -- This is meant to be used preferably with the RecordWildCards extension
 data Exchange = Exchange
-    { eventChan   :: Chan Sdl.EventPayload
-    , appStateSV  :: MSampleVar GameState
-    , mixerChan   :: Chan String
-    , timerChan   :: Chan ()
-    , logicEnd    :: MVar ()
-    , hRenderer   :: Sdl.Renderer
-    , audioAssets :: M.Map String Mix.Chunk
+    { eventChan    :: Chan Sdl.EventPayload
+    , appStateSV   :: MSampleVar GameState
+    , mixerChan    :: Chan String
+    , timerChan    :: Chan ()
+    , logicEndMVar :: MVar ()
+    , hRenderer    :: Sdl.Renderer
+    , audioAssets  :: M.Map String Mix.Chunk
     }
 
 runApp :: App -> IO ()
@@ -97,7 +97,7 @@ runApp app = runInBoundThread $ do
         return event
     
     -- Waiting for some important threads to finish
-    readMVar logicEnd
+    readMVar logicEndMVar
     
     -- Killing all the threads
     killThread logicThreadId
@@ -118,7 +118,7 @@ logicThread (Exchange {..}) = forever $ do
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> pushQuitEvent
         -- Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
         --     writeChan mixerChan "bell"
-        Sdl.QuitEvent -> putMVar logicEnd ()
+        Sdl.QuitEvent -> putMVar logicEndMVar ()
         _ -> do
             putStrLn $ takeWhile (/=' ') (show event)
 
