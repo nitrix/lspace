@@ -1,6 +1,7 @@
 -- Could be needed to interrupt a thread stuck on a foreign call
 -- https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/ffi-chap.html#interruptible-foreign-calls
 -- Might be in a critical section and leave C in some corrupted state.
+{-# LANGUAGE RecordWildCards #-}
 
 module Kawaii.Core
     ( App(..)
@@ -11,26 +12,35 @@ module Kawaii.Core
 import Control.Concurrent
 import Control.Concurrent.MSampleVar
 import Control.Exception
+import Control.Monad.Loops
 import Control.Monad.State
-import Data.Function
 import qualified Data.Text as T
 import qualified Data.Map as M
 import Foreign.Storable
 import Foreign.Marshal.Alloc
--- import Control.Monad.Trans
 import qualified SDL as Sdl
 import qualified SDL.Mixer as Mix
 import qualified SDL.Raw.Event as Raw
 import qualified SDL.Raw.Types as Raw
 
-type Event = Sdl.EventPayload -- TODO: temporary
 -- newtype Game a = Game (StateT GameState IO a)
-data AppState = AppState
+data GameState -- = AppState
 
 data Mode = Fullscreen | Windowed Int Int
 data App = App
     { appTitle  :: String
     , appMode   :: Mode
+    }
+
+-- This is meant to be used preferably with the RecordWildCards extension
+data Exchange = Exchange
+    { eventChan   :: Chan Sdl.EventPayload
+    , appStateSV  :: MSampleVar GameState
+    , mixerChan   :: Chan String
+    , timerChan   :: Chan ()
+    , logicEnd    :: MVar ()
+    , hRenderer   :: Sdl.Renderer
+    , audioAssets :: M.Map String Mix.Chunk
     }
 
 runApp :: App -> IO ()
@@ -56,32 +66,40 @@ runApp app = runInBoundThread $ do
     Sdl.showWindow window
     -- Mix.setChannels 8
 
-    -- Load music assets
+    -- TODO: Load music assets by wav extension and store them in map where the key is the filename
+    {-
     bell <- Mix.load "bell.wav"
     let audioChunkAssets = M.empty
                          & M.insert "bell" bell
-
+    -}
+    
     -- Thread communication
-    eventChan   <- newChan
-    gameStateSV <- newEmptySV
-    mixerChan   <- newChan
-
+    exchange@(Exchange {..}) <- Exchange
+        <$> newChan       -- Event channel (SDL events to be processed by the logic thread)
+        <*> newEmptySV    -- Game state sampling variable (contains a snapshot of the game state to render)
+        <*> newChan       -- Mixer channel (how we request things to be played)
+        <*> newChan       -- Timer channel (how we request things to happen in the future)
+        <*> newEmptyMVar  -- Logic thread end signal
+        <*> pure renderer -- Renderer
+        <*> pure M.empty  -- Audio assets
+    
     -- Threads
-    logicThreadId   <- forkOS (logicThread eventChan mixerChan gameStateSV)
-    renderThreadId  <- forkOS (renderThread renderer gameStateSV)
-    networkThreadId <- forkOS (networkThread eventChan)
-    timerThreadId   <- forkOS (timerThread eventChan)
-    mixerThreadId   <- forkOS (mixerThread mixerChan audioChunkAssets)
+    logicThreadId   <- forkOS (logicThread exchange)
+    renderThreadId  <- forkOS (renderThread exchange)
+    networkThreadId <- forkOS (networkThread exchange)
+    timerThreadId   <- forkOS (timerThread exchange)
+    mixerThreadId   <- forkOS (mixerThread exchange)
 
-    -- Event handling
-    fix $ \loop -> do
+    -- Main thread with event collecting
+    void $ iterateWhile (/= Sdl.QuitEvent) $ do
         event <- Sdl.eventPayload <$> Sdl.waitEvent
         writeChan eventChan event
-        unless (event == Sdl.QuitEvent) loop
-
-    -- TODO: This is disgusting cleanup. It doesn't give time for the logicThreadId to save
-    -- or networkThreadId to close the network connection properly.
-    -- We should be coordinating with them and waiting for their termination.
+        return event
+    
+    -- Waiting for some important threads to finish
+    readMVar logicEnd
+    
+    -- Killing all the threads
     killThread logicThreadId
     killThread renderThreadId
     killThread networkThreadId
@@ -89,54 +107,53 @@ runApp app = runInBoundThread $ do
     killThread mixerThreadId
 
     -- Cleanup
-    Mix.free bell
+    -- Mix.free bell
     Mix.closeAudio
     Sdl.quit
 
-logicThread :: Chan Event -> Chan String -> MSampleVar AppState -> IO ()
-logicThread eventChan mixerChan _ = fix $ \loop -> do
+logicThread :: Exchange -> IO ()
+logicThread (Exchange {..}) = forever $ do
     event <- readChan eventChan
     case event of
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> pushQuitEvent
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
-            writeChan mixerChan "bell"
-            loop
-        Sdl.QuitEvent -> return ()
+        -- Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
+        --     writeChan mixerChan "bell"
+        Sdl.QuitEvent -> putMVar logicEnd ()
         _ -> do
             putStrLn $ takeWhile (/=' ') (show event)
-            loop
 
-renderThread :: Sdl.Renderer -> MSampleVar AppState -> IO ()
-renderThread renderer _ = forever $ do
-    Sdl.rendererDrawColor renderer Sdl.$= Sdl.V4 0 0 0 255
-    Sdl.clear renderer
-    Sdl.present renderer
+renderThread :: Exchange -> IO ()
+renderThread (Exchange {..}) = forever $ do
+    Sdl.rendererDrawColor hRenderer Sdl.$= Sdl.V4 0 0 0 255
+    Sdl.clear hRenderer
+    Sdl.present hRenderer
     threadDelay 1000000
 
-networkThread :: Chan Event -> IO ()
+networkThread :: Exchange -> IO ()
 networkThread _ = forever $ do
     threadDelay 1000000
 
-timerThread :: Chan Event -> IO ()
+timerThread :: Exchange -> IO ()
 timerThread _ = forever $ do
     threadDelay 1000000
 
-mixerThread :: Chan String -> M.Map String Mix.Chunk -> IO ()
-mixerThread mixerChan chunks = forever $ do
+mixerThread :: Exchange -> IO ()
+mixerThread (Exchange {..}) = forever $ do
     key <- readChan mixerChan
-    case M.lookup key chunks of
+    case M.lookup key audioAssets of
         Just chunk -> do
+            -- SDL yields an exception if we try to play more sounds simultanously than we have channels available.
+            -- We ignore the incident when it happens. This will result in some sounds not playing in rare noisy situations.
             void $ tryJust (\e -> case e of Sdl.SDLCallFailed _ _ _ -> Just undefined; _ -> Nothing) (Mix.play chunk)
             -- Mix.playMusic {-Mix.Once-} music
-        Nothing    -> return ()
-
--- Thread-safe, will keep retrying on failures if the event queue is full.
--- SDL documents that the event is copied into their queue and we can dispose of our pointer immediately after.
+        Nothing -> return ()
+    
+-- Thread-safe. Also, we keep retrying on failures (every 250ms) if the event queue is full.
+-- SDL documents that the event is copied into their queue and that we can immediately dispose of our pointer after our function call.
 pushQuitEvent :: IO ()
 pushQuitEvent = alloca $ \ptr -> do
     poke ptr (Raw.QuitEvent 256 0)
-    fix $ \loop -> do
+    void $ iterateWhile (< 0) $ do
         code <- Raw.pushEvent ptr
-        when (code < 0) $ do
-            threadDelay 250000
-            loop
+        threadDelay 250000
+        return code
