@@ -34,7 +34,7 @@ gameHandleEvent event = do
 
 -- This lets us lift IO operation into our Game monad,
 -- yet not derive MonadIO which would give too much power to the users of this Game module/type.
-gameLiftIO :: IO () -> Game ()
+gameLiftIO :: IO a -> Game a
 gameLiftIO = Game . liftIO
 
 {-

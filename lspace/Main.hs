@@ -1,5 +1,7 @@
 module Main where
 
+import Debug.Trace
+
 {-
 import Kawaii
 
@@ -28,9 +30,10 @@ menuRender :: Engine ()
 menuRender = return ()
 -}
 
-import Kawaii
--- import Relational
+-- import Kawaii
+import Relational
 
+{-
 main :: IO ()
 main = runApp $ App
     { appTitle = "Lonesome Space"
@@ -40,10 +43,11 @@ main = runApp $ App
 
 uiMainMenu :: Ui
 uiMainMenu = const $ return Success 
+-}
 
-{-
 main :: IO ()
-main = runRelational "test" $ do
+main = runRelational viaMemory $ do
     foo <- newRelation (42 :: Int)
     writeRelation foo 69
--}
+    result <- readRelation foo
+    traceShow result $ return ()

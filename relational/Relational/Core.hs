@@ -1,25 +1,51 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Relational.Core
-    ( createRelation
+    ( newRelation
     , readRelation
     , writeRelation
+    , runRelational
     ) where
 
 import Control.Monad.State
 import Data.Dynamic
-import Data.IORef
-import System.Mem.Weak
 
 import Relational.Store
 
 type RelationId = Integer
-data Relation a = Relation (RelationId, IORef (Maybe (Weak (IORef a))))
-newtype Relational s a = Relational { unwrapRelational :: StateT s IO a }
+data Relation a = Relation RelationId
+newtype Relational s a = Relational { unwrapRelational :: StateT s IO a } deriving (Functor, Applicative, Monad, MonadState s)
+-- TODO: Going to need a special type in there instead of `s` that contains the autoincrement and the cache
+-- Maybe a new monad transformer? I don't know.
 
-createRelation :: (Store s, Typeable a) => a -> Relational s (Relation a)
-createRelation = undefined
+runRelational :: s -> Relational s () -> IO ()
+runRelational store relational = evalStateT (unwrapRelational relational) store
+
+newRelation :: (Store s, Typeable a) => a -> Relational s (Relation a)
+newRelation _ = do
+    -- TODO: Crap this is going to change the `s` in the `Relational s a` for a custom type that has the autoincrement.
+    return (Relation 100)
 
 readRelation :: (Store s, Typeable a) => Relation a -> Relational s a
-readRelation = undefined
+readRelation (Relation relationId) = do
+    -- TODO: Caching
+    
+    -- Otherwise, we read from the store
+    -- TODO: Add to cache
+    store <- get
+    (result, newStore) <- relationLiftIO $ runStateT (storeRead relationId) store
+    put newStore
+    return result
 
 writeRelation :: (Store s, Typeable a) => Relation a -> a -> Relational s ()
-writeRelation = undefined
+writeRelation (Relation relationId) val = do
+    -- TODO: Update cache
+    
+    -- TODO: Remove this, we don't need to write to disk on each write. I'm just testing.
+    store <- get
+    (result, newStore) <- relationLiftIO $ runStateT (storeWrite relationId val) store
+    put newStore
+    return result
+
+relationLiftIO :: IO a -> Relational s a
+relationLiftIO = Relational . liftIO
