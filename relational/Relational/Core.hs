@@ -15,7 +15,7 @@ import Relational.Store
 type RelationId = Integer
 data Relation a = Relation RelationId
 newtype Relational s a = Relational { unwrapRelational :: StateT s IO a } deriving (Functor, Applicative, Monad, MonadState s)
--- TODO: Going to need a special type in there instead of `s` that contains the autoincrement and the cache
+-- TODO: Going to need a special type in there instead of `s` that contains the autoincrement and the cache (using hashtables linear?)
 -- Maybe a new monad transformer? I don't know.
 
 runRelational :: s -> Relational s () -> IO ()
