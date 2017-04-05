@@ -2,16 +2,40 @@
 
 module Kawaii.Game where
 
-import Data.IORef
 import Control.Monad.State
+import qualified SDL as Sdl
+
+import Kawaii.FFI
 
 newtype Game a = Game { unwrapGame :: StateT GameState IO a }
-    deriving (Functor, Applicative, Monad, MonadState GameState, MonadIO)
+    deriving (Functor, Applicative, Monad, MonadState GameState)
 
 data GameState = GameState
 
 defaultGameState :: GameState
 defaultGameState = GameState
+
+gameHandleEvent :: Sdl.EventPayload -> Game ()
+gameHandleEvent event = do
+    gameLiftIO $ print event
+    case event of
+        -- --------------------------- Testing movement --------------------------------
+        {-
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Released False (Sdl.Keysym _ _ _)) -> stopPlayer
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeW _ _)) -> movePlayer exchange North
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeA _ _)) -> movePlayer exchange West
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeS _ _)) -> movePlayer exchange South
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeD _ _)) -> movePlayer exchange East
+        -}
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> gameLiftIO pushQuitEvent
+        -- Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
+        --     writeChan mixerChan "bell"
+        _ -> return ()
+
+-- This lets us lift IO operation into our Game monad,
+-- yet not derive MonadIO which would give too much power to the users of this Game module/type.
+gameLiftIO :: IO () -> Game ()
+gameLiftIO = Game . liftIO
 
 {-
 stopPlayer :: Game ()

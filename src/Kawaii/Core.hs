@@ -10,16 +10,12 @@ import Control.Concurrent.MSampleVar
 import Control.Monad.Loops
 import Control.Monad.State
 import Data.IORef
-import Foreign.Storable
-import Foreign.Marshal.Alloc
 
 import qualified Data.Text     as T
 import qualified Data.Map      as M
 import qualified SDL           as Sdl
 import qualified SDL.Image     as Img
 import qualified SDL.Mixer     as Mix
-import qualified SDL.Raw.Event as Raw
-import qualified SDL.Raw.Types as Raw
 import qualified SDL.TTF       as Ttf
 
 import Kawaii.Assets
@@ -35,7 +31,6 @@ data App = App
     { appTitle  :: String
     , appMode   :: Mode
     , appUis    :: [Ui]
-    -- TODO , appAssets
     }
 
 runApp :: App -> IO ()
@@ -46,9 +41,10 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     void Ttf.init
     Mix.openAudio (Mix.Audio 48000 Mix.FormatS16_LSB Mix.Mono) 1024 -- 44100 Hz
 
-    -- Workaround the fake and real fullscreen modes not playing nice with Alt-tab
+    -- Creating the game window
     desktopSize <- Sdl.displayBoundsSize . head <$> Sdl.getDisplays
     let windowConfig = case appMode app of
+                        -- We workaround that neither the `fake` or `real` fullscreen modes play nice with Alt-tab
                         -- Fullscreen   -> Sdl.defaultWindow { Sdl.windowMode = Sdl.FullscreenDesktop }
                            Fullscreen   -> Sdl.defaultWindow { Sdl.windowMode = Sdl.Windowed, Sdl.windowInitialSize = desktopSize, Sdl.windowBorder = False }
                            Windowed w h -> Sdl.defaultWindow { Sdl.windowInitialSize = Sdl.V2 (fromIntegral w) (fromIntegral h) }
@@ -101,27 +97,15 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
 
 logicThread :: Chan Sdl.EventPayload -> GameState -> MSampleVar GameState -> MVar () -> IO ()
 logicThread eventChan gameState gameStateSV logicEndMVar = do
-    newGameState <- execStateT (unwrapGame $ gameLogic eventChan logicEndMVar) gameState
-    writeSV gameStateSV newGameState
-    logicThread eventChan gameState gameStateSV logicEndMVar
-
-gameLogic :: Chan Sdl.EventPayload -> MVar () -> Game ()
-gameLogic eventChan logicEndMVar = do
     event <- liftIO (readChan eventChan)
-    case event of
-        -- --------------------------- Testing movement --------------------------------
-        {-
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Released False (Sdl.Keysym _ _ _)) -> stopPlayer
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeW _ _)) -> movePlayer exchange North
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeA _ _)) -> movePlayer exchange West
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeS _ _)) -> movePlayer exchange South
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeD _ _)) -> movePlayer exchange East
-        -}
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> liftIO pushQuitEvent
-        -- Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
-        --     writeChan mixerChan "bell"
-        Sdl.QuitEvent -> liftIO $ putMVar logicEndMVar ()
-        _ -> return ()
+    if (event == Sdl.QuitEvent)
+    then do
+        -- TODO: Save game state
+        liftIO $ putMVar logicEndMVar ()
+    else do
+        newGameState <- execStateT (unwrapGame $ gameHandleEvent event) gameState
+        writeSV gameStateSV newGameState
+        logicThread eventChan gameState gameStateSV logicEndMVar
 
 renderThread :: MSampleVar GameState -> Sdl.Renderer -> Assets -> IO ()
 renderThread gameStateSV renderer assets = forever $ do
@@ -134,13 +118,3 @@ renderThread gameStateSV renderer assets = forever $ do
 networkThread :: IO ()
 networkThread = forever $ do
     threadDelay 1000000
-    
--- Thread-safe. Also, we keep retrying on failures (every 250ms) if the event queue is full.
--- SDL documents that the event is copied into their queue and that we can immediately dispose of our pointer after our function call.
-pushQuitEvent :: IO ()
-pushQuitEvent = alloca $ \ptr -> do
-    poke ptr (Raw.QuitEvent 256 0)
-    void $ iterateWhile (< 0) $ do
-        code <- Raw.pushEvent ptr
-        threadDelay 250000
-        return code
