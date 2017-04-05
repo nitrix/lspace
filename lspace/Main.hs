@@ -29,7 +29,7 @@ menuRender = return ()
 -}
 
 import Kawaii
-import Relational
+-- import Relational
 
 main :: IO ()
 main = runApp $ App

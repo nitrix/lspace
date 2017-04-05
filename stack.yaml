@@ -1,7 +1,8 @@
 flags: {}
 packages:
-- '.'
-# - kawaii
+- lspace
+- kawaii
+- relational
 extra-deps:
 - sdl2-ttf-1.0.0
 - sdl2-image-2.0.0

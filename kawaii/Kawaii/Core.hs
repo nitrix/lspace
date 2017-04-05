@@ -9,10 +9,8 @@ import Control.Concurrent
 import Control.Concurrent.MSampleVar
 import Control.Monad.Loops
 import Control.Monad.State
-import Data.IORef
 
 import qualified Data.Text     as T
-import qualified Data.Map      as M
 import qualified SDL           as Sdl
 import qualified SDL.Image     as Img
 import qualified SDL.Mixer     as Mix
