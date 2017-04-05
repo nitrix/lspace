@@ -1,6 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 module Kawaii.Core
     ( App(..)
     , Mode(..)
@@ -10,7 +7,6 @@ module Kawaii.Core
 
 import Control.Concurrent
 import Control.Concurrent.MSampleVar
-import Control.Exception
 import Control.Monad.Loops
 import Control.Monad.State
 import Data.IORef
@@ -25,45 +21,25 @@ import qualified SDL.Mixer     as Mix
 import qualified SDL.Raw.Event as Raw
 import qualified SDL.Raw.Types as Raw
 import qualified SDL.TTF       as Ttf
-import qualified SDL.TTF.FFI   as Ttf (TTFFont)
 
+import Kawaii.Assets
+import Kawaii.Game
+import Kawaii.Mixer
+import Kawaii.Renderer
 import Kawaii.Ui
 
 data Direction = North | South | East | West deriving (Eq, Show)
-
-data ObjectPlayer = ObjectPlayer
-    { playerPosition        :: (Integer, Integer)
-    , playerOffsetPosition  :: (Int, Int)
-    , playerMovingDirection :: Maybe Direction
-    , playerMoving          :: Bool
-    , playerAnimating       :: Bool
-    , playerAnimation       :: ([Int], Int)
-    } deriving (Show)
-
-newtype Game a = Game { unwrapGame :: StateT GameState IO a} deriving (Functor, Applicative, Monad, MonadState GameState, MonadIO)
-data GameState = GameState
-    { gamePlayer :: IORef ObjectPlayer
-    }
 
 data Mode = Fullscreen | Windowed Int Int
 data App = App
     { appTitle  :: String
     , appMode   :: Mode
     , appUis    :: [Ui]
-    }
-
--- This is meant to be used preferably with the RecordWildCards extension
-data Exchange = Exchange
-    { eventChan    :: Chan Sdl.EventPayload
-    , gameStateSV  :: MSampleVar GameState
-    , mixerChan    :: Chan String
-    , logicEndMVar :: MVar ()
-    , hRenderer    :: Sdl.Renderer
-    , audioAssets  :: M.Map String Mix.Chunk
+    -- TODO , appAssets
     }
 
 runApp :: App -> IO ()
-runApp app = runInBoundThread $ do
+runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn't bound
     -- We're going to need SDL
     Sdl.initializeAll
     Img.initialize [Img.InitPNG]
@@ -87,31 +63,18 @@ runApp app = runInBoundThread $ do
     Sdl.showWindow window
     -- Mix.setChannels 8
 
-    -- TODO: Load music assets by wav extension and store them in map where the key is the filename
-    {-
-    bell <- Mix.load "bell.wav"
-    let audioChunkAssets = M.empty
-                         & M.insert "bell" bell
-    -}
-    
-    defaultGameState <- GameState <$> newIORef (ObjectPlayer (0,0) (0,0) Nothing False False (cycle [1,3,2,3], 1))
-    tileset          <- Img.loadTexture renderer "assets/tileset.png"
-    font             <- Ttf.openFont "assets/terminus.ttf" 16
+    -- Load assets
+    assets <- loadAssets renderer
 
     -- Thread communication
-    exchange@(Exchange {..}) <- Exchange
-        <$> newChan       -- Event channel (SDL events to be processed by the logic thread)
-        <*> newEmptySV    -- Game state sampling variable (contains a snapshot of the game state to render)
-        <*> newChan       -- Mixer channel (how we request things to be played)
-        <*> newEmptyMVar  -- Logic thread end signal
-        <*> pure renderer -- Renderer
-        <*> pure M.empty  -- Audio assets
+    eventChan    <- newChan      -- Event channel (SDL events to be processed by the logic thread)
+    gameStateSV  <- newEmptySV   -- Game state sampling variable (contains a snapshot of the game state to render)
+    logicEndMVar <- newEmptyMVar -- Logic thread end signal
     
     -- Threads
-    logicThreadId   <- forkOS (logicThread exchange defaultGameState)
-    renderThreadId  <- forkOS (renderThread exchange tileset font)
-    networkThreadId <- forkOS (networkThread exchange)
-    mixerThreadId   <- forkOS (mixerThread exchange)
+    logicThreadId   <- forkOS (logicThread eventChan defaultGameState gameStateSV logicEndMVar)
+    renderThreadId  <- forkOS (renderThread gameStateSV renderer assets)
+    networkThreadId <- forkOS (networkThread)
 
     -- Main thread with event collecting
     void $ iterateWhile (/= Sdl.QuitEvent) $ do
@@ -126,125 +89,51 @@ runApp app = runInBoundThread $ do
     killThread logicThreadId
     killThread renderThreadId
     killThread networkThreadId
-    killThread mixerThreadId
+
+    -- Cleanup assets
+    mixerHalt
+    unloadAssets assets
 
     -- Cleanup
-    -- Mix.free bell
-    Sdl.destroyTexture tileset
-    Ttf.closeFont font
-    Ttf.quit
     Mix.closeAudio
+    Ttf.quit
     Sdl.quit
 
-logicThread :: Exchange -> GameState -> IO ()
-logicThread exchange@(Exchange {..}) gameState = do
-    newGameState <- execStateT (unwrapGame $ gameLogic exchange) gameState
+logicThread :: Chan Sdl.EventPayload -> GameState -> MSampleVar GameState -> MVar () -> IO ()
+logicThread eventChan gameState gameStateSV logicEndMVar = do
+    newGameState <- execStateT (unwrapGame $ gameLogic eventChan logicEndMVar) gameState
     writeSV gameStateSV newGameState
-    logicThread exchange newGameState
+    logicThread eventChan gameState gameStateSV logicEndMVar
 
-gameLogic :: Exchange -> Game ()
-gameLogic (Exchange {..}) = do
-    gameState <- get
-    playerRef <- gets gamePlayer
+gameLogic :: Chan Sdl.EventPayload -> MVar () -> Game ()
+gameLogic eventChan logicEndMVar = do
     event <- liftIO (readChan eventChan)
     case event of
         -- --------------------------- Testing movement --------------------------------
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Released False (Sdl.Keysym Sdl.ScancodeD _ _)) -> do
-            liftIO $ atomicModifyIORef' playerRef $ \p -> (p { playerMovingDirection = Nothing }, ())
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeD _ _)) -> do
-            liftIO $ atomicModifyIORef' playerRef $ \p -> (p { playerMovingDirection = Just East }, ())
-            player <- liftIO $ readIORef playerRef
-            if playerMoving player
-            then return ()
-            else do
-                liftIO $ atomicModifyIORef' playerRef $ \p -> (p { playerMoving = True }, ())
-                maybeAnimationTimer <- do
-                    if not (playerAnimating player)
-                    then do
-                        timer <- liftIO $ Sdl.addTimer 0 $ \_ -> do
-                            atomicModifyIORef' playerRef $ \p -> (if playerMoving p || playerMovingDirection p /= Nothing then p { playerAnimation = let (frames, beginning) = playerAnimation p in (drop 1 frames, beginning)} else p, ())
-                            writeSV gameStateSV gameState
-                            player <- readIORef playerRef
-                            if playerMoving player || playerMovingDirection player /= Nothing
-                            then return (Sdl.Reschedule 75)
-                            else return (Sdl.Cancel)
-                        return (Just timer)
-                    else return Nothing
-                liftIO $ void $ Sdl.addTimer 0 $ \_ -> do
-                    reschedule <- atomicModifyIORef' playerRef $ \p ->
-                        let (offsetX, offsetY) = playerOffsetPosition p in
-                        let (x, y) = playerPosition p in
-                        let direction = playerMovingDirection p in
-
-                        if offsetX /= 0 || offsetY /= 0 || direction == Just East
-                        then (p { playerOffsetPosition = (if offsetX == 0 then -32 + 8 else offsetX + 8, offsetY)
-                                , playerPosition       = (if offsetX == 0 then x + 1 else x, y)
-                                , playerMoving         = True
-                                , playerAnimating      = True
-                                }, Sdl.Reschedule 25)
-                        else (p { playerMoving = False, playerAnimating = False, playerAnimation = let (frames, beginning) = playerAnimation p in (dropWhile (/= beginning) frames, beginning) } , Sdl.Cancel)
-                    writeSV gameStateSV gameState
-                    {-
-                    when (reschedule == Sdl.Cancel) $ do
-                        case maybeAnimationTimer of 
-                            Just animationTimer -> do
-                                liftIO $ putStrLn "Killing previous animation thread"
-                                liftIO $ void $ Sdl.removeTimer animationTimer
-                            Nothing -> return ()
-                    -}
-                    return reschedule
-            liftIO $ writeSV gameStateSV gameState
-            -- --------------------------- End of testing movement --------------------------------
+        {-
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Released False (Sdl.Keysym _ _ _)) -> stopPlayer
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeW _ _)) -> movePlayer exchange North
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeA _ _)) -> movePlayer exchange West
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeS _ _)) -> movePlayer exchange South
+        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeD _ _)) -> movePlayer exchange East
+        -}
         Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> liftIO pushQuitEvent
         -- Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
         --     writeChan mixerChan "bell"
         Sdl.QuitEvent -> liftIO $ putMVar logicEndMVar ()
-        _ -> do
-            return ()
-            -- liftIO $ putStrLn $ takeWhile (/=' ') (show event)
+        _ -> return ()
 
-
-renderThread :: Exchange -> Sdl.Texture -> Ttf.TTFFont  -> IO ()
-renderThread (Exchange {..}) texture font = forever $ do
+renderThread :: MSampleVar GameState -> Sdl.Renderer -> Assets -> IO ()
+renderThread gameStateSV renderer assets = forever $ do
     -- Wait for the game state to change
     gameState <- readSV gameStateSV
 
-    -- Clear the screen
-    Sdl.rendererDrawColor hRenderer Sdl.$= Sdl.V4 0 0 0 255
-    Sdl.clear hRenderer
+    -- Render that game state
+    renderGame renderer assets gameState
 
-    -- Figure out where our lovely test astronaut should go
-    player <- readIORef (gamePlayer gameState)
-    let (x, y) = playerPosition player
-    let (offsetX, offsetY) = playerOffsetPosition player
-    -- Testing animation
-    let src = Sdl.V2 (fromIntegral $ head $ fst $ playerAnimation player) 3
-    let dst = Sdl.V2 (fromIntegral x) (fromIntegral y)
-    let offsetDst = Sdl.V2 (fromIntegral offsetX) (fromIntegral offsetY)
-
-    -- Draw our lovely test astronaut
-    let tileSize = Sdl.V2 32 32
-    Sdl.copy hRenderer texture
-        (Just $ Sdl.Rectangle (Sdl.P $ tileSize * src) tileSize) -- source
-        (Just $ Sdl.Rectangle (Sdl.P $ tileSize * dst + offsetDst) tileSize) -- destination
-    
-    -- Present the result
-    Sdl.present hRenderer
-
-networkThread :: Exchange -> IO ()
-networkThread _ = forever $ do
+networkThread :: IO ()
+networkThread = forever $ do
     threadDelay 1000000
-
-mixerThread :: Exchange -> IO ()
-mixerThread (Exchange {..}) = forever $ do
-    key <- readChan mixerChan
-    case M.lookup key audioAssets of
-        Just chunk -> do
-            -- SDL yields an exception if we try to play more sounds simultanously than we have channels available.
-            -- We ignore the incident when it happens. This will result in some sounds not playing in rare noisy situations.
-            void $ tryJust (\e -> case e of Sdl.SDLCallFailed _ _ _ -> Just undefined; _ -> Nothing) (Mix.play chunk)
-            -- Mix.playMusic {-Mix.Once-} music
-        Nothing -> return ()
     
 -- Thread-safe. Also, we keep retrying on failures (every 250ms) if the event queue is full.
 -- SDL documents that the event is copied into their queue and that we can immediately dispose of our pointer after our function call.
