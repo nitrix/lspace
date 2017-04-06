@@ -1,17 +1,6 @@
 module Main where
 
-import Debug.Trace
-
 {-
-import Kawaii
-
-main :: IO ()
-main = runApp $ App
-    { appTitle  = "Lonesome Space"
-    , appMode   = Windowed 800 600 -- Fullscreen
-    , appScenes = [menu]
-    }
-
 menu :: Scene
 menu = Scene
     { sceneUpdate = const (return Success)
@@ -30,20 +19,24 @@ menuRender :: Engine ()
 menuRender = return ()
 -}
 
--- import Kawaii
-import Relational
+import Kawaii
 
-{-
 main :: IO ()
 main = runApp $ App
     { appTitle = "Lonesome Space"
     , appMode  = Windowed 1024 768
-    , appUis   = [uiMainMenu]
+    , appUis   = [uiMainMenu, uiGame]
     }
 
 uiMainMenu :: Ui
-uiMainMenu = const $ return Success 
--}
+uiMainMenu = const $ return Skip
+
+uiGame :: Ui
+uiGame = const $ return Success
+
+{-
+import Relational
+import Debug.Trace
 
 main :: IO ()
 main = runRelational (viaDisk "test") $ do
@@ -51,3 +44,4 @@ main = runRelational (viaDisk "test") $ do
     updateRelation foo [69,42,18]
     result <- readRelation foo
     traceShow result $ return ()
+-}

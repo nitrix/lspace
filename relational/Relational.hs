@@ -9,6 +9,5 @@ module Relational
     where
 
 import Relational.Core
-import Relational.Store
 import Relational.Store.Disk
 import Relational.Store.Memory
