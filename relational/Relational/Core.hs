@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Relational.Core
     ( newRelation
@@ -8,9 +9,12 @@ module Relational.Core
     ) where
 
 import Control.Monad.State
+import Data.Aeson
 import Data.Dynamic
 
 import Relational.Store
+
+type Related a = (Typeable a, ToJSON a, FromJSON a)
 
 type RelationId = Integer
 data Relation a = Relation RelationId
@@ -19,14 +23,16 @@ newtype Relational s a = Relational { unwrapRelational :: StateT s IO a } derivi
 -- Maybe a new monad transformer? I don't know.
 
 runRelational :: s -> Relational s () -> IO ()
-runRelational store relational = evalStateT (unwrapRelational relational) store
+runRelational store relational = do
+    evalStateT (unwrapRelational relational) store
+    -- TODO: write all elements in the cache
 
-newRelation :: (Store s, Typeable a) => a -> Relational s (Relation a)
+newRelation :: (Store s, Related a) => a -> Relational s (Relation a)
 newRelation _ = do
     -- TODO: Crap this is going to change the `s` in the `Relational s a` for a custom type that has the autoincrement.
     return (Relation 100)
 
-readRelation :: (Store s, Typeable a) => Relation a -> Relational s a
+readRelation :: (Store s, Related a) => Relation a -> Relational s a
 readRelation (Relation relationId) = do
     -- TODO: Caching
     
@@ -37,7 +43,7 @@ readRelation (Relation relationId) = do
     put newStore
     return result
 
-writeRelation :: (Store s, Typeable a) => Relation a -> a -> Relational s ()
+writeRelation :: (Store s, Related a) => Relation a -> a -> Relational s ()
 writeRelation (Relation relationId) val = do
     -- TODO: Update cache
     
