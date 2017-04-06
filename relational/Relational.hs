@@ -1,8 +1,14 @@
 module Relational
-    ( module Relational.Core
-    , module Relational.Store
+    ( runRelational
+    , createRelation
+    , readRelation
+    , updateRelation
+    , viaDisk
+    , viaMemory
     )
     where
 
 import Relational.Core
 import Relational.Store
+import Relational.Store.Disk
+import Relational.Store.Memory

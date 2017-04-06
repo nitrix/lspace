@@ -1,35 +1,29 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE ConstraintKinds #-}
-
 module Relational.Core
-    ( newRelation
+    ( createRelation
     , readRelation
-    , writeRelation
+    , updateRelation
+    , deleteRelation
     , runRelational
     ) where
 
 import Control.Monad.State
-import Data.Aeson
 import Data.Dynamic
+import qualified Data.HashTable.IO as H
 
 import Relational.Store
+import Relational.Types
 
-type Related a = (Typeable a, ToJSON a, FromJSON a)
+-- TODO: extract cache logic to its own module?
 
-type RelationId = Integer
-data Relation a = Relation RelationId
-newtype Relational s a = Relational { unwrapRelational :: StateT s IO a } deriving (Functor, Applicative, Monad, MonadState s)
--- TODO: Going to need a special type in there instead of `s` that contains the autoincrement and the cache (using hashtables linear?)
--- Maybe a new monad transformer? I don't know.
-
-runRelational :: s -> Relational s () -> IO ()
+runRelational :: Store s => s -> Relational s () -> IO ()
 runRelational store relational = do
-    evalStateT (unwrapRelational relational) store
+    cache <- H.newSized 1000
+    evalStateT (unwrapRelational relational) (Context cache store)
     -- TODO: write all elements in the cache
 
-newRelation :: (Store s, Related a) => a -> Relational s (Relation a)
-newRelation _ = do
-    -- TODO: Crap this is going to change the `s` in the `Relational s a` for a custom type that has the autoincrement.
+createRelation :: a -> Relational s (Relation a)
+createRelation _ = do
+    -- TODO: The store is responsible for keeping the next available relation id
     return (Relation 100)
 
 readRelation :: (Store s, Related a) => Relation a -> Relational s a
@@ -38,20 +32,23 @@ readRelation (Relation relationId) = do
     
     -- Otherwise, we read from the store
     -- TODO: Add to cache
-    store <- get
+    store <- gets ctxStore
     (result, newStore) <- relationLiftIO $ runStateT (storeRead relationId) store
-    put newStore
+    modify (\ctx -> ctx { ctxStore = newStore })
     return result
 
-writeRelation :: (Store s, Related a) => Relation a -> a -> Relational s ()
-writeRelation (Relation relationId) val = do
+updateRelation :: (Store s, Related a) => Relation a -> a -> Relational s ()
+updateRelation (Relation relationId) val = do
     -- TODO: Update cache
     
     -- TODO: Remove this, we don't need to write to disk on each write. I'm just testing.
-    store <- get
-    (result, newStore) <- relationLiftIO $ runStateT (storeWrite relationId val) store
-    put newStore
+    store <- gets ctxStore
+    (result, newStore) <- relationLiftIO $ runStateT (storeUpdate relationId val) store
+    modify (\ctx -> ctx { ctxStore = newStore })
     return result
+
+deleteRelation :: (Store s, Related a) => Relation a -> Relational s ()
+deleteRelation = undefined -- TODO
 
 relationLiftIO :: IO a -> Relational s a
 relationLiftIO = Relational . liftIO

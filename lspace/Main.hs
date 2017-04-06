@@ -46,8 +46,8 @@ uiMainMenu = const $ return Success
 -}
 
 main :: IO ()
-main = runRelational viaMemory $ do
-    foo <- newRelation (42 :: Int)
-    writeRelation foo 69
+main = runRelational (viaDisk "test") $ do
+    foo <- createRelation ([1,2,3] :: [Int])
+    updateRelation foo [69,42,18]
     result <- readRelation foo
     traceShow result $ return ()
