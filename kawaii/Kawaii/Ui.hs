@@ -4,6 +4,7 @@ module Kawaii.Ui
     ) where
 
 import qualified SDL as Sdl
+import Kawaii.Game
 
 data Result = Success
             | Skip
@@ -12,4 +13,4 @@ data Result = Success
             | Destroy
             | Terminate
 
-type Ui = Sdl.EventPayload -> IO Result
+type Ui = Sdl.EventPayload -> Game Result

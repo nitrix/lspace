@@ -1,12 +1,13 @@
 module Kawaii.Assets where
 
 import Control.Monad
+import Data.Map
+import Data.Monoid
 import qualified SDL         as Sdl
 import qualified SDL.Image   as Img
 import qualified SDL.Mixer   as Mix
 import qualified SDL.TTF     as Ttf
 import qualified SDL.TTF.FFI as Ttf (TTFFont)
-import Data.Map
 
 type Resource = String
 data Assets = Assets
@@ -16,11 +17,11 @@ data Assets = Assets
     , assetsFonts    :: Map Resource Ttf.TTFFont
     }
 
-loadAssets :: Sdl.Renderer -> IO Assets
-loadAssets renderer = do
-    -- TODO: These should be loaded either automatically
-    primaryTileset <- Img.loadTexture renderer "assets/tileset.png"
-    terminusFont   <- Ttf.openFont "assets/terminus.ttf" 16
+loadAssets :: Sdl.Renderer -> FilePath -> IO Assets
+loadAssets renderer filepath = do
+    -- TODO: These should be loaded automatically from their extension type
+    primaryTileset <- Img.loadTexture renderer (filepath <> "/tileset.png")
+    terminusFont   <- Ttf.openFont (filepath <> "/terminus.ttf") 16
     -- bellSound <- Mix.load "assets/bell.wav"
 
     return $ Assets

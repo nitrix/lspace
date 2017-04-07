@@ -19,14 +19,14 @@ menuRender :: Engine ()
 menuRender = return ()
 -}
 
-{-
 import Kawaii
 
 main :: IO ()
 main = runApp $ App
-    { appTitle = "Lonesome Space"
-    , appMode  = Windowed 1024 768
-    , appUis   = [uiMainMenu, uiGame]
+    { appTitle      = "Lonesome Space"
+    , appMode       = Windowed 1024 768
+    , appPathAssets = "assets"
+    , appUis        = [uiMainMenu, uiGame]
     }
 
 uiMainMenu :: Ui
@@ -34,8 +34,8 @@ uiMainMenu = const $ return Skip
 
 uiGame :: Ui
 uiGame = const $ return Success
--}
 
+{-
 import Relational
 import Debug.Trace
 
@@ -46,3 +46,4 @@ main = runRelational (viaDisk "test") $ do
     updateRelation foo [5,5,5]
     result <- readRelation foo
     traceShow result $ return ()
+-}

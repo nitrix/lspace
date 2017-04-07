@@ -26,9 +26,11 @@ data Direction = North | South | East | West deriving (Eq, Show)
 
 data Mode = Fullscreen | Windowed Int Int
 data App = App
-    { appTitle  :: String
-    , appMode   :: Mode
-    , appUis    :: [Ui]
+    { appTitle      :: String
+    , appMode       :: Mode
+    , appUis        :: [Ui]
+    -- , appPathData   :: FilePath
+    , appPathAssets :: FilePath
     }
 
 runApp :: App -> IO ()
@@ -58,7 +60,7 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     -- Mix.setChannels 8
 
     -- Load assets
-    assets <- loadAssets renderer
+    assets <- loadAssets renderer (appPathAssets app)
 
     -- Thread communication
     eventChan    <- newChan      -- Event channel (SDL events to be processed by the logic thread)

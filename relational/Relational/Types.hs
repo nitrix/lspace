@@ -9,7 +9,6 @@ import Data.Aeson
 import Data.Dynamic
 import qualified Data.HashTable.IO as H
 import Data.Label (mkLabel)
-import qualified Data.Map as M
 
 -- Related a :: Contraint
 type Related a = (Typeable a, ToJSON a, FromJSON a)
