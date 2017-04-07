@@ -4,11 +4,7 @@ module Relational.Store
     ( Store(..)
     ) where
 
-import Control.Monad.State (StateT, lift)
-import Data.Dynamic
-import Data.Label.Monadic
-import qualified Data.Map as M
-
+import Control.Monad.State
 import Relational.Types
 
 -- TODO: Maybe each store should do their own caching?
