@@ -19,6 +19,7 @@ menuRender :: Engine ()
 menuRender = return ()
 -}
 
+{-
 import Kawaii
 
 main :: IO ()
@@ -33,8 +34,8 @@ uiMainMenu = const $ return Skip
 
 uiGame :: Ui
 uiGame = const $ return Success
+-}
 
-{-
 import Relational
 import Debug.Trace
 
@@ -42,6 +43,6 @@ main :: IO ()
 main = runRelational (viaDisk "test") $ do
     foo <- createRelation ([1,2,3] :: [Int])
     updateRelation foo [69,42,18]
+    updateRelation foo [5,5,5]
     result <- readRelation foo
     traceShow result $ return ()
--}

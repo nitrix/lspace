@@ -11,7 +11,10 @@ import qualified Data.Map as M
 
 import Relational.Types
 
--- TODO: Maybe each store should be its own module?
+-- TODO: Maybe each store should do their own caching?
+-- TODO: MEaning we need a Cache module and get rid of the storeCacheable
+
+-- TODO: This is great, because otherwise we'll need a notify system or something for a ViaNetwork to know when updates occur.
 
 class Store via where
     -- CRUD store
@@ -19,5 +22,6 @@ class Store via where
     storeRead      :: forall a. Related a => Integer -> StateT via IO a
     storeUpdate    :: forall a. Related a => Integer -> a -> StateT via IO ()
     storeDelete    :: Integer -> StateT via IO ()
-    -- Whether or not it makes sense for a given store to use memory cache
+    storeInit      :: StateT via IO ()
+    storeQuit      :: StateT via IO ()
     storeCacheable :: forall p. p via -> Bool -- TODO: Proxy !?

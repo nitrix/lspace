@@ -20,15 +20,9 @@ data Relation a = Relation RelationId
 newtype Relational s a = Relational { unwrapRelational :: StateT (Context s) IO a }
     deriving (Functor, Applicative, Monad, MonadState (Context s))
 
+-- TODO: labels
 data Context s = Context
-    { ctxCache :: H.LinearHashTable RelationId Dynamic
-    , ctxStore :: s
+    { _ctxCache :: H.LinearHashTable RelationId (Dynamic, StateT s IO ()) -- TODO: Should this tuple become a record?
+    , _ctxStore :: s
     }
-
-newtype ViaDisk = ViaDisk { _diskNamespace :: String }
-data ViaMemory = ViaMemory { _memoryMapping :: M.Map Integer Dynamic
-                           , _memoryIncrement :: Integer
-                           }
-
-mkLabel ''ViaMemory
-mkLabel ''ViaDisk
+mkLabel ''Context
