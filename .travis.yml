@@ -9,7 +9,7 @@
 # named .travis.yml
 
 # Use new container infrastructure to enable caching
-sudo: false
+sudo: required
 
 # Do not choose a language; we provide our own build tools.
 language: generic
@@ -18,6 +18,10 @@ language: generic
 cache:
   directories:
   - $HOME/.stack
+  - SDL2-2.0.4
+  - SDL2_image-2.0.1
+  - SDL2_ttf-2.0.14
+  - SDL2_mixer-2.0.1
 
 # Ensure necessary system libraries are present
 addons:
@@ -26,6 +30,18 @@ addons:
       - libgmp-dev
 
 before_install:
+# Install SDL
+- wget http://libsdl.org/release/SDL2-2.0.4.tar.gz -O - | tar xz
+- cd SDL2-2.0.4 && ./configure --prefix=/usr && make -j && sudo make install && cd ..
+# Install SDL image
+- wget https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.1.tar.gz -O - | tar xz
+- cd SDL2_image-2.0.1 && ./configure --prefix=/usr && make -j && sudo make install && cd ..
+# Install SDL ttf
+- wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-2.0.14.tar.gz -O - | tar xz
+- cd SDL2_ttf-2.0.14 && ./configure --prefix=/usr && make -j && sudo make install && cd ..
+# Install SDL mixer
+- wget https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-2.0.1.tar.gz -O - | tar xz
+- cd SDL2_mixer-2.0.1 && ./configure --prefix=/usr && make -j && sudo make install && cd ..
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
