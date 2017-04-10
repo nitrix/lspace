@@ -26,14 +26,22 @@ main = runApp $ App
     { appTitle      = "Lonesome Space"
     , appMode       = Windowed 1024 768
     , appPathAssets = "assets"
-    , appUis        = [uiMainMenu, uiGame]
+    , appUis        = [ Ui updateMainMenu renderMainMenu
+                      , Ui updateGame renderGame
+                      ]
     }
 
-uiMainMenu :: Ui
-uiMainMenu = const $ return Skip
+updateMainMenu :: Event -> Game Result
+updateMainMenu _ = return Skip
 
-uiGame :: Ui
-uiGame = const $ return Success
+renderMainMenu :: Renderer ()
+renderMainMenu = return ()
+
+updateGame :: Event -> Game Result
+updateGame _ = return Success
+
+renderGame :: Renderer ()
+renderGame = return ()
 
 {-
 import Relational

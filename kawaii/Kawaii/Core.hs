@@ -19,7 +19,6 @@ import qualified SDL.TTF       as Ttf
 import Kawaii.Assets
 import Kawaii.Game
 import Kawaii.Mixer
-import Kawaii.Renderer
 import Kawaii.Ui
 
 data Direction = North | South | East | West deriving (Eq, Show)
@@ -108,12 +107,18 @@ logicThread eventChan gameState gameStateSV logicEndMVar = do
         logicThread eventChan gameState gameStateSV logicEndMVar
 
 renderThread :: MSampleVar GameState -> Sdl.Renderer -> Assets -> IO ()
-renderThread gameStateSV renderer assets = forever $ do
+renderThread gameStateSV renderer _assets = forever $ do
     -- Wait for the game state to change
-    gameState <- readSV gameStateSV
+    _gameState <- readSV gameStateSV
+
+    -- Clear the screen
+    Sdl.rendererDrawColor renderer Sdl.$= Sdl.V4 0 0 0 255
+    Sdl.clear renderer
+    -- Present the result
+    Sdl.present renderer
 
     -- Render that game state
-    renderGame renderer assets gameState
+    -- renderGame renderer assets gameState
 
 networkThread :: IO ()
 networkThread = forever $ do

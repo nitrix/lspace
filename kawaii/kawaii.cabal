@@ -24,6 +24,7 @@ library
   exposed-modules:     Kawaii
   other-modules:       Kawaii.Assets
                      , Kawaii.Core
+                     , Kawaii.Event
                      , Kawaii.FFI
                      , Kawaii.Game
                      , Kawaii.Mixer
