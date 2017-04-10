@@ -1,6 +1,10 @@
-/.stack-work/
-/dist
+# At the root of the project
 /data
 /lspace.prof
 /lspace.prof.html
-*.dump-simpl
+
+# Anywhere in the directories
+.cabal-sandbox
+.stack-work
+dist
+cabal.sandbox.config
