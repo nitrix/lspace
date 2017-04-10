@@ -1,13 +1,10 @@
 flags: {}
 packages:
-- '.'
-- location:
-    git: https://github.com/nitrix/sdl2-image
-    commit: 0808be3039ce362402166cfdd02fb74c6cd4a2a3
-- location:
-    git: https://github.com/nitrix/sdl2
-    commit: c1532a34f2a5a7fcfe22c80893ee83f8bd940223
+- lspace
+- kawaii
+- relational
 extra-deps:
-#- sdl2-2.1.1
 - sdl2-ttf-1.0.0
-resolver: nightly-2016-06-29
+- sdl2-image-2.0.0
+- sdl2-mixer-0.1
+resolver: lts-7.19

@@ -1,3 +1,9 @@
+Install stack. Later instructions assume you're using the 64-bit version.
+Open a shell and run stack setup. This will download and install ghc and msys2, which may take several minutes.
+Run stack exec -- pacman -Syu to update msys2. You'll need to press Y to confirm.
+Run stack exec -- pacman -S mingw-w64-x86_64-pkg-config mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_image mingw-w64-x86_64-SDL2_ttf mingw-w64-x86_64-SDL2_mixer to install the pkg-config tool and the SDL2 library.
+Again, press Y to confirm.
+
 - WorldShips are bimaps of objectids and coordinates
 - WorldObjects are map of objectids and objects
 - WorldSpriteParts is one bimap of coordinates and objectids

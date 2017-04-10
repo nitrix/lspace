@@ -1,0 +1,25 @@
+name:                lspace
+version:             0.0.0.6
+synopsis:            Lonesome Space
+description:         Real-time 2D strategy/sandbox game.
+homepage:            https://github.com/nitrix/lspace
+license:             MIT
+license-file:        LICENSE
+author:              Alex Belanger
+maintainer:          i.caught.air@gmail.com
+category:            Game
+build-type:          Simple
+cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://github.com/nitrix/lspace
+
+executable lspace
+  main-is:             Main.hs
+  build-depends:       base >= 4.8 && < 4.10
+                     , kawaii
+  default-language:    Haskell2010
+  ghc-options:         -Wall -threaded -with-rtsopts=-T
+  -- ghc-options:         -threaded -with-rtsopts=-T -O -ddump-simpl -ddump-to-file -dsuppress-all
+  -- other-modules:       Main
