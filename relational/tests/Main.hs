@@ -16,7 +16,7 @@ safeHead (x:_) = Just x
 
 testSafeHeadForNonEmptyList :: Test
 testSafeHeadForNonEmptyList =
-    TestCase $ assertEqual "Should return (Just head) for non empty list" (Just 2)
+    TestCase $ assertEqual "Should return (Just head) for non empty list" (Just 1)
                (safeHead ([1]::[Int]))
 
 testSafeHeadForEmptyList :: Test
