@@ -106,10 +106,7 @@ logicThread eventChan gameState gameStateSV logicEndMVar uis = do
         liftIO $ putMVar logicEndMVar ()
     else do
         let event = convertSdlEvent sdlEvent
-        let game = do
-            newUis <- uiHandleEvent uis event
-            -- Do more things here
-            return newUis
+        let game = uiHandleEvent uis event
         (newUis, newGameState) <- runStateT (unwrapGame game) gameState
 
         writeSV gameStateSV newGameState

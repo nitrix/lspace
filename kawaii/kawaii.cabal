@@ -27,6 +27,7 @@ library
                      , Kawaii.Event
                      , Kawaii.FFI
                      , Kawaii.Game
+                     , Kawaii.Keyboard
                      , Kawaii.Mixer
                      , Kawaii.Renderer
                      , Kawaii.Ui
