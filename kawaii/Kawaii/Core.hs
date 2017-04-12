@@ -9,7 +9,6 @@ import Control.Concurrent
 import Control.Concurrent.MSampleVar
 import Control.Monad.Loops
 import Control.Monad.State
-
 import qualified Data.Text     as T
 import qualified SDL           as Sdl
 import qualified SDL.Image     as Img
@@ -17,6 +16,7 @@ import qualified SDL.Mixer     as Mix
 import qualified SDL.TTF       as Ttf
 
 import Kawaii.Assets
+import Kawaii.Event
 import Kawaii.Game
 import Kawaii.Mixer
 import Kawaii.Ui
@@ -40,7 +40,7 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     void Ttf.init
     Mix.openAudio (Mix.Audio 48000 Mix.FormatS16_LSB Mix.Mono) 1024 -- 44100 Hz
 
-    -- Creating the game window
+    -- Creating the application window
     desktopSize <- Sdl.displayBoundsSize . head <$> Sdl.getDisplays
     let windowConfig = case appMode app of
                         -- We workaround that neither the `fake` or `real` fullscreen modes play nice with Alt-tab
@@ -63,11 +63,12 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
 
     -- Thread communication
     eventChan    <- newChan      -- Event channel (SDL events to be processed by the logic thread)
-    gameStateSV  <- newEmptySV   -- Game state sampling variable (contains a snapshot of the game state to render)
+    gameStateSV  <- newEmptySV   -- Scene state sampling variable (contains a snapshot of the current scene state to render)
     logicEndMVar <- newEmptyMVar -- Logic thread end signal
     
     -- Threads
-    logicThreadId   <- forkOS (logicThread eventChan defaultGameState gameStateSV logicEndMVar)
+    let uis = appUis app -- TODO eww
+    logicThreadId   <- forkOS (logicThread eventChan defaultGameState gameStateSV logicEndMVar uis)
     renderThreadId  <- forkOS (renderThread gameStateSV renderer assets)
     networkThreadId <- forkOS (networkThread)
 
@@ -94,22 +95,28 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     Ttf.quit
     Sdl.quit
 
-logicThread :: Chan Sdl.EventPayload -> GameState -> MSampleVar GameState -> MVar () -> IO ()
-logicThread eventChan gameState gameStateSV logicEndMVar = do
-    event <- liftIO (readChan eventChan)
-    if (event == Sdl.QuitEvent)
+logicThread :: Chan Sdl.EventPayload -> GameState -> MSampleVar GameState -> MVar () -> [Ui] -> IO ()
+logicThread eventChan gameState gameStateSV logicEndMVar uis = do
+    sdlEvent <- liftIO (readChan eventChan)
+    if (sdlEvent == Sdl.QuitEvent)
     then do
         -- TODO: Save game state
         liftIO $ putMVar logicEndMVar ()
     else do
-        newGameState <- execStateT (unwrapGame $ gameHandleEvent event) gameState
+        let event = convertSdlEvent sdlEvent
+        let game = do
+            newUis <- uiHandleEvent uis event
+            -- Do more things here
+            return newUis
+        (newUis, newGameState) <- runStateT (unwrapGame game) gameState
+
         writeSV gameStateSV newGameState
-        logicThread eventChan gameState gameStateSV logicEndMVar
+        logicThread eventChan newGameState gameStateSV logicEndMVar newUis
 
 renderThread :: MSampleVar GameState -> Sdl.Renderer -> Assets -> IO ()
-renderThread gameStateSV renderer _assets = forever $ do
+renderThread sceneStateSV renderer _assets = forever $ do
     -- Wait for the game state to change
-    _gameState <- readSV gameStateSV
+    _gameState <- readSV sceneStateSV
 
     -- Clear the screen
     Sdl.rendererDrawColor renderer Sdl.$= Sdl.V4 0 0 0 255

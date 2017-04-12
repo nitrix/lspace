@@ -26,19 +26,18 @@ main = runApp $ App
     { appTitle      = "Lonesome Space"
     , appMode       = Windowed 1024 768
     , appPathAssets = "assets"
-    , appUis        = [ Ui updateMainMenu renderMainMenu
-                      , Ui updateGame renderGame
-                      ]
+    , appUis        = [Ui updateMainMenu renderMainMenu]
     }
 
 updateMainMenu :: Event -> Game Result
+updateMainMenu (EventKeyPressed ScancodeEscape _) = return Terminate
 updateMainMenu _ = return Skip
 
 renderMainMenu :: Renderer ()
 renderMainMenu = return ()
 
 updateGame :: Event -> Game Result
-updateGame _ = return Success
+updateGame _ = return Skip
 
 renderGame :: Renderer ()
 renderGame = return ()

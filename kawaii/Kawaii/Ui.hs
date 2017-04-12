@@ -1,14 +1,13 @@
 module Kawaii.Ui
     ( Result(..)
     , Ui(Ui)
-    , Layout
-    , Widget
+    -- , Layout
+    -- , Widget
+    , uiHandleEvent
     ) where
 
-import qualified SDL as Sdl
-
-import Kawaii.Assets
 import Kawaii.Event
+import Kawaii.FFI
 import Kawaii.Game
 import Kawaii.Renderer
 
@@ -24,6 +23,28 @@ data Ui = Ui
     , uiRender :: Renderer ()
     }
 
+-- TODO: unit testing this would be awesome (or refactoring it ;))
+uiHandleEvent :: [Ui] -> Event -> Game [Ui]
+uiHandleEvent allUis event = process allUis
+    where
+        -- Given a list of processed uis, uis to process, carry out updates and yield the remaining uis.
+        process :: [Ui] -> Game [Ui]
+        process [] = return allUis
+        process (ui:uis) = do
+            result <- uiUpdate ui event
+            case result of
+                Success   -> return allUis
+                Skip      -> process uis
+                Bring  x  -> return (x : allUis)
+                Switch x  -> return $ let cut = length allUis - length uis - 1 in
+                                      let (left, right) = splitAt cut allUis in
+                                      x : left ++ drop 1 right
+                Destroy   -> return $ let cut = length allUis - length uis - 1 in
+                                      let (left, right) = splitAt cut allUis in
+                                      left ++ drop 1 right
+                Terminate -> gameLiftIO pushQuitEvent >> return []
+
+{-
 type Width = Int
 type Height = Int
 
@@ -46,3 +67,4 @@ centered = hCentered . vCentered
 
 renderLayout :: Layout -> Sdl.Renderer -> Assets -> IO ()
 renderLayout layout renderer assets = return ()
+-}
