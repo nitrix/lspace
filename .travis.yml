@@ -31,16 +31,16 @@ addons:
 
 before_install:
 # Install SDL
-- wget http://libsdl.org/release/SDL2-2.0.4.tar.gz -O - | tar xz
+- wget http://libsdl.org/release/SDL2-2.0.4.tar.gz -O - | tar xzk
 - cd SDL2-2.0.4 && ./configure --prefix=/usr && make -j && sudo make install && cd ..
 # Install SDL image
-- wget https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.1.tar.gz -O - | tar xz
+- wget https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.1.tar.gz -O - | tar xzk
 - cd SDL2_image-2.0.1 && ./configure --prefix=/usr && make -j && sudo make install && cd ..
 # Install SDL ttf
-- wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-2.0.14.tar.gz -O - | tar xz
+- wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-2.0.14.tar.gz -O - | tar xzk
 - cd SDL2_ttf-2.0.14 && ./configure --prefix=/usr && make -j && sudo make install && cd ..
 # Install SDL mixer
-- wget https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-2.0.1.tar.gz -O - | tar xz
+- wget https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-2.0.1.tar.gz -O - | tar xzk
 - cd SDL2_mixer-2.0.1 && ./configure --prefix=/usr && make -j && sudo make install && cd ..
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
