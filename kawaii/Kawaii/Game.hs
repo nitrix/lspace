@@ -1,21 +1,41 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 module Kawaii.Game where
 
 import Control.Monad.State
 
-newtype Game a = Scene { unwrapGame :: StateT GameState IO a }
-    deriving (Functor, Applicative, Monad, MonadState GameState)
+newtype Game c a = Game { unwrapGame :: StateT (GameState c) IO a } deriving (Functor, Applicative, Monad)
 
-data GameState = GameState
+data GameState c = GameState
+    { gsFoo         :: Int
+    , gsCustomState :: c
+    }
 
-defaultGameState :: GameState
-defaultGameState = GameState
+{-
+instance Applicative (Game c) where
+    pure = Game $ _ $ pure
+    (<*>) = _
+
+instance Monad (Game c) where
+    return = _
+    (>>=)  = _
+-}
+
+instance MonadState c (Game c) where
+    get = Game $ state (\gs -> (gsCustomState gs, gs))
+    put custom = Game $ state (\gs -> ((), gs { gsCustomState = custom }))
+
+defaultGameState :: c -> GameState c
+defaultGameState = GameState 0
 
 -- This lets us lift IO operation into our Game monad,
 -- yet not derive MonadIO which would give too much power to the users of this Game module/type.
-gameLiftIO :: IO a -> Game a
-gameLiftIO = Scene . liftIO
+gameLiftIO :: IO a -> Game c a
+gameLiftIO = Game . liftIO
 
 {-
 stopPlayer :: Game ()

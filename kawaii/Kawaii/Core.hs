@@ -1,7 +1,7 @@
 module Kawaii.Core
     ( App(..)
     , Mode(..)
-    , Result(..)
+    -- , Result(..)
     , runApp
     ) where
 
@@ -24,15 +24,16 @@ import Kawaii.Ui
 data Direction = North | South | East | West deriving (Eq, Show)
 
 data Mode = Fullscreen | Windowed Int Int
-data App = App
-    { appTitle      :: String
-    , appMode       :: Mode
-    , appUis        :: [Ui]
+data App c = App
+    { appTitle       :: String
+    , appMode        :: Mode
+    , appUis         :: [Ui c]
     -- , appPathData   :: FilePath
-    , appPathAssets :: FilePath
+    , appPathAssets  :: FilePath
+    , appCustomState :: c
     }
 
-runApp :: App -> IO ()
+runApp :: App c -> IO ()
 runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn't bound
     -- We're going to need SDL
     Sdl.initializeAll
@@ -68,7 +69,8 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     
     -- Threads
     let uis = appUis app -- TODO eww
-    logicThreadId   <- forkOS (logicThread eventChan defaultGameState gameStateSV logicEndMVar uis)
+    let gameState = defaultGameState (appCustomState app)
+    logicThreadId   <- forkOS (logicThread eventChan gameState gameStateSV logicEndMVar uis)
     renderThreadId  <- forkOS (renderThread gameStateSV renderer assets)
     networkThreadId <- forkOS (networkThread)
 
@@ -95,7 +97,7 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     Ttf.quit
     Sdl.quit
 
-logicThread :: Chan Sdl.EventPayload -> GameState -> MSampleVar GameState -> MVar () -> [Ui] -> IO ()
+logicThread :: Chan Sdl.EventPayload -> GameState c -> MSampleVar (GameState c) -> MVar () -> [Ui c] -> IO ()
 logicThread eventChan gameState gameStateSV logicEndMVar uis = do
     sdlEvent <- liftIO (readChan eventChan)
     if (sdlEvent == Sdl.QuitEvent)
@@ -113,7 +115,7 @@ logicThread eventChan gameState gameStateSV logicEndMVar uis = do
         writeSV gameStateSV newGameState
         logicThread eventChan newGameState gameStateSV logicEndMVar newUis
 
-renderThread :: MSampleVar GameState -> Sdl.Renderer -> Assets -> IO ()
+renderThread :: MSampleVar (GameState c) -> Sdl.Renderer -> Assets -> IO ()
 renderThread sceneStateSV renderer _assets = forever $ do
     -- Wait for the game state to change
     _gameState <- readSV sceneStateSV

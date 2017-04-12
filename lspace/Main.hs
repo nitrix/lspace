@@ -20,26 +20,37 @@ menuRender = return ()
 -}
 
 import Kawaii
+import Control.Monad.State
+import Debug.Trace
+
+data LonesomeSpace = LonesomeSpace
+    { test :: Int
+    } deriving Show
 
 main :: IO ()
 main = runApp $ App
-    { appTitle      = "Lonesome Space"
-    , appMode       = Windowed 1024 768
-    , appPathAssets = "assets"
-    , appUis        = [Ui updateMainMenu renderMainMenu]
+    { appTitle       = "Lonesome Space"
+    , appMode        = Windowed 1024 768
+    , appPathAssets  = "assets"
+    , appUis         = [Ui updateMainMenu renderMainMenu]
+    , appCustomState = LonesomeSpace 42
     }
 
-updateMainMenu :: Event -> Game Result
+updateMainMenu :: Event -> Game LonesomeSpace (Result LonesomeSpace)
 updateMainMenu (EventKeyPressed ScancodeEscape _) = return Terminate
+updateMainMenu (EventKeyPressed ScancodeSpace _) = do
+    cs <- get
+    trace (show cs) $ return Success
 updateMainMenu _ = return Skip
 
-renderMainMenu :: Renderer ()
-renderMainMenu = return ()
+renderMainMenu :: Renderer LonesomeSpace ()
+renderMainMenu = do
+    return $ ()
 
-updateGame :: Event -> Game Result
+updateGame :: Event -> Game LonesomeSpace (Result LonesomeSpace)
 updateGame _ = return Skip
 
-renderGame :: Renderer ()
+renderGame :: Renderer LonesomeSpace ()
 renderGame = return ()
 
 {-

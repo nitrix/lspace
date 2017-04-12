@@ -7,9 +7,8 @@ import qualified SDL as Sdl
 
 import Kawaii.Game
 
-data RenderContext = RenderContext
+data RenderContext c = RenderContext
     { rcRenderer   :: Sdl.Renderer
-    , rcSceneState :: GameState
+    , rcSceneState :: GameState c
     }
-newtype Renderer a = Renderer { unwrapRenderer :: ReaderT RenderContext IO a } deriving (Functor, Applicative, Monad)
-
+newtype Renderer c a = Renderer { unwrapRenderer :: ReaderT (RenderContext c) IO a } deriving (Functor, Applicative, Monad)

@@ -1,3 +1,7 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ExistentialQuantification #-}
+
 module Kawaii.Ui
     ( Result(..)
     , Ui(Ui)
@@ -11,27 +15,28 @@ import Kawaii.FFI
 import Kawaii.Game
 import Kawaii.Renderer
 
-data Result = Success
-            | Skip
-            | Switch Ui
-            | Bring Ui
-            | Destroy
-            | Terminate
+data Result c = Success
+              | Skip
+              | Switch (Ui c)
+              | Bring (Ui c)
+              | Destroy
+              | Terminate
 
-data Ui = Ui
-    { uiUpdate :: Event -> Game Result
-    , uiRender :: Renderer ()
+data Ui c = Ui
+    { uiUpdate :: Event -> Game c (Result c)
+    , uiRender :: Renderer c ()
     }
 
 -- TODO: unit testing this would be awesome (or refactoring it ;))
-uiHandleEvent :: [Ui] -> Event -> Game [Ui]
+uiHandleEvent :: forall c. [Ui c] -> Event -> Game c [Ui c]
 uiHandleEvent allUis event = process allUis
     where
         -- Given a list of processed uis, uis to process, carry out updates and yield the remaining uis.
-        process :: [Ui] -> Game [Ui]
+        -- process :: forall c. [Ui c] -> Game c [Ui c]
         process [] = return allUis
         process (ui:uis) = do
             result <- uiUpdate ui event
+            {-
             case result of
                 Success   -> return allUis
                 Skip      -> process uis
@@ -43,6 +48,8 @@ uiHandleEvent allUis event = process allUis
                                       let (left, right) = splitAt cut allUis in
                                       left ++ drop 1 right
                 Terminate -> gameLiftIO pushQuitEvent >> return []
+            -}
+            return allUis -- TODO temp
 
 {-
 type Width = Int
