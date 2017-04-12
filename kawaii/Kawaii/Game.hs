@@ -1,8 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE DeriveFunctor #-}
 
 module Kawaii.Game where
 
@@ -14,16 +12,6 @@ data GameState c = GameState
     { gsFoo         :: Int
     , gsCustomState :: c
     }
-
-{-
-instance Applicative (Game c) where
-    pure = Game $ _ $ pure
-    (<*>) = _
-
-instance Monad (Game c) where
-    return = _
-    (>>=)  = _
--}
 
 instance MonadState c (Game c) where
     get = Game $ state (\gs -> (gsCustomState gs, gs))

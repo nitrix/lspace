@@ -1,6 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ExistentialQuantification #-}
 
 module Kawaii.Ui
     ( Result(..)
@@ -32,11 +30,10 @@ uiHandleEvent :: forall c. [Ui c] -> Event -> Game c [Ui c]
 uiHandleEvent allUis event = process allUis
     where
         -- Given a list of processed uis, uis to process, carry out updates and yield the remaining uis.
-        -- process :: forall c. [Ui c] -> Game c [Ui c]
+        process :: [Ui c] -> Game c [Ui c]
         process [] = return allUis
         process (ui:uis) = do
             result <- uiUpdate ui event
-            {-
             case result of
                 Success   -> return allUis
                 Skip      -> process uis
@@ -48,8 +45,6 @@ uiHandleEvent allUis event = process allUis
                                       let (left, right) = splitAt cut allUis in
                                       left ++ drop 1 right
                 Terminate -> gameLiftIO pushQuitEvent >> return []
-            -}
-            return allUis -- TODO temp
 
 {-
 type Width = Int
