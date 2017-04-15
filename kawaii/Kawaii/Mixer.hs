@@ -9,7 +9,7 @@ import qualified SDL.Mixer as Mix
 import Kawaii.Assets
 import Kawaii.Game
 
-playSound :: String -> Assets -> Game c ()
+playSound :: String -> Assets -> Game ()
 playSound name assets = gameLiftIO $ do 
     case M.lookup name (assetsSounds assets) of
         Just sound -> do
@@ -19,7 +19,7 @@ playSound name assets = gameLiftIO $ do
             -- Mix.playMusic {-Mix.Once-} music
         Nothing -> return ()
 
-playMusic :: String -> Assets -> Game c ()
+playMusic :: String -> Assets -> Game ()
 playMusic name assets = gameLiftIO $ do 
     case M.lookup name (assetsMusic assets) of
         Just music -> Mix.playMusic Mix.Once music

@@ -29,5 +29,5 @@ library
                      , Kawaii.Game
                      , Kawaii.Keyboard
                      , Kawaii.Mixer
-                     , Kawaii.Renderer
+                     , Kawaii.Stage
                      , Kawaii.Ui

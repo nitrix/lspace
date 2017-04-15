@@ -1,6 +1,6 @@
 module Kawaii.Event
-    ( convertSdlEvent
-    , Event(..)
+    ( Event(..)
+    , convertSdlEvent
     ) where
 
 import qualified SDL as Sdl

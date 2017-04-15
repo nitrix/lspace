@@ -6,23 +6,18 @@ module Kawaii.Game where
 
 import Control.Monad.State
 
-newtype Game c a = Game { unwrapGame :: StateT (GameState c) IO a } deriving (Functor, Applicative, Monad)
+newtype Game a = Game { unwrapGame :: StateT GameState IO a } deriving (Functor, Applicative, Monad, MonadState GameState)
 
-data GameState c = GameState
-    { gsFoo         :: Int
-    , gsCustomState :: c
+data GameState = GameState
+    { gsFoo :: Int
     }
 
-instance MonadState c (Game c) where
-    get = Game $ state (\gs -> (gsCustomState gs, gs))
-    put custom = Game $ state (\gs -> ((), gs { gsCustomState = custom }))
-
-defaultGameState :: c -> GameState c
+defaultGameState :: GameState
 defaultGameState = GameState 0
 
 -- This lets us lift IO operation into our Game monad,
 -- yet not derive MonadIO which would give too much power to the users of this Game module/type.
-gameLiftIO :: IO a -> Game c a
+gameLiftIO :: IO a -> Game a
 gameLiftIO = Game . liftIO
 
 {-
