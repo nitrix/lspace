@@ -1,7 +1,6 @@
 module Kawaii.Core
     ( App(..)
     , Mode(..)
-    -- , Result(..)
     , runApp
     ) where
 
@@ -9,6 +8,7 @@ import Control.Concurrent
 import Control.Concurrent.MSampleVar
 import Control.Monad.Loops
 import Control.Monad.State
+
 import qualified Data.Text     as T
 import qualified SDL           as Sdl
 import qualified SDL.Image     as Img
@@ -19,7 +19,7 @@ import Kawaii.Assets
 import Kawaii.Event
 import Kawaii.Game
 import Kawaii.Mixer
-import Kawaii.Ui
+import Kawaii.Stage
 
 data Direction = North | South | East | West deriving (Eq, Show)
 
@@ -27,7 +27,7 @@ data Mode = Fullscreen | Windowed Int Int
 data App c = App
     { appTitle       :: String
     , appMode        :: Mode
-    , appUis         :: [Ui c]
+    , appStages      :: [Stage c]
     -- , appPathData   :: FilePath
     , appPathAssets  :: FilePath
     , appCustomState :: c
@@ -68,10 +68,10 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     logicEndMVar <- newEmptyMVar -- Logic thread end signal
     
     -- Threads
-    let uis = appUis app -- TODO eww
+    let stages = appStages app -- TODO eww
     let gameState = defaultGameState
     let customState = appCustomState app
-    logicThreadId   <- forkOS (logicThread eventChan gameState customState gameStateSV logicEndMVar uis)
+    logicThreadId   <- forkOS (logicThread eventChan gameState customState gameStateSV logicEndMVar stages)
     renderThreadId  <- forkOS (renderThread gameStateSV renderer assets)
     networkThreadId <- forkOS (networkThread)
 
@@ -98,20 +98,21 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     Ttf.quit
     Sdl.quit
 
-logicThread :: Chan Sdl.EventPayload -> GameState -> c -> MSampleVar GameState -> MVar () -> [Ui c] -> IO ()
-logicThread eventChan gameState customState gameStateSV logicEndMVar uis = do
+logicThread :: Chan Sdl.EventPayload -> GameState -> c -> MSampleVar GameState -> MVar () -> [Stage c] -> IO ()
+logicThread eventChan gameState customState gameStateSV logicEndMVar stages = do
     sdlEvent <- liftIO (readChan eventChan)
     if (sdlEvent == Sdl.QuitEvent)
     then do
         -- TODO: Save game state
         liftIO $ putMVar logicEndMVar ()
     else do
-        let event = convertSdlEvent sdlEvent
-        let game = uiHandleEvent customState uis event
-        ((newCustomState, newUis), newGameState) <- runStateT (unwrapGame game) gameState
+        -- let event = convertSdlEvent sdlEvent
+        -- let game = uiHandleEvent customState uis event
+        -- ((newCustomState, newUis), newGameState) <- runStateT (unwrapGame game) gameState
+        let (newCustomState, newStages, newGameState) = (customState, stages, gameState) -- TODO: temporary
 
         writeSV gameStateSV newGameState
-        logicThread eventChan newGameState newCustomState gameStateSV logicEndMVar newUis
+        logicThread eventChan newGameState newCustomState gameStateSV logicEndMVar newStages
 
 renderThread :: MSampleVar GameState -> Sdl.Renderer -> Assets -> IO ()
 renderThread sceneStateSV renderer _assets = forever $ do
