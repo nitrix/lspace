@@ -1,3 +1,7 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Kawaii.Stage
     ( Stage(Stage)
     , Updating
@@ -27,12 +31,30 @@ data RenderContext = RenderContext
     , rcGameState :: GameState
     }
 
-type Updating c = StateT (c, [Stage c]) Game ()
-
+-- Aliases for convenience
+type Updating c = UpdateM c ()
 type Rendering c = StateT c (ReaderT RenderContext IO) ()
 
-skip :: Updating c
-skip = undefined
+-- newtype Updating c = Updating { runUpdating :: StateT (c, [Stage c]) Game () }
+newtype UpdateM s a = UpdateM { unwrapUpdateM :: StateT (s, [Stage s], [Stage s]) Game (Result s) } deriving (Functor, Applicative)
+
+instance Monad (UpdateM s) where
+    return a = UpdateM $ return a
+    Skipped   >>= f = _
+    Succeeded >>= f = return Succeeded
+
+instance MonadState s (UpdateM s) where
+    get = UpdateM $ get >>= return . (\(x,_,_) -> x)
+    put x = UpdateM $ modify (\(_, seenStages, futureStages) -> (x, seenStages, futureStages))
+
+stageModify :: ([Stage s] -> [Stage s]) -> UpdateM s ()
+stageModify f = UpdateM $ state (\(s, seenStages, futureStages) -> ((), (s, f stages)))
+
+data Result s = Skipped
+              | Succeeded
+
+skip :: UpdateM s (Result s)
+skip = UpdateM $ return Skipped
 
 success :: Updating c
 success = undefined
