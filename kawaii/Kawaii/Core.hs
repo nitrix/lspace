@@ -16,7 +16,6 @@ import qualified SDL.Mixer     as Mix
 import qualified SDL.TTF       as Ttf
 
 import Kawaii.Assets
-import Kawaii.Event
 import Kawaii.Game
 import Kawaii.Mixer
 import Kawaii.Stage
