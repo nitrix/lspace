@@ -69,8 +69,9 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     
     -- Threads
     let uis = appUis app -- TODO eww
-    let gameState = defaultGameState (appCustomState app)
-    logicThreadId   <- forkOS (logicThread eventChan gameState gameStateSV logicEndMVar uis)
+    let gameState = defaultGameState
+    let customState = appCustomState app
+    logicThreadId   <- forkOS (logicThread eventChan gameState customState gameStateSV logicEndMVar uis)
     renderThreadId  <- forkOS (renderThread gameStateSV renderer assets)
     networkThreadId <- forkOS (networkThread)
 
@@ -97,8 +98,8 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     Ttf.quit
     Sdl.quit
 
-logicThread :: Chan Sdl.EventPayload -> GameState c -> MSampleVar (GameState c) -> MVar () -> [Ui c] -> IO ()
-logicThread eventChan gameState gameStateSV logicEndMVar uis = do
+logicThread :: Chan Sdl.EventPayload -> GameState -> c -> MSampleVar GameState -> MVar () -> [Ui c] -> IO ()
+logicThread eventChan gameState customState gameStateSV logicEndMVar uis = do
     sdlEvent <- liftIO (readChan eventChan)
     if (sdlEvent == Sdl.QuitEvent)
     then do
@@ -106,13 +107,13 @@ logicThread eventChan gameState gameStateSV logicEndMVar uis = do
         liftIO $ putMVar logicEndMVar ()
     else do
         let event = convertSdlEvent sdlEvent
-        let game = uiHandleEvent uis event
-        (newUis, newGameState) <- runStateT (unwrapGame game) gameState
+        let game = uiHandleEvent customState uis event
+        ((newCustomState, newUis), newGameState) <- runStateT (unwrapGame game) gameState
 
         writeSV gameStateSV newGameState
-        logicThread eventChan newGameState gameStateSV logicEndMVar newUis
+        logicThread eventChan newGameState newCustomState gameStateSV logicEndMVar newUis
 
-renderThread :: MSampleVar (GameState c) -> Sdl.Renderer -> Assets -> IO ()
+renderThread :: MSampleVar GameState -> Sdl.Renderer -> Assets -> IO ()
 renderThread sceneStateSV renderer _assets = forever $ do
     -- Wait for the game state to change
     _gameState <- readSV sceneStateSV

@@ -5,6 +5,7 @@ module Kawaii
     , Mode(..)
     , Renderer
     , Result(..)
+    , Scene
     , Ui(Ui)
     , module Kawaii.Keyboard
     , runApp

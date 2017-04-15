@@ -1,17 +1,24 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Kawaii.Ui
     ( Result(..)
+    , Scene
     , Ui(Ui)
     -- , Layout
     -- , Widget
     , uiHandleEvent
     ) where
 
+import Control.Monad.State
+
 import Kawaii.Event
 import Kawaii.FFI
 import Kawaii.Game
 import Kawaii.Renderer
+
+newtype Scene c a = Scene { unwrapScene :: StateT c Game (Result c) }
+-- deriving (Functor, Applicative, Monad)
 
 data Result c = Success
               | Skip
@@ -21,31 +28,30 @@ data Result c = Success
               | Terminate
 
 data Ui c = Ui
-    { uiUpdate :: Event -> Game c (Result c)
+    { uiUpdate :: Event -> Scene c ()
     , uiRender :: Renderer c ()
     }
 
 -- TODO: unit testing this would be awesome (or refactoring it ;))
-uiHandleEvent :: forall c. [Ui c] -> Event -> Game c [Ui c]
-uiHandleEvent allUis event = process allUis
+uiHandleEvent :: forall c. c -> [Ui c] -> Event -> Game (c, [Ui c])
+uiHandleEvent custom allUis event = process custom allUis
     where
         -- Given a list of processed uis, uis to process, carry out updates and yield the remaining uis.
-        process :: [Ui c] -> Game c [Ui c]
-        process [] = return allUis
-        process (ui:uis) = do
-            result <- uiUpdate ui event
+        process :: c -> [Ui c] -> Game (c, [Ui c])
+        process custom [] = return (custom, allUis)
+        process custom (ui:uis) = do
+            (result, newC) <- runStateT (unwrapScene $ uiUpdate ui event) custom
             case result of
-                Success   -> return allUis
-                Skip      -> process uis
-                Bring  x  -> return (x : allUis)
-                Switch x  -> return $ let cut = length allUis - length uis - 1 in
+                Success   -> return (newC, allUis)
+                Skip      -> process custom uis
+                Bring  x  -> return (newC, x : allUis)
+                Switch x  -> return $ (newC, let cut = length allUis - length uis - 1 in
                                       let (left, right) = splitAt cut allUis in
-                                      x : left ++ drop 1 right
-                Destroy   -> return $ let cut = length allUis - length uis - 1 in
+                                      x : left ++ drop 1 right)
+                Destroy   -> return $ (newC, let cut = length allUis - length uis - 1 in
                                       let (left, right) = splitAt cut allUis in
-                                      left ++ drop 1 right
-                Terminate -> gameLiftIO pushQuitEvent >> return []
-
+                                      left ++ drop 1 right)
+                Terminate -> gameLiftIO pushQuitEvent >> return (newC, [])
 {-
 type Width = Int
 type Height = Int
