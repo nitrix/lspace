@@ -36,7 +36,7 @@ main = runApp $ App
     , appCustomState = LonesomeSpace 42
     }
 
--- updateMainMenu :: Event -> Scene LonesomeSpace (Result c)
+updateMainMenu :: Event -> Updater LonesomeSpace Result
 updateMainMenu (EventKeyPressed ScancodeEscape _) = return Terminate
 updateMainMenu (EventKeyPressed ScancodeSpace _) = do
     cs <- get
@@ -47,7 +47,7 @@ renderMainMenu :: Renderer LonesomeSpace ()
 renderMainMenu = do
     return $ ()
 
--- updateGame :: Event -> Scene LonesomeSpace (Result c)
+updateGame :: Event -> Updater LonesomeSpace Result
 updateGame _ = return Skip
 
 renderGame :: Renderer LonesomeSpace ()

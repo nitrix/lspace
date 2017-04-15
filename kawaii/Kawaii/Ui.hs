@@ -3,7 +3,6 @@
 
 module Kawaii.Ui
     ( Result(..)
-    , Scene
     , Ui(Ui)
     -- , Layout
     -- , Widget
@@ -16,9 +15,7 @@ import Kawaii.Event
 import Kawaii.FFI
 import Kawaii.Game
 import Kawaii.Renderer
-
-newtype Scene c a = Scene { unwrapScene :: StateT c Game (Result c) }
--- deriving (Functor, Applicative, Monad)
+import Kawaii.Updater
 
 data Result c = Success
               | Skip
@@ -28,7 +25,7 @@ data Result c = Success
               | Terminate
 
 data Ui c = Ui
-    { uiUpdate :: Event -> Scene c ()
+    { uiUpdate :: Event -> Updater c Result
     , uiRender :: Renderer c ()
     }
 
@@ -40,7 +37,7 @@ uiHandleEvent custom allUis event = process custom allUis
         process :: c -> [Ui c] -> Game (c, [Ui c])
         process custom [] = return (custom, allUis)
         process custom (ui:uis) = do
-            (result, newC) <- runStateT (unwrapScene $ uiUpdate ui event) custom
+            (result, newC) <- runStateT (uiUpdate ui event) custom
             case result of
                 Success   -> return (newC, allUis)
                 Skip      -> process custom uis

@@ -5,8 +5,8 @@ module Kawaii
     , Mode(..)
     , Renderer
     , Result(..)
-    , Scene
     , Ui(Ui)
+    , Updater
     , module Kawaii.Keyboard
     , runApp
     ) where
@@ -17,3 +17,4 @@ import Kawaii.Game
 import Kawaii.Keyboard
 import Kawaii.Renderer
 import Kawaii.Ui
+import Kawaii.Updater
