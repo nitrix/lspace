@@ -9,6 +9,7 @@ import Control.Concurrent.MSampleVar
 import Control.Monad.Loops
 import Control.Monad.State
 
+import qualified Data.Sequence as S
 import qualified Data.Text     as T
 import qualified SDL           as Sdl
 import qualified SDL.Image     as Img
@@ -16,6 +17,7 @@ import qualified SDL.Mixer     as Mix
 import qualified SDL.TTF       as Ttf
 
 import Kawaii.Assets
+import Kawaii.Event
 import Kawaii.Game
 import Kawaii.Mixer
 import Kawaii.Stage
@@ -67,7 +69,8 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     logicEndMVar <- newEmptyMVar -- Logic thread end signal
     
     -- Threads
-    let stages = appStages app -- TODO eww
+    -- TIDO: This block is very `eww`
+    let stages = S.fromList (appStages app)
     let gameState = defaultGameState
     let customState = appCustomState app
     logicThreadId   <- forkOS (logicThread eventChan gameState customState gameStateSV logicEndMVar stages)
@@ -97,7 +100,7 @@ runApp app = runInBoundThread $ do -- Fixes a GHCi bug where the main thread isn
     Ttf.quit
     Sdl.quit
 
-logicThread :: Chan Sdl.EventPayload -> GameState -> c -> MSampleVar GameState -> MVar () -> [Stage c] -> IO ()
+logicThread :: Chan Sdl.EventPayload -> GameState -> c -> MSampleVar GameState -> MVar () -> S.Seq (Stage c) -> IO ()
 logicThread eventChan gameState customState gameStateSV logicEndMVar stages = do
     sdlEvent <- liftIO (readChan eventChan)
     if (sdlEvent == Sdl.QuitEvent)
@@ -105,10 +108,11 @@ logicThread eventChan gameState customState gameStateSV logicEndMVar stages = do
         -- TODO: Save game state
         liftIO $ putMVar logicEndMVar ()
     else do
-        -- let event = convertSdlEvent sdlEvent
+        let event = convertSdlEvent sdlEvent
         -- let game = uiHandleEvent customState uis event
         -- ((newCustomState, newUis), newGameState) <- runStateT (unwrapGame game) gameState
-        let (newCustomState, newStages, newGameState) = (customState, stages, gameState) -- TODO: temporary
+        -- let (newCustomState, newStages, newGameState) = (customState, stages, gameState) -- TODO: temporary
+        ((newStages, newCustomState), newGameState) <- runStateT (unwrapGame $ stageBubbleEvent event customState stages) gameState
 
         writeSV gameStateSV newGameState
         logicThread eventChan newGameState newCustomState gameStateSV logicEndMVar newStages
