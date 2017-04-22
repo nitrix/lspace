@@ -35,15 +35,15 @@ main = runApp $ App
     }
 
 updateMainMenu :: Event -> Updating LonesomeSpace
-updateMainMenu (EventKeyPressed ScancodeEscape _) = terminate
-updateMainMenu (EventKeyPressed ScancodeSpace _) = success
-updateMainMenu _ = skip
+updateMainMenu (EventKeyPressed ScancodeEscape _) = return Terminate
+updateMainMenu (EventKeyPressed ScancodeSpace _) = return Success
+updateMainMenu _ = return Skip
 
 renderMainMenu :: Rendering LonesomeSpace
 renderMainMenu = return ()
 
 updateGame :: Event -> Updating LonesomeSpace
-updateGame _ = skip
+updateGame _ = return Skip
 
 renderGame :: Rendering LonesomeSpace
 renderGame = return ()
