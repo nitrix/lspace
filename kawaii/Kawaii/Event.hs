@@ -11,10 +11,14 @@ data Event = EventKeyPressed  !Sdl.Scancode !Sdl.Keycode
            | EventKeyReleased !Sdl.Scancode !Sdl.Keycode
            | EventUnknown
            | EventQuit
-           deriving Show
+           deriving (Eq, Show)
 
 convertSdlEvent :: Sdl.EventPayload -> Event
+-- Quit events
+convertSdlEvent Sdl.QuitEvent = EventQuit
+-- Keyboard events
 convertSdlEvent (Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed True (Sdl.Keysym scancode keycode _))) = EventKeyRepeat scancode keycode
 convertSdlEvent (Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym scancode keycode _))) = EventKeyPressed scancode keycode
 convertSdlEvent (Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Released _ (Sdl.Keysym scancode keycode _))) = EventKeyReleased scancode keycode
+-- Unknown events
 convertSdlEvent _ = EventUnknown

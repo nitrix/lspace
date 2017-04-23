@@ -1,24 +1,45 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 
-module Kawaii.Game where
+module Kawaii.Game
+    ( Game
+    , GameState(..)
+    , defaultGameState
+    , evalGame
+    , gameLiftIO
+    , runGame
+    , moveCamera
+    ) where
 
-import Control.Monad.State
+import Control.Monad
+import Control.Monad.State (StateT, MonadState, liftIO, runStateT, liftM)
+import Data.Label (mkLabel)
+import Data.Label.Monadic (modify)
+import Kawaii.Camera
+import Kawaii.Direction
 
 newtype Game a = Game { unwrapGame :: StateT GameState IO a } deriving (Functor, Applicative, Monad, MonadState GameState)
 
 data GameState = GameState
-    { gsFoo :: Int
+    { _gsCamera :: Camera
     }
+mkLabel ''GameState
 
 defaultGameState :: GameState
-defaultGameState = GameState 0
+defaultGameState = GameState defaultCamera
 
 -- This lets us lift IO operation into our Game monad,
 -- yet not derive MonadIO which would give too much power to the users of this Game module/type.
 gameLiftIO :: IO a -> Game a
 gameLiftIO = Game . liftIO
+
+runGame :: Game a -> GameState -> IO (a, GameState)
+runGame = runStateT . unwrapGame
+
+evalGame :: Game a -> GameState -> IO a
+evalGame game gameState = liftM fst (runGame game gameState) -- TODO: So tempted to use (.:) = (.) . (.) here.
 
 {-
 stopPlayer :: Game ()
@@ -79,3 +100,6 @@ movePlayer (Exchange {..}) direction = do
             return reschedule
     liftIO $ writeSV gameStateSV gameState
 -}
+
+moveCamera :: Int -> Direction -> Game ()
+moveCamera delta direction = modify gsCamera (cameraTranslate delta direction)
