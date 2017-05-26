@@ -1,28 +1,8 @@
-module Kawaii.Ui
-    ( Result(..)
-    , Ui(Ui)
-    , Layout
-    , Widget
-    ) where
+module Kawaii.Ui where
 
-import qualified SDL as Sdl
-
-import Kawaii.Assets
-import Kawaii.Event
-import Kawaii.Game
-import Kawaii.Renderer
-
-data Result = Success
-            | Skip
-            | Switch Ui
-            | Bring Ui
-            | Destroy
-            | Terminate
-
-data Ui = Ui
-    { uiUpdate :: Event -> Game Result
-    , uiRender :: Renderer ()
-    }
+{-
+, Layout
+, Widget
 
 type Width = Int
 type Height = Int
@@ -46,3 +26,4 @@ centered = hCentered . vCentered
 
 renderLayout :: Layout -> Sdl.Renderer -> Assets -> IO ()
 renderLayout layout renderer assets = return ()
+-}

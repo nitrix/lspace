@@ -1,41 +1,45 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 
-module Kawaii.Game where
+module Kawaii.Game
+    ( Game
+    , GameState(..)
+    , defaultGameState
+    , evalGame
+    , gameLiftIO
+    , runGame
+    , moveCamera
+    ) where
 
-import Control.Monad.State
-import qualified SDL as Sdl
+import Control.Monad
+import Control.Monad.State (StateT, MonadState, liftIO, runStateT, liftM)
+import Data.Label (mkLabel)
+import Data.Label.Monadic (modify)
+import Kawaii.Camera
+import Kawaii.Direction
 
-import Kawaii.FFI
-
-newtype Game a = Game { unwrapGame :: StateT GameState IO a }
-    deriving (Functor, Applicative, Monad, MonadState GameState)
+newtype Game a = Game { unwrapGame :: StateT GameState IO a } deriving (Functor, Applicative, Monad, MonadState GameState)
 
 data GameState = GameState
+    { _gsCamera :: Camera
+    }
+mkLabel ''GameState
 
 defaultGameState :: GameState
-defaultGameState = GameState
-
-gameHandleEvent :: Sdl.EventPayload -> Game ()
-gameHandleEvent event = do
-    gameLiftIO $ print event
-    case event of
-        -- --------------------------- Testing movement --------------------------------
-        {-
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Released False (Sdl.Keysym _ _ _)) -> stopPlayer
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeW _ _)) -> movePlayer exchange North
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeA _ _)) -> movePlayer exchange West
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeS _ _)) -> movePlayer exchange South
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ Sdl.Pressed False (Sdl.Keysym Sdl.ScancodeD _ _)) -> movePlayer exchange East
-        -}
-        Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeEscape _ _)) -> gameLiftIO pushQuitEvent
-        -- Sdl.KeyboardEvent (Sdl.KeyboardEventData _ _ _ (Sdl.Keysym Sdl.ScancodeSpace _ _)) -> do
-        --     writeChan mixerChan "bell"
-        _ -> return ()
+defaultGameState = GameState defaultCamera
 
 -- This lets us lift IO operation into our Game monad,
 -- yet not derive MonadIO which would give too much power to the users of this Game module/type.
 gameLiftIO :: IO a -> Game a
 gameLiftIO = Game . liftIO
+
+runGame :: Game a -> GameState -> IO (a, GameState)
+runGame = runStateT . unwrapGame
+
+evalGame :: Game a -> GameState -> IO a
+evalGame game gameState = liftM fst (runGame game gameState) -- TODO: So tempted to use (.:) = (.) . (.) here.
 
 {-
 stopPlayer :: Game ()
@@ -96,3 +100,6 @@ movePlayer (Exchange {..}) direction = do
             return reschedule
     liftIO $ writeSV gameStateSV gameState
 -}
+
+moveCamera :: Int -> Direction -> Game ()
+moveCamera delta direction = modify gsCamera (cameraTranslate delta direction)

@@ -1,16 +1,18 @@
 module Kawaii
-    ( App(..)
-    , Event
+    ( module Kawaii.Core
+    , module Kawaii.Direction
+    , module Kawaii.Keyboard
+    , module Kawaii.Stage
+    -- Manually exporting the Event module
+    , Event(..)
+    -- Manually exporting the Game module
     , Game
-    , Mode(..)
-    , Renderer
-    , Result(..)
-    , Ui(Ui)
-    , runApp
+    , moveCamera
     ) where
 
 import Kawaii.Core
+import Kawaii.Direction
 import Kawaii.Event
 import Kawaii.Game
-import Kawaii.Renderer
-import Kawaii.Ui
+import Kawaii.Keyboard
+import Kawaii.Stage
