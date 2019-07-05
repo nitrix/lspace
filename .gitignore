@@ -1,10 +1,2 @@
-# At the root of the project
+/.idea
 /data
-/lspace.prof
-/lspace.prof.html
-
-# Anywhere in the directories
-.cabal-sandbox
-.stack-work
-dist
-cabal.sandbox.config
