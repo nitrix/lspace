@@ -1,4 +1,4 @@
-# Lonesome Space
+# Lonesome Space (lspace)
 
 Lonesome Space - Real-time 2D strategy/sandbox game.
 
