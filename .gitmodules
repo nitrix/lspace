@@ -1,3 +1,6 @@
 [submodule "lib/SDL"]
 	path = lib/SDL
 	url = https://github.com/SDL-mirror/SDL
+[submodule "lib/toolkit"]
+	path = lib/toolkit
+	url = https://github.com/nitrix/toolkit

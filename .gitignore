@@ -1,6 +1,3 @@
-# IDE stuff
-/cmake-build-debug
 /.idea
-
-# Game save data
+/cmake-build-debug
 /data
